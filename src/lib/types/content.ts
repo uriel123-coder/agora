@@ -179,4 +179,5 @@ export interface SessionUser {
   name: string;
   role: UserRole;
   studentId?: string;
+  suspended?: boolean;
 }

@@ -125,10 +125,11 @@ export function rowToPublication(
     return { issues };
   }
 
+  const primaryRaw = row.primaryCategory?.trim().toLowerCase();
   const primary =
-    (row.primaryCategory &&
-      categories.find((c) => c === row.primaryCategory.toLowerCase())) ||
-    categories[0];
+    (primaryRaw
+      ? categories.find((c) => c === primaryRaw)
+      : undefined) ?? categories[0];
 
   const publication: Publication = {
     id: row.id,

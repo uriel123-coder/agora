@@ -35,11 +35,13 @@ export function searchPublications(
   const pageSize = Math.min(50, Math.max(1, filters.pageSize ?? 12));
   let pool = [...publications];
 
-  if (filters.category) {
-    pool = pool.filter((p) => p.categorySlugs.includes(filters.category!));
+  const categoryFilter = filters.category;
+  if (categoryFilter) {
+    pool = pool.filter((p) => p.categorySlugs.includes(categoryFilter));
   }
-  if (filters.contentType) {
-    pool = pool.filter((p) => p.contentType === filters.contentType);
+  const contentTypeFilter = filters.contentType;
+  if (contentTypeFilter) {
+    pool = pool.filter((p) => p.contentType === contentTypeFilter);
   }
   if (filters.tag) {
     const tag = normalizeText(filters.tag);
