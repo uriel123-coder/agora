@@ -1,22 +1,10 @@
-import {
-  CatalogBlock,
-  CategoryGrid,
-  HomeHero,
-} from "@/components/home/HomeSections";
-import { getSession } from "@/lib/auth/session";
-import { getLatestPublications } from "@/lib/data/repository";
+import { CategoryGrid, HomeHero } from "@/components/home/HomeSections";
 
-export const dynamic = "force-dynamic";
-
-export default async function HomePage() {
-  const user = await getSession();
-  const publications = await getLatestPublications(user?.role ?? "visitor", 6);
-
+export default function HomePage() {
   return (
     <>
       <HomeHero />
       <CategoryGrid />
-      <CatalogBlock publications={publications} />
     </>
   );
 }
