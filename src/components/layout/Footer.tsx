@@ -52,8 +52,7 @@ export function Footer() {
         </div>
       </div>
       <div className="border-t border-white/10 px-4 py-4 text-center text-xs text-ivory/60">
-        Ágora · Contenidos de demostración claramente etiquetados · Privacidad
-        escolar primero
+        Ágora · Solo contenido autorizado · Privacidad escolar primero
       </div>
     </footer>
   );
