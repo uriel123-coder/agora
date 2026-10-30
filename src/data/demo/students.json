@@ -1,0 +1,32 @@
+[
+  {
+    "id": "stu-demo-001",
+    "displayName": "Alex Rivera (demo)",
+    "searchable": true,
+    "authorizationStatus": "approved",
+    "grade": "3º Secundaria (demo)",
+    "schoolYear": "2025-2026",
+    "portfolioPublicationIds": ["pub-demo-002", "pub-demo-007"],
+    "isDemo": true
+  },
+  {
+    "id": "stu-demo-002",
+    "displayName": "Jordan Lee (demo)",
+    "searchable": true,
+    "authorizationStatus": "approved",
+    "grade": "2º Secundaria (demo)",
+    "schoolYear": "2025-2026",
+    "portfolioPublicationIds": ["pub-demo-006", "pub-demo-008", "pub-demo-012"],
+    "isDemo": true
+  },
+  {
+    "id": "stu-demo-003",
+    "displayName": "Estudiante no autorizado (demo)",
+    "searchable": false,
+    "authorizationStatus": "pending",
+    "grade": "1º Secundaria (demo)",
+    "schoolYear": "2025-2026",
+    "portfolioPublicationIds": ["pub-demo-011"],
+    "isDemo": true
+  }
+]

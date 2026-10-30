@@ -1,0 +1,43 @@
+[
+  {
+    "id": "user-admin-demo",
+    "email": "admin@agora.demo",
+    "name": "Administrador demo",
+    "role": "administrador",
+    "passwordHash": "$2b$10$82OUrIcNlSZlrGzWjZhJxu5LEswUcFNxweorj54AHSbObv18GoEXG",
+    "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "user-editor-demo",
+    "email": "editor@agora.demo",
+    "name": "Editor demo",
+    "role": "editor",
+    "passwordHash": "$2b$10$KPaOiwFn.o5LlFOX3.WOTOXEcRQkw4BHrWQ3vfCA1iaq38oDcXQNK",
+    "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "user-mod-demo",
+    "email": "moderador@agora.demo",
+    "name": "Moderador demo",
+    "role": "moderador",
+    "passwordHash": "$2b$10$qZXjufDwyhqUl1Q0dNss8OLbZHYHEgMSzBQgToV7TzyVOAyqr89Oa",
+    "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "user-docente-demo",
+    "email": "docente@agora.demo",
+    "name": "Docente demo",
+    "role": "docente",
+    "passwordHash": "$2b$10$3kWkLu3hgvKMvbrazrxUFe0jlte29ouu3poTHddllD5alAfrGkxHK",
+    "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "user-alumno-demo",
+    "email": "alumno@agora.demo",
+    "name": "Alex Rivera (demo)",
+    "role": "alumno",
+    "studentId": "stu-demo-001",
+    "passwordHash": "$2b$10$yh9rkQKW5Knv4baMdjyxie/EREVBQ6WjblcbT4Lt.J/zqLOSQURMi",
+    "createdAt": "2026-01-01T00:00:00.000Z"
+  }
+]

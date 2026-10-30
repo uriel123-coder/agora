@@ -1,0 +1,470 @@
+[
+  {
+    "id": "pub-demo-001",
+    "slug": "la-biblioteca-que-escucha",
+    "title": "La biblioteca que escucha",
+    "subtitle": "Cuento de demostración",
+    "summary": "Un relato sobre un espacio donde los libros responden preguntas con nuevas historias.",
+    "body": "<p><em>Contenido de demostración.</em></p><p>En el corazón del colegio había una sala con ventanas altas y estantes que olían a papel antiguo. Nadie sabía quién había dejado la primera nota entre las páginas, pero desde entonces la biblioteca aprendió a escuchar.</p><p>Cada pregunta que alguien escribía encontraba, días después, un cuento, un poema o un mapa doblado con cuidado. Así nació Ágora: no como un depósito de libros, sino como un diálogo.</p><h2>Índice</h2><ol><li>La primera nota</li><li>Los estantes que responden</li><li>Una comunidad de lectores</li></ol>",
+    "coverImage": "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=1200&q=80",
+    "coverAlt": "Libros abiertos sobre una mesa de madera",
+    "categorySlugs": ["taller-de-letras"],
+    "primaryCategory": "taller-de-letras",
+    "contentType": "cuento",
+    "tags": ["cuento", "biblioteca", "demostración"],
+    "authors": [
+      {
+        "id": "author-demo-inst",
+        "displayName": "Equipo editorial Ágora (demo)",
+        "role": "institucional",
+        "nameVisible": true
+      }
+    ],
+    "subject": "Literatura",
+    "schoolYear": "2025-2026",
+    "publishedAt": "2026-09-12T10:00:00.000Z",
+    "updatedAt": "2026-09-20T10:00:00.000Z",
+    "status": "published",
+    "accessLevel": "public",
+    "featured": true,
+    "isDemo": true,
+    "bibliography": ["Colección editorial de demostración Ágora, 2026."],
+    "credits": "Texto e imagen de demostración. No representa un trabajo auténtico de la comunidad.",
+    "media": [],
+    "relatedIds": ["pub-demo-008"],
+    "historicalLinks": [],
+    "source": "demo"
+  },
+  {
+    "id": "pub-demo-002",
+    "slug": "por-que-flota-el-hielo",
+    "title": "¿Por qué flota el hielo?",
+    "subtitle": "Un experimento para mentes curiosas",
+    "summary": "Explicación sencilla de la densidad del agua y un experimento reproducible en el aula.",
+    "body": "<p><em>Contenido de demostración.</em></p><p>El agua es una de las pocas sustancias cuya forma sólida es menos densa que la líquida. Por eso el hielo flota y los lagos pueden congelarse por arriba sin eliminar la vida debajo.</p><h2>Materiales</h2><ul><li>Vaso transparente</li><li>Agua</li><li>Cubos de hielo</li><li>Aceite vegetal (opcional, para comparar densidades)</li></ul><h2>Observación</h2><p>Registra el volumen desplazado y discute por qué la estructura cristalina del hielo deja espacios vacíos.</p>",
+    "coverImage": "https://images.unsplash.com/photo-1559757175-5700dde675bc?w=1200&q=80",
+    "coverAlt": "Cristales de hielo",
+    "categorySlugs": ["mentes-curiosas", "voces-creadoras"],
+    "primaryCategory": "mentes-curiosas",
+    "contentType": "experimento",
+    "tags": ["física", "densidad", "agua", "experimento"],
+    "authors": [
+      {
+        "id": "author-demo-alumno-1",
+        "displayName": "Alex Rivera (demo)",
+        "role": "alumno",
+        "studentId": "stu-demo-001",
+        "nameVisible": true
+      }
+    ],
+    "subject": "Física",
+    "schoolYear": "2025-2026",
+    "publishedAt": "2026-08-03T15:00:00.000Z",
+    "status": "published",
+    "accessLevel": "public",
+    "featured": true,
+    "isDemo": true,
+    "bibliography": ["Manual de demostración científica Ágora."],
+    "credits": "Trabajo ficticio de demostración con autorización simulada.",
+    "media": [
+      {
+        "id": "media-002-1",
+        "type": "image",
+        "url": "https://images.unsplash.com/photo-1581093458791-9f3c3900df4b?w=800&q=80",
+        "alt": "Laboratorio escolar de demostración",
+        "credit": "Imagen de demostración"
+      }
+    ],
+    "relatedIds": ["pub-demo-009"],
+    "historicalLinks": [],
+    "source": "demo"
+  },
+  {
+    "id": "pub-demo-003",
+    "slug": "preguntas-que-cuidan",
+    "title": "Preguntas que cuidan",
+    "subtitle": "Ética del diálogo en comunidad",
+    "summary": "Una reflexión educativa sobre cómo formular preguntas difíciles con respeto.",
+    "body": "<p><em>Contenido de demostración.</em></p><blockquote>«Una pregunta bien hecha no busca vencer: busca comprender.»</blockquote><p>Este texto propone un marco sencillo para debates escolares: escuchar antes de responder, citar fuentes, distinguir opinión de juicio, y cuidar la dignidad de quien habla.</p>",
+    "coverImage": "https://images.unsplash.com/photo-1456513080800-7d93dbe9f5a5?w=1200&q=80",
+    "coverAlt": "Libro abierto con luz suave",
+    "categorySlugs": ["fe-y-pensamiento"],
+    "primaryCategory": "fe-y-pensamiento",
+    "contentType": "reflexion",
+    "tags": ["ética", "diálogo", "filosofía"],
+    "authors": [
+      {
+        "id": "author-demo-docente",
+        "displayName": "Docente demo",
+        "role": "docente",
+        "nameVisible": true
+      }
+    ],
+    "subject": "Ética",
+    "schoolYear": "2025-2026",
+    "publishedAt": "2026-07-18T12:00:00.000Z",
+    "status": "published",
+    "accessLevel": "public",
+    "featured": false,
+    "isDemo": true,
+    "bibliography": ["Guía de convivencia escolar (demo)."],
+    "credits": "Contenido de demostración.",
+    "media": [],
+    "relatedIds": ["pub-demo-004"],
+    "historicalLinks": [],
+    "source": "demo"
+  },
+  {
+    "id": "pub-demo-004",
+    "slug": "raices-de-sukkot",
+    "title": "Raíces de Sukkot",
+    "subtitle": "Memoria, hospitalidad y ciclo del año",
+    "summary": "Introducción educativa a la festividad de Sukkot desde la identidad y la memoria cultural.",
+    "body": "<p><em>Contenido de demostración.</em></p><p><strong>Shorashim</strong> — raíces — invita a mirar las festividades no solo como fechas, sino como prácticas de memoria. Sukkot recuerda la fragilidad del hogar y la fuerza de la hospitalidad.</p><p>Este material distingue claramente la mirada cultural e identitaria de Shorashim respecto de los espacios de reflexión filosófico-religiosa de Fe y pensamiento.</p>",
+    "coverImage": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&q=80",
+    "coverAlt": "Luz cálida sobre textura de madera",
+    "categorySlugs": ["shorashim"],
+    "primaryCategory": "shorashim",
+    "contentType": "articulo",
+    "tags": ["sukkot", "festividades", "identidad", "memoria"],
+    "authors": [
+      {
+        "id": "author-demo-inst",
+        "displayName": "Equipo editorial Ágora (demo)",
+        "role": "institucional",
+        "nameVisible": true
+      }
+    ],
+    "subject": "Cultura e identidad",
+    "schoolYear": "2025-2026",
+    "publishedAt": "2026-10-01T09:00:00.000Z",
+    "status": "published",
+    "accessLevel": "public",
+    "featured": true,
+    "isDemo": true,
+    "bibliography": ["Material educativo de demostración sobre festividades."],
+    "credits": "Contenido de demostración. No sustituye fuentes comunitarias reales.",
+    "media": [],
+    "relatedIds": ["pub-demo-003", "pub-demo-005"],
+    "historicalLinks": [
+      {
+        "year": -1313,
+        "historicalLine": "hebrea-judia",
+        "label": "Referencia educativa al ciclo bíblico (demo)",
+        "deepUrl": "https://linea-comparativa-2027.vercel.app/"
+      }
+    ],
+    "source": "demo"
+  },
+  {
+    "id": "pub-demo-005",
+    "slug": "el-camino-de-la-seda-en-cinco-mapas",
+    "title": "El camino de la seda en cinco mapas",
+    "subtitle": "Rutas, intercambios y ecos culturales",
+    "summary": "Artículo histórico de demostración con vínculos a la cronología comparativa.",
+    "body": "<p><em>Contenido de demostración.</em></p><p>Las rutas de la seda no fueron un solo camino: fueron redes de intercambio de bienes, ideas y técnicas. Este artículo propone cinco mapas conceptuales para el aula.</p>",
+    "coverImage": "https://images.unsplash.com/photo-1524661135-423995f22d0b?w=1200&q=80",
+    "coverAlt": "Mapa antiguo estilizado",
+    "categorySlugs": ["ecos-de-la-historia"],
+    "primaryCategory": "ecos-de-la-historia",
+    "contentType": "articulo",
+    "tags": ["ruta de la seda", "intercambio", "mapas", "edad media"],
+    "authors": [
+      {
+        "id": "author-demo-docente",
+        "displayName": "Docente demo",
+        "role": "docente",
+        "nameVisible": true
+      }
+    ],
+    "subject": "Historia",
+    "schoolYear": "2025-2026",
+    "publishedAt": "2026-06-22T11:00:00.000Z",
+    "status": "published",
+    "accessLevel": "public",
+    "featured": true,
+    "isDemo": true,
+    "bibliography": ["Atlas histórico de demostración Ágora."],
+    "credits": "Contenido de demostración.",
+    "media": [],
+    "relatedIds": ["pub-demo-004"],
+    "historicalLinks": [
+      {
+        "year": 200,
+        "yearEnd": 1400,
+        "historicalLine": "mundial",
+        "eventId": "demo-silk-road",
+        "label": "Intervalo pedagógico de la ruta de la seda (demo)",
+        "deepUrl": "https://linea-comparativa-2027.vercel.app/"
+      }
+    ],
+    "source": "demo"
+  },
+  {
+    "id": "pub-demo-006",
+    "slug": "luz-sobre-papel",
+    "title": "Luz sobre papel",
+    "subtitle": "Serie fotográfica de demostración",
+    "summary": "Galería artística que explora texturas de papel, tinta y sombra.",
+    "body": "<p><em>Contenido de demostración.</em></p><p>Esta serie observa el papel como superficie viva: arrugas, transparencias y tipografías incompletas. Cada imagen incluye créditos y técnica simulada.</p>",
+    "coverImage": "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=1200&q=80",
+    "coverAlt": "Composición artística con papel",
+    "categorySlugs": ["expresiones-del-arte", "voces-creadoras"],
+    "primaryCategory": "expresiones-del-arte",
+    "contentType": "galeria",
+    "tags": ["fotografía", "papel", "luz", "composición"],
+    "authors": [
+      {
+        "id": "author-demo-alumno-2",
+        "displayName": "Jordan Lee (demo)",
+        "role": "alumno",
+        "studentId": "stu-demo-002",
+        "nameVisible": true
+      }
+    ],
+    "subject": "Artes visuales",
+    "schoolYear": "2025-2026",
+    "publishedAt": "2026-05-14T16:00:00.000Z",
+    "status": "published",
+    "accessLevel": "public",
+    "featured": true,
+    "isDemo": true,
+    "bibliography": [],
+    "credits": "Obra de demostración. Técnica: fotografía digital.",
+    "media": [
+      {
+        "id": "media-006-1",
+        "type": "image",
+        "url": "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=1000&q=80",
+        "alt": "Detalle de textura artística",
+        "credit": "Imagen demo"
+      },
+      {
+        "id": "media-006-2",
+        "type": "image",
+        "url": "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=1000&q=80",
+        "alt": "Obra en galería",
+        "credit": "Imagen demo"
+      }
+    ],
+    "relatedIds": ["pub-demo-001"],
+    "historicalLinks": [],
+    "source": "demo"
+  },
+  {
+    "id": "pub-demo-007",
+    "slug": "portafolio-investigacion-agua",
+    "title": "Investigación escolar sobre el agua en la ciudad",
+    "subtitle": "Proyecto interdisciplinario de demostración",
+    "summary": "Portafolio que combina ciencia ciudadana, entrevista y presentación.",
+    "body": "<p><em>Contenido de demostración.</em></p><p>Este proyecto une observación local, lectura de fuentes y una entrevista simulada a un especialista. Sirve como ejemplo de Voces creadoras vinculado también a Mentes curiosas.</p>",
+    "coverImage": "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=1200&q=80",
+    "coverAlt": "Gotas de agua",
+    "categorySlugs": ["voces-creadoras", "mentes-curiosas"],
+    "primaryCategory": "voces-creadoras",
+    "contentType": "proyecto",
+    "tags": ["agua", "ciudad", "proyecto", "interdisciplinario"],
+    "authors": [
+      {
+        "id": "author-demo-alumno-1",
+        "displayName": "Alex Rivera (demo)",
+        "role": "alumno",
+        "studentId": "stu-demo-001",
+        "nameVisible": true
+      }
+    ],
+    "subject": "Ciencias / Ciudadanía",
+    "schoolYear": "2025-2026",
+    "publishedAt": "2026-09-28T14:00:00.000Z",
+    "status": "published",
+    "accessLevel": "public",
+    "featured": true,
+    "isDemo": true,
+    "bibliography": ["Fuentes municipales de demostración."],
+    "credits": "Proyecto ficticio con nombre de alumno demo autorizado.",
+    "media": [],
+    "relatedIds": ["pub-demo-002"],
+    "historicalLinks": [],
+    "source": "demo"
+  },
+  {
+    "id": "pub-demo-008",
+    "slug": "poema-de-la-plaza",
+    "title": "Poema de la plaza",
+    "summary": "Breve poema sobre el ágora como lugar de encuentro.",
+    "body": "<p><em>Contenido de demostración.</em></p><pre>En la plaza del mediodía\nlas palabras se sientan juntas.\nNadie llega con la verdad completa;\ntodos llegan con una pregunta.</pre>",
+    "coverImage": "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=1200&q=80",
+    "coverAlt": "Máquina de escribir y papel",
+    "categorySlugs": ["taller-de-letras", "voces-creadoras"],
+    "primaryCategory": "taller-de-letras",
+    "contentType": "poema",
+    "tags": ["poesía", "ágora", "encuentro"],
+    "authors": [
+      {
+        "id": "author-demo-alumno-2",
+        "displayName": "Jordan Lee (demo)",
+        "role": "alumno",
+        "studentId": "stu-demo-002",
+        "nameVisible": true
+      }
+    ],
+    "subject": "Literatura",
+    "schoolYear": "2025-2026",
+    "publishedAt": "2026-04-02T10:00:00.000Z",
+    "status": "published",
+    "accessLevel": "public",
+    "featured": false,
+    "isDemo": true,
+    "bibliography": [],
+    "credits": "Poema de demostración.",
+    "media": [],
+    "relatedIds": ["pub-demo-001"],
+    "historicalLinks": [],
+    "source": "demo"
+  },
+  {
+    "id": "pub-demo-009",
+    "slug": "tabla-periodica-en-el-aula",
+    "title": "La tabla periódica en el aula",
+    "summary": "Guía visual de demostración para organizar elementos y propiedades.",
+    "body": "<p><em>Contenido de demostración.</em></p><p>Propone una actividad de clasificación por familias y una tabla HTML simple para practicar lectura de símbolos.</p><table><thead><tr><th>Símbolo</th><th>Nombre</th><th>Grupo</th></tr></thead><tbody><tr><td>H</td><td>Hidrógeno</td><td>1</td></tr><tr><td>C</td><td>Carbono</td><td>14</td></tr><tr><td>O</td><td>Oxígeno</td><td>16</td></tr></tbody></table>",
+    "coverImage": "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=1200&q=80",
+    "coverAlt": "Laboratorio científico",
+    "categorySlugs": ["mentes-curiosas"],
+    "primaryCategory": "mentes-curiosas",
+    "contentType": "articulo",
+    "tags": ["química", "tabla periódica", "aula"],
+    "authors": [
+      {
+        "id": "author-demo-docente",
+        "displayName": "Docente demo",
+        "role": "docente",
+        "nameVisible": true
+      }
+    ],
+    "subject": "Química",
+    "schoolYear": "2025-2026",
+    "publishedAt": "2026-03-11T09:00:00.000Z",
+    "status": "published",
+    "accessLevel": "public",
+    "featured": false,
+    "isDemo": true,
+    "bibliography": [],
+    "credits": "Contenido de demostración.",
+    "media": [],
+    "relatedIds": ["pub-demo-002"],
+    "historicalLinks": [],
+    "source": "demo"
+  },
+  {
+    "id": "pub-demo-010",
+    "slug": "memoria-de-un-documento",
+    "title": "Memoria de un documento",
+    "subtitle": "Cómo leer fuentes con cuidado",
+    "summary": "Método breve para contextualizar un documento histórico antes de interpretarlo.",
+    "body": "<p><em>Contenido de demostración.</em></p><ol><li>Identifica autoría y fecha.</li><li>Sitúa el contexto.</li><li>Separa descripción e interpretación.</li><li>Busca fuentes complementarias.</li><li>Registra dudas abiertas.</li></ol>",
+    "coverImage": "https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=1200&q=80",
+    "coverAlt": "Documentos antiguos",
+    "categorySlugs": ["ecos-de-la-historia", "shorashim"],
+    "primaryCategory": "ecos-de-la-historia",
+    "contentType": "documento",
+    "tags": ["fuentes", "método", "memoria"],
+    "authors": [
+      {
+        "id": "author-demo-inst",
+        "displayName": "Equipo editorial Ágora (demo)",
+        "role": "institucional",
+        "nameVisible": true
+      }
+    ],
+    "subject": "Historia",
+    "schoolYear": "2025-2026",
+    "publishedAt": "2026-02-01T08:00:00.000Z",
+    "status": "published",
+    "accessLevel": "public",
+    "featured": false,
+    "isDemo": true,
+    "bibliography": ["Guía metodológica demo."],
+    "credits": "Contenido de demostración.",
+    "media": [],
+    "relatedIds": ["pub-demo-005"],
+    "historicalLinks": [
+      {
+        "year": 1948,
+        "historicalLine": "comparativa",
+        "label": "Ejemplo de vínculo histórico (demo)",
+        "deepUrl": "https://linea-comparativa-2027.vercel.app/"
+      }
+    ],
+    "source": "demo"
+  },
+  {
+    "id": "pub-demo-011",
+    "slug": "trabajo-privado-no-indexable",
+    "title": "Borrador privado de demostración",
+    "summary": "Este registro existe para probar filtros de privacidad y no debe aparecer en búsquedas públicas.",
+    "body": "<p>Contenido privado de demostración.</p>",
+    "coverImage": "",
+    "categorySlugs": ["voces-creadoras"],
+    "primaryCategory": "voces-creadoras",
+    "contentType": "proyecto",
+    "tags": ["privado", "demo"],
+    "authors": [
+      {
+        "id": "author-demo-alumno-3",
+        "displayName": "Nombre no autorizado (demo)",
+        "role": "alumno",
+        "studentId": "stu-demo-003",
+        "nameVisible": false
+      }
+    ],
+    "subject": "Proyecto",
+    "schoolYear": "2025-2026",
+    "publishedAt": "2026-01-15T08:00:00.000Z",
+    "status": "draft",
+    "accessLevel": "private",
+    "featured": false,
+    "isDemo": true,
+    "bibliography": [],
+    "credits": "Demo de privacidad.",
+    "media": [],
+    "relatedIds": [],
+    "historicalLinks": [],
+    "source": "demo"
+  },
+  {
+    "id": "pub-demo-012",
+    "slug": "entrevista-a-una-artista-local",
+    "title": "Entrevista a una artista local (demo)",
+    "summary": "Formato de entrevista educativa sobre proceso creativo y créditos.",
+    "body": "<p><em>Contenido de demostración.</em></p><p><strong>¿Qué te hace volver al taller?</strong></p><p>—La posibilidad de equivocarme delante del material.</p>",
+    "coverImage": "https://images.unsplash.com/photo-1461344577544-4e5dc9487184?w=1200&q=80",
+    "coverAlt": "Estudio artístico",
+    "categorySlugs": ["expresiones-del-arte", "voces-creadoras"],
+    "primaryCategory": "voces-creadoras",
+    "contentType": "entrevista",
+    "tags": ["entrevista", "arte", "proceso"],
+    "authors": [
+      {
+        "id": "author-demo-alumno-2",
+        "displayName": "Jordan Lee (demo)",
+        "role": "alumno",
+        "studentId": "stu-demo-002",
+        "nameVisible": true
+      }
+    ],
+    "subject": "Artes",
+    "schoolYear": "2025-2026",
+    "publishedAt": "2026-08-21T13:00:00.000Z",
+    "status": "published",
+    "accessLevel": "public",
+    "featured": false,
+    "isDemo": true,
+    "bibliography": [],
+    "credits": "Entrevista ficticia de demostración.",
+    "media": [],
+    "relatedIds": ["pub-demo-006"],
+    "historicalLinks": [],
+    "source": "demo"
+  }
+]

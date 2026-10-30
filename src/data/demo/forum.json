@@ -1,0 +1,125 @@
+{
+  "communities": [
+    {
+      "id": "comm-ciencia",
+      "slug": "ciencia-en-comun",
+      "name": "Ciencia en común",
+      "description": "Preguntas, hallazgos y dudas científicas de la comunidad escolar.",
+      "tags": ["ciencia", "experimentos"],
+      "moderated": true
+    },
+    {
+      "id": "comm-lectura",
+      "slug": "club-de-lectura",
+      "name": "Club de lectura",
+      "description": "Recomendaciones y conversaciones sobre textos del Taller de letras.",
+      "tags": ["lectura", "literatura"],
+      "moderated": true
+    },
+    {
+      "id": "comm-historia",
+      "slug": "pasado-presente",
+      "name": "Pasado presente",
+      "description": "Debates respetuosos sobre historia, memoria e identidad.",
+      "tags": ["historia", "memoria"],
+      "moderated": true
+    }
+  ],
+  "posts": [
+    {
+      "id": "fpost-001",
+      "slug": "como-cuidamos-las-fuentes",
+      "communityId": "comm-historia",
+      "title": "¿Cómo cuidamos las fuentes cuando investigamos?",
+      "body": "Propongo que compartamos criterios para citar y verificar. Contenido de demostración.",
+      "authorId": "user-docente-demo",
+      "authorName": "Docente demo",
+      "tags": ["fuentes", "método"],
+      "imageUrl": "",
+      "linkUrl": "/publicacion/memoria-de-un-documento",
+      "score": 12,
+      "commentCount": 2,
+      "pinned": true,
+      "locked": false,
+      "createdAt": "2026-09-01T10:00:00.000Z",
+      "updatedAt": "2026-09-01T10:00:00.000Z",
+      "isDemo": true
+    },
+    {
+      "id": "fpost-002",
+      "slug": "experimento-del-hielo",
+      "communityId": "comm-ciencia",
+      "title": "Repetí el experimento del hielo: ¿les funcionó?",
+      "body": "Siguiendo la guía de demostración de Mentes curiosas. ¿Qué variables cambiaron ustedes?",
+      "authorId": "user-alumno-demo",
+      "authorName": "Alex Rivera (demo)",
+      "tags": ["experimento", "densidad"],
+      "imageUrl": "",
+      "linkUrl": "/publicacion/por-que-flota-el-hielo",
+      "score": 8,
+      "commentCount": 1,
+      "pinned": false,
+      "locked": false,
+      "createdAt": "2026-09-10T12:00:00.000Z",
+      "updatedAt": "2026-09-10T12:00:00.000Z",
+      "isDemo": true
+    },
+    {
+      "id": "fpost-003",
+      "slug": "poema-favorito-de-la-plaza",
+      "communityId": "comm-lectura",
+      "title": "¿Cuál verso del Poema de la plaza les resonó?",
+      "body": "Abramos una lectura compartida sin spoilear interpretaciones definitivas.",
+      "authorId": "user-editor-demo",
+      "authorName": "Editor demo",
+      "tags": ["poesía"],
+      "imageUrl": "",
+      "linkUrl": "/publicacion/poema-de-la-plaza",
+      "score": 5,
+      "commentCount": 0,
+      "pinned": false,
+      "locked": false,
+      "createdAt": "2026-09-15T09:00:00.000Z",
+      "updatedAt": "2026-09-15T09:00:00.000Z",
+      "isDemo": true
+    }
+  ],
+  "comments": [
+    {
+      "id": "fcom-001",
+      "postId": "fpost-001",
+      "parentId": null,
+      "authorId": "user-alumno-demo",
+      "authorName": "Alex Rivera (demo)",
+      "body": "Me ayuda separar «qué dice el documento» de «qué pienso yo».",
+      "score": 4,
+      "createdAt": "2026-09-01T11:00:00.000Z",
+      "isDemo": true
+    },
+    {
+      "id": "fcom-002",
+      "postId": "fpost-001",
+      "parentId": "fcom-001",
+      "authorId": "user-docente-demo",
+      "authorName": "Docente demo",
+      "body": "Exacto. Guarden también las dudas abiertas.",
+      "score": 3,
+      "createdAt": "2026-09-01T12:00:00.000Z",
+      "isDemo": true
+    },
+    {
+      "id": "fcom-003",
+      "postId": "fpost-002",
+      "parentId": null,
+      "authorId": "user-editor-demo",
+      "authorName": "Editor demo",
+      "body": "Probamos con aceite y la comparación de densidades quedó muy clara.",
+      "score": 2,
+      "createdAt": "2026-09-10T13:00:00.000Z",
+      "isDemo": true
+    }
+  ],
+  "votes": [],
+  "reports": [],
+  "savedPostIdsByUser": {}
+}
