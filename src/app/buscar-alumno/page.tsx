@@ -154,25 +154,27 @@ export default async function BuscarAlumnoPage({ searchParams }: Props) {
         <h2 className="font-serif text-2xl text-petrol dark:text-ivory">
           Alumnos autorizados
         </h2>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {matchedStudents.map((student) => (
-            <Link
-              key={student.id}
-              href={`/alumno/${student.id}`}
-              className="rounded-xl border border-border bg-card p-4 hover:border-gold/40"
-            >
-              <p className="font-medium">{student.displayName}</p>
-              <p className="text-sm text-muted">
-                {student.grade} · {student.schoolYear}
-              </p>
-              {student.isDemo ? (
-                <Badge tone="demo" className="mt-2">
-                  Demo
-                </Badge>
-              ) : null}
-            </Link>
-          ))}
-        </div>
+        {matchedStudents.length === 0 ? (
+          <p className="mt-4 rounded-xl border border-dashed border-border p-6 text-sm text-muted">
+            No hay alumnos con autorización pública para mostrar. No inventamos
+            perfiles.
+          </p>
+        ) : (
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {matchedStudents.map((student) => (
+              <Link
+                key={student.id}
+                href={`/alumno/${student.id}`}
+                className="rounded-xl border border-border bg-card p-4 hover:border-gold/40"
+              >
+                <p className="font-medium">{student.displayName}</p>
+                <p className="text-sm text-muted">
+                  {student.grade} · {student.schoolYear}
+                </p>
+              </Link>
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="mt-10">

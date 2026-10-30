@@ -13,10 +13,12 @@ import type {
   UserRole,
 } from "@/lib/types/content";
 
-function canView(
-  pub: Publication,
-  role: UserRole = "visitor",
-): boolean {
+/** Por defecto NO se muestran inventos. Solo con AGORA_USE_DEMO=true. */
+function demoEnabled(): boolean {
+  return process.env.AGORA_USE_DEMO === "true";
+}
+
+function canView(pub: Publication, role: UserRole = "visitor"): boolean {
   if (pub.status !== "published" && role === "visitor") return false;
   if (pub.status !== "published" && role === "alumno") {
     return pub.accessLevel !== "private";
@@ -36,12 +38,12 @@ function canView(
 export async function getAllPublications(
   role: UserRole = "visitor",
 ): Promise<Publication[]> {
-  const demo = demoPublications as Publication[];
+  const demo = demoEnabled() ? (demoPublications as Publication[]) : [];
   const config = getSheetsConfig();
-  // Evitar llamadas remotas durante `next build` (fase de generación estática).
   const skipRemote =
     process.env.NEXT_PHASE === "phase-production-build" ||
     process.env.AGORA_SKIP_SHEETS === "true";
+
   let sheets: Publication[] = [];
   if (config.enabled && !skipRemote) {
     try {
@@ -51,10 +53,9 @@ export async function getAllPublications(
       sheets = [];
     }
   }
+
   const merged =
-    config.enabled && sheets.length > 0
-      ? mergeContentSources(demo, sheets)
-      : demo;
+    sheets.length > 0 ? mergeContentSources(demo, sheets) : demo;
   return merged.filter((p) => canView(p, role));
 }
 
@@ -92,7 +93,8 @@ export async function getFeaturedPublications(
   limit = 6,
 ): Promise<Publication[]> {
   const all = await getAllPublications(role);
-  return all.filter((p) => p.featured).slice(0, limit);
+  const featured = all.filter((p) => p.featured);
+  return (featured.length ? featured : all).slice(0, limit);
 }
 
 export async function getLatestPublications(
@@ -156,6 +158,7 @@ export async function getStudentVoices(
 }
 
 export function getStudents(onlySearchable = true): StudentProfile[] {
+  if (!demoEnabled()) return [];
   const students = demoStudents as StudentProfile[];
   if (!onlySearchable) return students;
   return students.filter(
@@ -164,6 +167,7 @@ export function getStudents(onlySearchable = true): StudentProfile[] {
 }
 
 export function getStudentById(id: string): StudentProfile | null {
+  if (!demoEnabled()) return null;
   return (demoStudents as StudentProfile[]).find((s) => s.id === id) ?? null;
 }
 

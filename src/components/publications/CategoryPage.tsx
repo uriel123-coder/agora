@@ -1,5 +1,6 @@
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { PublicationCard } from "@/components/publications/PublicationCard";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { Badge } from "@/components/ui/Badge";
 import { getCategory } from "@/lib/categories";
 import { getPublicationsByCategory } from "@/lib/data/repository";
@@ -22,31 +23,34 @@ export async function CategoryPageView({ slug }: { slug: CategorySlug }) {
           { label: category.name },
         ]}
       />
-      <div className="mb-10 max-w-3xl">
+      <header className="mb-12 max-w-3xl border-b border-border pb-10">
         <span
-          className="mb-4 inline-block h-1.5 w-12 rounded-full"
+          className="mb-5 inline-block h-1.5 w-14 rounded-full"
           style={{ background: category.accent }}
           aria-hidden
         />
-        <h1 className="font-serif text-4xl text-petrol dark:text-ivory">
+        <h1 className="font-serif text-4xl leading-tight text-petrol dark:text-ivory sm:text-5xl">
           {category.name}
         </h1>
-        <p className="mt-3 text-lg text-muted">{category.tagline}</p>
-        <p className="mt-4 leading-relaxed text-foreground/90">
+        <p className="mt-4 text-xl text-muted">{category.tagline}</p>
+        <p className="mt-5 text-base leading-relaxed text-foreground/90">
           {category.description}
         </p>
-        <div className="mt-5 flex flex-wrap gap-2">
+        <div className="mt-6 flex flex-wrap gap-2">
           {category.contentTypes.map((type) => (
             <Badge key={type} tone="muted">
               {type}
             </Badge>
           ))}
         </div>
-      </div>
+      </header>
       {publications.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-border p-8 text-muted">
-          Todavía no hay publicaciones publicadas en esta categoría.
-        </p>
+        <EmptyState
+          title="Sin publicaciones en esta categoría"
+          description="Cuando se carguen contenidos reales (por Google Sheets o administración), aparecerán aquí. No mostramos ejemplos inventados."
+          actionHref="/tres-mundos-una-historia"
+          actionLabel="Ver la cronología"
+        />
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {publications.map((pub) => (

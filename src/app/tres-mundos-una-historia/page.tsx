@@ -16,6 +16,8 @@ export const metadata: Metadata = {
     "Tres historias. Un mismo tiempo. Infinitas conexiones. Cronología comparativa integrada en Ágora.",
 };
 
+export const dynamic = "force-dynamic";
+
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
