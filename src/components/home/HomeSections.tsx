@@ -42,38 +42,39 @@ export function HomeHero() {
             <Image
               src="/brand/or-hajayim-logo.png"
               alt="Colegio Or Hajayim"
-              width={64}
-              height={64}
-              className="rounded-sm bg-white/95 p-1.5 shadow-sm"
+              width={72}
+              height={72}
+              className="rounded-sm bg-white p-1.5 shadow-sm"
               priority
             />
             <div>
-              <p className="text-xs font-medium uppercase tracking-[0.22em] text-white/70">
+              <p className="text-xs font-medium uppercase tracking-[0.22em] text-white/75">
                 Colegio Or Hajayim
               </p>
-              <p className="font-display text-3xl leading-none tracking-tight sm:text-4xl">
+              <p className="font-display text-3xl leading-none tracking-tight text-white sm:text-4xl">
                 Ágora
               </p>
             </div>
           </div>
-          <h1 className="max-w-[13ch] font-display text-4xl leading-[1.05] sm:text-5xl lg:text-6xl">
+          <h1 className="max-w-[13ch] font-display text-4xl leading-[1.05] text-white sm:text-5xl lg:text-6xl">
             Cada idea merece un espacio.
           </h1>
-          <p className="mt-5 max-w-lg text-base leading-relaxed text-white/80 sm:text-lg">
+          <p className="mt-5 max-w-lg text-base leading-relaxed text-white/85 sm:text-lg">
             Un espacio para descubrir, comprender y compartir.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Button href="/buscar-alumno" size="lg" className="bg-oh-blue hover:bg-oh-blue-deep">
+            <Link
+              href="/buscar-alumno"
+              className="inline-flex items-center justify-center bg-[#3968cc] px-5 py-3 text-base font-medium text-white transition hover:bg-[#2f56ad]"
+            >
               Buscar alumno
-            </Button>
-            <Button
+            </Link>
+            <Link
               href="/tres-mundos-una-historia"
-              variant="secondary"
-              size="lg"
-              className="border-white/35 text-white hover:border-white hover:text-white"
+              className="inline-flex items-center justify-center border border-white/45 px-5 py-3 text-base font-medium text-white transition hover:border-white hover:bg-white/10"
             >
               Tres mundos, una historia
-            </Button>
+            </Link>
           </div>
         </div>
       </div>
