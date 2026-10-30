@@ -9,6 +9,7 @@ export const CATEGORIES: Category[] = [
     description:
       "Cuentos, fábulas, poemas, leyendas, relatos, ensayos literarios, escritura creativa y antologías.",
     accent: "#5B7C8A",
+    coverImage: "/categories/taller-de-letras.jpg",
     contentTypes: [
       "Cuentos",
       "Fábulas",
@@ -28,6 +29,7 @@ export const CATEGORIES: Category[] = [
     description:
       "Física, química, biología, astronomía, matemáticas, tecnología, experimentos y divulgación científica.",
     accent: "#3D7A6A",
+    coverImage: "/categories/mentes-curiosas.jpg",
     contentTypes: [
       "Física",
       "Química",
@@ -48,6 +50,7 @@ export const CATEGORIES: Category[] = [
     description:
       "Textos religiosos, reflexiones, filosofía, ética, tradiciones, interpretaciones y estudios culturales, con enfoque educativo y respetuoso.",
     accent: "#7A6B8A",
+    coverImage: "/categories/fe-y-pensamiento.jpg",
     contentTypes: [
       "Textos religiosos",
       "Reflexiones",
@@ -67,6 +70,7 @@ export const CATEGORIES: Category[] = [
     description:
       "Tradiciones judías, festividades, historia y memoria, cultura, identidad, costumbres, lengua hebrea y raíces comunitarias autorizadas.",
     accent: "#8A6B3D",
+    coverImage: "/categories/shorashim.jpg",
     contentTypes: [
       "Tradiciones judías",
       "Festividades",
@@ -87,6 +91,7 @@ export const CATEGORIES: Category[] = [
     description:
       "Civilizaciones, acontecimientos, personajes, documentos, mapas, investigaciones y artículos históricos.",
     accent: "#8A4F3D",
+    coverImage: "/categories/ecos-de-la-historia.jpg",
     contentTypes: [
       "Civilizaciones",
       "Acontecimientos",
@@ -105,7 +110,8 @@ export const CATEGORIES: Category[] = [
     tagline: "Tres historias. Un mismo tiempo. Infinitas conexiones",
     description:
       "Cronología comparativa oficial de historia hebrea y judía, historia mundial e historia de México. En Ágora es un puente al proyecto existente; no la rehacemos aquí.",
-    accent: "#B49A65",
+    accent: "#3968cc",
+    coverImage: "/categories/tres-mundos.jpg",
     contentTypes: [
       "Historia hebrea y judía",
       "Historia mundial",
@@ -121,6 +127,7 @@ export const CATEGORIES: Category[] = [
     description:
       "Pintura, escultura, fotografía, arquitectura, música, cine, ilustración y producciones artísticas estudiantiles.",
     accent: "#6A5B8A",
+    coverImage: "/categories/expresiones-del-arte.jpg",
     contentTypes: [
       "Pintura",
       "Escultura",
@@ -141,6 +148,7 @@ export const CATEGORIES: Category[] = [
     description:
       "Foro interactivo para debatir con respeto: publicaciones, comentarios, votos, espacios temáticos y moderación.",
     accent: "#3D6A8A",
+    coverImage: "/categories/ideas-en-dialogo.jpg",
     contentTypes: ["Debates", "Preguntas", "Temas", "Espacios moderados"],
   },
   {
@@ -151,6 +159,7 @@ export const CATEGORIES: Category[] = [
     description:
       "Investigaciones, artículos, entrevistas, videos, podcasts, proyectos escolares y trabajos interdisciplinarios.",
     accent: "#5A7A4D",
+    coverImage: "/categories/voces-creadoras.jpg",
     contentTypes: [
       "Investigaciones",
       "Artículos",

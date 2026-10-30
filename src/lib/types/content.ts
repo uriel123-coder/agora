@@ -49,6 +49,8 @@ export interface Category {
   description: string;
   accent: string;
   contentTypes: string[];
+  /** Portada visual de la categoría (ruta local o remota). */
+  coverImage: string;
 }
 
 export interface AuthorRef {

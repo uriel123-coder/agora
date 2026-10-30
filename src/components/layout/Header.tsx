@@ -13,9 +13,9 @@ import { canAccessAdmin } from "@/lib/auth/client-roles";
 const mainLinks = [
   { href: "/", label: "Inicio" },
   { href: "/explorar", label: "Explorar" },
-  { href: "/tres-mundos-una-historia", label: "Tres mundos" },
+  { href: "/#categorias", label: "Categorías" },
   { href: "/voces-creadoras", label: "Voces creadoras" },
-  { href: "/buscar-alumno", label: "Buscar alumno" },
+  { href: "/buscar", label: "Buscar" },
 ];
 
 export function Header({

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { PublicationCard } from "@/components/publications/PublicationCard";
@@ -13,9 +14,6 @@ export const dynamic = "force-dynamic";
 export default async function ExplorarPage() {
   const user = await getSession();
   const publications = await getLatestPublications(user?.role ?? "visitor", 48);
-  const catalogCats = CATEGORIES.filter(
-    (c) => c.slug !== "tres-mundos-una-historia",
-  );
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -27,34 +25,48 @@ export default async function ExplorarPage() {
         Catálogo y categorías de Ágora. Solo contenido autorizado de Or Hajayim.
       </p>
 
-      <a
-        href={TIMELINE_EXTERNAL_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-8 flex flex-col gap-2 border border-oh-ink bg-oh-ink p-5 text-white transition duration-300 hover:-translate-y-1 hover:bg-oh-ink-deep sm:flex-row sm:items-center sm:justify-between"
-      >
-        <div>
-          <p className="text-[11px] uppercase tracking-[0.18em] text-white/55">
-            Apartado especial
-          </p>
-          <p className="mt-1 font-display text-2xl">Tres mundos, una historia</p>
-          <p className="mt-1 text-sm text-white/70">
-            Abre la cronología en otra pestaña
-          </p>
-        </div>
-        <span className="text-sm text-[#8eb4ff]">Entrar →</span>
-      </a>
+      <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {CATEGORIES.map((cat) => {
+          const isTimeline = cat.slug === "tres-mundos-una-historia";
+          const className =
+            "group relative min-h-[180px] overflow-hidden border border-border transition duration-300 hover:-translate-y-1 hover:border-oh-blue/40";
+          const body = (
+            <>
+              <Image
+                src={cat.coverImage}
+                alt=""
+                fill
+                className="object-cover transition duration-500 group-hover:scale-105"
+                sizes="(max-width: 640px) 100vw, 33vw"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-oh-ink/90 via-oh-ink/40 to-transparent" />
+              <div className="relative flex h-full flex-col justify-end p-4 text-white">
+                <h2 className="font-display text-xl">{cat.name}</h2>
+                <p className="mt-1 text-sm text-white/75">{cat.tagline}</p>
+              </div>
+            </>
+          );
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        {catalogCats.map((cat) => (
-          <Link
-            key={cat.slug}
-            href={`/${cat.slug}`}
-            className="border border-border bg-card px-3 py-2 text-sm transition duration-300 hover:-translate-y-0.5 hover:border-oh-blue hover:text-oh-blue"
-          >
-            {cat.name}
-          </Link>
-        ))}
+          if (isTimeline) {
+            return (
+              <a
+                key={cat.slug}
+                href={TIMELINE_EXTERNAL_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={className}
+              >
+                {body}
+              </a>
+            );
+          }
+
+          return (
+            <Link key={cat.slug} href={`/${cat.slug}`} className={className}>
+              {body}
+            </Link>
+          );
+        })}
       </div>
 
       {publications.length === 0 ? (
@@ -62,8 +74,8 @@ export default async function ExplorarPage() {
           <EmptyState
             title="El catálogo todavía está vacío"
             description="Cuando existan publicaciones reales, aparecerán aquí."
-            actionHref="/buscar-alumno"
-            actionLabel="Buscar alumno"
+            actionHref="/buscar"
+            actionLabel="Ir al buscador"
           />
         </div>
       ) : (

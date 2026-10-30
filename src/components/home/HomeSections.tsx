@@ -1,121 +1,52 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Search } from "lucide-react";
 import { CategoryExplore } from "@/components/home/CategoryExplore";
-import { TresMundosQuietBand } from "@/components/home/TresMundosQuietBand";
+import { HomeSearchPanel } from "@/components/home/HomeSearchPanel";
 import { PublicationCard } from "@/components/publications/PublicationCard";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { Button } from "@/components/ui/Button";
 import type { Publication } from "@/lib/types/content";
 
 export function HomeHero() {
   return (
-    <section className="relative min-h-[88vh] overflow-hidden bg-oh-ink text-white">
-      <Image
-        src="/brand/hero-bleed.png"
-        alt="Ambiente escolar y cultural de Or Hajayim"
-        fill
-        priority
-        className="animate-reveal-image object-cover object-center"
-        sizes="100vw"
-      />
-      <div
-        className="absolute inset-0"
-        aria-hidden
-        style={{
-          background:
-            "linear-gradient(105deg, rgba(26,42,54,0.92) 0%, rgba(36,55,70,0.78) 42%, rgba(36,55,70,0.35) 100%)",
-        }}
-      />
-      <div
-        className="hero-float pointer-events-none absolute -right-8 bottom-8 opacity-[0.14] sm:right-10 sm:bottom-12"
-        aria-hidden
-      >
-        <Image
-          src="/brand/or-hajayim-logo.png"
-          alt=""
-          width={220}
-          height={220}
-          className="select-none"
-        />
-      </div>
-      <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-oh-ink-deep/40 to-transparent"
-        aria-hidden
-      />
-
-      <div className="relative mx-auto flex min-h-[88vh] max-w-7xl flex-col justify-end px-4 pb-16 pt-28 sm:px-6 lg:pb-20">
-        <div className="animate-rise max-w-2xl">
-          <div className="mb-6 flex items-center gap-3">
-            <Image
-              src="/brand/or-hajayim-logo.png"
-              alt="Colegio Or Hajayim"
-              width={72}
-              height={72}
-              className="rounded-sm bg-white p-1.5 shadow-sm transition duration-500 hover:rotate-3 hover:scale-105"
-              priority
-            />
-            <div>
-              <p className="text-xs font-medium uppercase tracking-[0.22em] text-white/75">
-                Colegio Or Hajayim
-              </p>
-              <p className="font-display text-3xl leading-none tracking-tight text-white sm:text-4xl">
-                Ágora
-              </p>
+    <section className="border-b border-border bg-card">
+      <div className="mx-auto grid max-w-7xl lg:min-h-[min(78vh,720px)] lg:grid-cols-2">
+        <div className="relative min-h-[280px] overflow-hidden sm:min-h-[360px] lg:min-h-full">
+          <Image
+            src="/brand/hero-campus.png"
+            alt="Fachada del Colegio Or Hajayim Jacobo y Yosi Cojab"
+            fill
+            priority
+            className="animate-reveal-image object-cover object-center"
+            sizes="(max-width: 1024px) 100vw, 50vw"
+          />
+          <div
+            className="absolute inset-0 bg-gradient-to-t from-oh-ink/55 via-transparent to-oh-ink/10 lg:bg-gradient-to-r lg:from-transparent lg:via-transparent lg:to-card/40"
+            aria-hidden
+          />
+          <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6">
+            <div className="inline-flex items-center gap-3 rounded-sm bg-white/95 px-3 py-2 shadow-sm backdrop-blur-sm">
+              <Image
+                src="/brand/or-hajayim-logo.png"
+                alt=""
+                width={40}
+                height={40}
+                className="rounded-sm"
+              />
+              <div>
+                <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-muted">
+                  Colegio Or Hajayim
+                </p>
+                <p className="font-display text-lg leading-none text-oh-ink">
+                  Ágora
+                </p>
+              </div>
             </div>
-          </div>
-          <h1 className="max-w-[13ch] font-display text-4xl leading-[1.05] text-white sm:text-5xl lg:text-6xl">
-            Cada idea merece un espacio.
-          </h1>
-          <p className="mt-5 max-w-lg text-base leading-relaxed text-white/85 sm:text-lg">
-            Un espacio para descubrir, comprender y compartir.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              href="/buscar-alumno"
-              className="inline-flex items-center justify-center bg-[#3968cc] px-5 py-3 text-base font-medium text-white shadow-[0_10px_30px_rgba(57,104,204,0.35)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#2f56ad]"
-            >
-              Buscar alumno
-            </Link>
-            <a
-              href="#categorias"
-              className="inline-flex items-center justify-center border border-white/45 px-5 py-3 text-base font-medium text-white transition duration-300 hover:-translate-y-0.5 hover:border-white hover:bg-white/10"
-            >
-              Ver categorías
-            </a>
           </div>
         </div>
-      </div>
-    </section>
-  );
-}
 
-export function StudentSearchBand() {
-  return (
-    <section className="border-b border-border bg-card">
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
-        <form
-          action="/buscar-alumno"
-          method="get"
-          className="grid gap-4 md:grid-cols-[1fr_auto] md:items-end"
-        >
-          <label className="block">
-            <span className="mb-2 block text-xs font-medium uppercase tracking-[0.16em] text-muted">
-              Encuentra las producciones de nuestros alumnos
-            </span>
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-              <input
-                name="alumno"
-                placeholder="Nombre del alumno (cuando esté autorizado)"
-                className="w-full rounded-sm border border-border bg-background py-3 pl-10 pr-3 text-base outline-none transition duration-300 focus:border-oh-blue focus:shadow-[0_0_0_4px_rgba(57,104,204,0.12)]"
-              />
-            </div>
-          </label>
-          <Button type="submit" size="lg">
-            Buscar
-          </Button>
-        </form>
+        <div className="border-t border-border lg:border-l lg:border-t-0">
+          <HomeSearchPanel />
+        </div>
       </div>
     </section>
   );
@@ -125,14 +56,10 @@ export function CategoryGrid() {
   return <CategoryExplore />;
 }
 
-export function TresMundosHomeBand() {
-  return <TresMundosQuietBand />;
-}
-
 export function CatalogBlock({ publications }: { publications: Publication[] }) {
   return (
     <section className="border-t border-border bg-oh-stone/40 dark:bg-white/[0.02]">
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
+      <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
         <div className="mb-8 flex items-end justify-between gap-4">
           <div>
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-oh-blue">
@@ -154,7 +81,7 @@ export function CatalogBlock({ publications }: { publications: Publication[] }) 
         {publications.length === 0 ? (
           <EmptyState
             title="Aún no hay publicaciones en el catálogo"
-            description="Cuando Or Hajayim cargue contenidos autorizados, aparecerán aquí. Mientras tanto puedes explorar categorías o buscar alumnos autorizados."
+            description="Cuando Or Hajayim cargue contenidos autorizados, aparecerán aquí. Usa el buscador de arriba o explora una categoría."
             actionHref="#categorias"
             actionLabel="Ver categorías"
           />
