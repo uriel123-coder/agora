@@ -42,7 +42,7 @@ export function Header({
               key={link.href}
               href={link.href}
               className={cn(
-                "rounded-sm px-3 py-2 text-sm transition duration-200 hover:text-oh-blue",
+                "rounded-sm px-3 py-2 text-sm transition duration-300 hover:-translate-y-0.5 hover:text-oh-blue",
                 pathname === link.href ||
                   (link.href !== "/" && pathname.startsWith(link.href))
                   ? "text-oh-blue"

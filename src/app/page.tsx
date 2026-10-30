@@ -3,6 +3,7 @@ import {
   CategoryGrid,
   HomeHero,
   StudentSearchBand,
+  TresMundosHomeBand,
 } from "@/components/home/HomeSections";
 import { getSession } from "@/lib/auth/session";
 import { getLatestPublications } from "@/lib/data/repository";
@@ -17,6 +18,7 @@ export default async function HomePage() {
     <>
       <HomeHero />
       <StudentSearchBand />
+      <TresMundosHomeBand />
       <CategoryGrid />
       <CatalogBlock publications={publications} />
     </>

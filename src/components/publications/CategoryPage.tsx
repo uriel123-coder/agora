@@ -50,9 +50,9 @@ export async function CategoryPageView({ slug }: { slug: CategorySlug }) {
           </div>
         ) : (
           <div className="mt-6 flex flex-wrap gap-3">
-            <Button href="/tres-mundos-una-historia">Abrir en Ágora</Button>
-            <Button href={TIMELINE_EXTERNAL_URL} variant="secondary">
-              Sitio original
+            <Button href="/tres-mundos-una-historia">Ver portal en Ágora</Button>
+            <Button href={TIMELINE_EXTERNAL_URL} variant="secondary" external>
+              Abrir cronología (nueva pestaña)
             </Button>
           </div>
         )}
@@ -62,7 +62,9 @@ export async function CategoryPageView({ slug }: { slug: CategorySlug }) {
           title="Sin publicaciones en esta categoría"
           description="Cuando haya contenidos reales autorizados, se listarán aquí."
           actionHref={isTimeline ? TIMELINE_EXTERNAL_URL : "/buscar-alumno"}
-          actionLabel={isTimeline ? "Ver cronología original" : "Buscar alumno"}
+          actionLabel={
+            isTimeline ? "Abrir cronología (nueva pestaña)" : "Buscar alumno"
+          }
         />
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
