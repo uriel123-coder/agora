@@ -80,7 +80,7 @@ export function CommandSearch({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-deep/50 p-4 pt-[12vh] backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-start justify-center bg-oh-ink-deep/55 p-4 pt-[12vh] backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-label="Buscador global"
@@ -107,7 +107,7 @@ export function CommandSearch({
             type="button"
             aria-label="Cerrar"
             onClick={() => onOpenChange(false)}
-            className="rounded-md p-2 hover:bg-beige/60 dark:hover:bg-white/5"
+            className="rounded-md p-2 hover:bg-oh-stone/60 dark:hover:bg-white/5"
           >
             <X className="h-4 w-4" />
           </button>
@@ -122,7 +122,7 @@ export function CommandSearch({
                 <button
                   key={item}
                   type="button"
-                  className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-beige/50 dark:hover:bg-white/5"
+                  className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-oh-stone/50 dark:hover:bg-white/5"
                   onClick={() => goSearch(item)}
                 >
                   {item}
@@ -145,9 +145,9 @@ export function CommandSearch({
                     if (query.trim()) persistHistory(query.trim());
                     onOpenChange(false);
                   }}
-                  className="flex gap-3 rounded-xl p-3 hover:bg-beige/50 dark:hover:bg-white/5"
+                  className="flex gap-3 rounded-xl p-3 hover:bg-oh-stone/50 dark:hover:bg-white/5"
                 >
-                  <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded-md bg-beige">
+                  <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded-md bg-oh-stone">
                     {pub.coverImage ? (
                       <Image
                         src={pub.coverImage}
@@ -173,7 +173,7 @@ export function CommandSearch({
           <span>Enter para buscar · Esc para cerrar</span>
           <button
             type="button"
-            className="text-gold hover:underline"
+            className="text-oh-blue hover:underline"
             onClick={() => goSearch()}
           >
             Buscador avanzado

@@ -40,7 +40,7 @@ export function VoteButtons({
         aria-label="Voto positivo"
         disabled={disabled || busy}
         onClick={() => vote(1)}
-        className="rounded p-1 hover:bg-beige/60 disabled:opacity-40 dark:hover:bg-white/5"
+        className="rounded p-1 hover:bg-oh-stone/60 disabled:opacity-40 dark:hover:bg-white/5"
       >
         <ChevronUp className="h-5 w-5" />
       </button>
@@ -50,7 +50,7 @@ export function VoteButtons({
         aria-label="Voto negativo"
         disabled={disabled || busy}
         onClick={() => vote(-1)}
-        className="rounded p-1 hover:bg-beige/60 disabled:opacity-40 dark:hover:bg-white/5"
+        className="rounded p-1 hover:bg-oh-stone/60 disabled:opacity-40 dark:hover:bg-white/5"
       >
         <ChevronDown className="h-5 w-5" />
       </button>

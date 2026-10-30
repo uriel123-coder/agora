@@ -56,7 +56,7 @@ export default async function BuscarPage({ searchParams }: Props) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
       <Breadcrumbs items={[{ label: "Buscar" }]} />
-      <h1 className="font-serif text-4xl text-petrol dark:text-ivory">
+      <h1 className="font-display text-4xl text-oh-ink dark:text-foreground">
         Buscador global
       </h1>
       <p className="mt-2 max-w-2xl text-muted">
@@ -180,7 +180,7 @@ export default async function BuscarPage({ searchParams }: Props) {
               key={publication.id}
               className="flex gap-4 rounded-xl border border-border bg-card p-4"
             >
-              <div className="relative h-24 w-32 shrink-0 overflow-hidden rounded-lg bg-beige">
+              <div className="relative h-24 w-32 shrink-0 overflow-hidden rounded-lg bg-oh-stone">
                 {publication.coverImage ? (
                   <Image
                     src={publication.coverImage}
@@ -203,7 +203,7 @@ export default async function BuscarPage({ searchParams }: Props) {
                 </div>
                 <Link
                   href={`/publicacion/${publication.slug}`}
-                  className="font-serif text-xl text-petrol hover:text-gold dark:text-ivory"
+                  className="font-display text-xl text-oh-ink hover:text-oh-blue dark:text-foreground"
                   dangerouslySetInnerHTML={{
                     __html: highlightMatch(publication.title, q),
                   }}
@@ -238,7 +238,7 @@ export default async function BuscarPage({ searchParams }: Props) {
                 href={`/buscar?${params.toString()}`}
                 className={`rounded-md px-3 py-1.5 text-sm ${
                   p === page
-                    ? "bg-petrol text-ivory dark:bg-gold dark:text-deep"
+                    ? "bg-oh-ink text-white dark:bg-oh-blue dark:text-oh-ink-deep"
                     : "border border-border"
                 }`}
               >

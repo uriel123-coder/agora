@@ -64,7 +64,7 @@ export default async function ForumPostPage({ params }: Props) {
               {community ? <Badge tone="muted">{community.name}</Badge> : null}
               {post.isDemo ? <Badge tone="demo">Demo</Badge> : null}
             </div>
-            <h1 className="font-serif text-3xl text-petrol dark:text-ivory">
+            <h1 className="font-display text-3xl text-oh-ink dark:text-foreground">
               {post.title}
             </h1>
             <p className="mt-2 text-sm text-muted">
@@ -77,7 +77,7 @@ export default async function ForumPostPage({ params }: Props) {
             {post.linkUrl ? (
               <p className="mt-4 text-sm">
                 Enlace:{" "}
-                <Link href={post.linkUrl} className="text-gold hover:underline">
+                <Link href={post.linkUrl} className="text-oh-blue hover:underline">
                   {post.linkUrl}
                 </Link>
               </p>

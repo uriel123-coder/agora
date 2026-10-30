@@ -67,7 +67,7 @@ export default async function PublicationPage({ params }: Props) {
               <Badge tone="demo">Contenido de demostración</Badge>
             ) : null}
           </div>
-          <h1 className="font-serif text-4xl leading-tight text-petrol dark:text-ivory sm:text-5xl">
+          <h1 className="font-display text-4xl leading-tight text-oh-ink dark:text-foreground sm:text-5xl">
             {publication.title}
           </h1>
           {publication.subtitle ? (
@@ -115,7 +115,7 @@ export default async function PublicationPage({ params }: Props) {
 
           {publication.media.length > 0 ? (
             <section className="mt-10">
-              <h2 className="font-serif text-2xl text-petrol dark:text-ivory">
+              <h2 className="font-display text-2xl text-oh-ink dark:text-foreground">
                 Recursos
               </h2>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -137,7 +137,7 @@ export default async function PublicationPage({ params }: Props) {
                     <a
                       key={asset.id}
                       href={asset.url}
-                      className="rounded-xl border border-border p-4 text-sm hover:border-gold"
+                      className="rounded-xl border border-border p-4 text-sm hover:border-oh-blue"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -151,7 +151,7 @@ export default async function PublicationPage({ params }: Props) {
 
           {publication.bibliography && publication.bibliography.length > 0 ? (
             <section className="mt-10">
-              <h2 className="font-serif text-2xl text-petrol dark:text-ivory">
+              <h2 className="font-display text-2xl text-oh-ink dark:text-foreground">
                 Bibliografía
               </h2>
               <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-muted">
@@ -169,7 +169,7 @@ export default async function PublicationPage({ params }: Props) {
 
         <aside className="space-y-6">
           <div className="rounded-2xl border border-border bg-card p-5">
-            <h2 className="font-serif text-lg">Compartir y guardar</h2>
+            <h2 className="font-display text-lg">Compartir y guardar</h2>
             <div className="mt-3 flex flex-col gap-2">
               <Button
                 href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/publicacion/${publication.slug}`)}`}
@@ -185,7 +185,7 @@ export default async function PublicationPage({ params }: Props) {
           </div>
 
           <div className="rounded-2xl border border-border bg-card p-5">
-            <h2 className="font-serif text-lg">Etiquetas</h2>
+            <h2 className="font-display text-lg">Etiquetas</h2>
             <div className="mt-3 flex flex-wrap gap-2">
               {publication.tags.map((tag) => (
                 <Link key={tag} href={`/buscar?tag=${encodeURIComponent(tag)}`}>
@@ -197,7 +197,7 @@ export default async function PublicationPage({ params }: Props) {
 
           {publication.historicalLinks.length > 0 ? (
             <div className="rounded-2xl border border-border bg-card p-5">
-              <h2 className="font-serif text-lg">Vínculos históricos</h2>
+              <h2 className="font-display text-lg">Vínculos históricos</h2>
               <ul className="mt-3 space-y-3 text-sm">
                 {publication.historicalLinks.map((link, i) => (
                   <li key={i}>
@@ -210,7 +210,7 @@ export default async function PublicationPage({ params }: Props) {
                     {link.deepUrl ? (
                       <Link
                         href={link.deepUrl}
-                        className="text-gold hover:underline"
+                        className="text-oh-blue hover:underline"
                         target="_blank"
                         rel="noopener noreferrer"
                       >
@@ -219,7 +219,7 @@ export default async function PublicationPage({ params }: Props) {
                     ) : (
                       <Link
                         href="/tres-mundos-una-historia"
-                        className="text-gold hover:underline"
+                        className="text-oh-blue hover:underline"
                       >
                         Ver Tres mundos, una historia
                       </Link>
@@ -235,11 +235,11 @@ export default async function PublicationPage({ params }: Props) {
           ) : null}
 
           <div className="rounded-2xl border border-border bg-card p-5">
-            <h2 className="font-serif text-lg">También en</h2>
+            <h2 className="font-display text-lg">También en</h2>
             <ul className="mt-3 space-y-2 text-sm">
               {publication.categorySlugs.map((slug) => (
                 <li key={slug}>
-                  <Link href={`/${slug}`} className="text-gold hover:underline">
+                  <Link href={`/${slug}`} className="text-oh-blue hover:underline">
                     {getCategory(slug).name}
                   </Link>
                 </li>
@@ -251,7 +251,7 @@ export default async function PublicationPage({ params }: Props) {
 
       {related.length > 0 ? (
         <section className="mt-16">
-          <h2 className="mb-6 font-serif text-3xl text-petrol dark:text-ivory">
+          <h2 className="mb-6 font-display text-3xl text-oh-ink dark:text-foreground">
             También te puede interesar
           </h2>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

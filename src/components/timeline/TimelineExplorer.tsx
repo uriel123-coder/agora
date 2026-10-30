@@ -58,7 +58,7 @@ export function TimelineExplorer({
     <div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="font-serif text-2xl text-petrol dark:text-ivory">
+          <h2 className="font-display text-2xl text-oh-ink dark:text-foreground">
             Cronología desde Google Sheets
           </h2>
           <p className="mt-1 text-sm text-muted">
@@ -133,7 +133,7 @@ export function TimelineExplorer({
                 <Badge tone="muted">{LINE_LABEL[event.line]}</Badge>
                 {event.etapa ? <Badge>{event.etapa}</Badge> : null}
                 {typeof event.yearGregorian === "number" ? (
-                  <span className="text-sm font-medium text-gold">
+                  <span className="text-sm font-medium text-oh-blue">
                     {event.yearGregorian}
                   </span>
                 ) : null}

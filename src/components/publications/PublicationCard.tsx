@@ -13,41 +13,34 @@ export function PublicationCard({ publication }: { publication: Publication }) {
     .join(", ");
 
   return (
-    <article className="surface-card group flex h-full flex-col overflow-hidden rounded-2xl transition duration-300 hover:-translate-y-1 hover:border-gold/45">
+    <article className="group flex h-full flex-col overflow-hidden border border-border bg-card transition duration-300 hover:border-oh-blue/40">
       <Link
         href={`/publicacion/${publication.slug}`}
-        className="relative block aspect-[16/10] overflow-hidden bg-beige"
+        className="relative block aspect-[16/10] overflow-hidden bg-oh-stone"
       >
         {publication.coverImage ? (
           <Image
             src={publication.coverImage}
             alt={publication.coverAlt || publication.title}
             fill
-            className="object-cover transition duration-700 group-hover:scale-[1.04]"
+            className="object-cover transition duration-500 group-hover:scale-[1.02]"
             sizes="(max-width:768px) 100vw, 33vw"
           />
         ) : (
-          <div className="flex h-full items-center justify-center bg-[linear-gradient(135deg,var(--beige),var(--ivory))] text-sm text-muted">
+          <div className="flex h-full items-center justify-center text-sm text-muted">
             Sin portada
           </div>
         )}
-        <span
-          className="absolute left-0 top-0 h-full w-1"
-          style={{ background: category.accent }}
-          aria-hidden
-        />
       </Link>
-      <div className="flex flex-1 flex-col gap-3 p-5">
+      <div className="flex flex-1 flex-col gap-3 p-4">
         <div className="flex flex-wrap gap-2">
           <Badge>{category.name}</Badge>
-          {publication.isDemo ? (
-            <Badge tone="demo">Contenido de demostración</Badge>
-          ) : null}
+          {publication.isDemo ? <Badge tone="demo">Demostración</Badge> : null}
         </div>
-        <h3 className="font-serif text-[1.35rem] leading-snug text-petrol dark:text-ivory">
+        <h3 className="font-display text-xl leading-snug text-oh-ink dark:text-foreground">
           <Link
             href={`/publicacion/${publication.slug}`}
-            className="transition-colors hover:text-gold"
+            className="hover:text-oh-blue"
           >
             {publication.title}
           </Link>
@@ -55,7 +48,7 @@ export function PublicationCard({ publication }: { publication: Publication }) {
         <p className="text-sm leading-relaxed text-muted">
           {excerpt(publication.summary, 140)}
         </p>
-        <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-border/70 pt-3 text-xs text-muted">
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-2 text-xs text-muted">
           <span>{authors || "Autoría institucional"}</span>
           <span>
             {new Date(publication.publishedAt).toLocaleDateString("es-MX", {

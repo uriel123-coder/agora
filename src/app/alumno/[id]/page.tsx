@@ -37,7 +37,7 @@ export default async function AlumnoPage({ params }: Props) {
             Contenido de demostración
           </Badge>
         ) : null}
-        <h1 className="mt-4 font-serif text-4xl text-petrol dark:text-ivory">
+        <h1 className="mt-4 font-display text-4xl text-oh-ink dark:text-foreground">
           {student.displayName}
         </h1>
         <p className="mt-2 text-muted">

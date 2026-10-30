@@ -11,7 +11,7 @@ export function Breadcrumbs({
     <nav aria-label="Miga de pan" className="mb-6 text-sm text-muted">
       <ol className="flex flex-wrap items-center gap-2">
         <li>
-          <Link href="/" className="hover:text-gold">
+          <Link href="/" className="hover:text-oh-blue">
             Inicio
           </Link>
         </li>
@@ -19,7 +19,7 @@ export function Breadcrumbs({
           <li key={`${item.label}-${index}`} className="flex items-center gap-2">
             <span aria-hidden="true">/</span>
             {item.href ? (
-              <Link href={item.href} className="hover:text-gold">
+              <Link href={item.href} className="hover:text-oh-blue">
                 {item.label}
               </Link>
             ) : (

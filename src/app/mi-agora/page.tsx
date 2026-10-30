@@ -37,7 +37,7 @@ export default async function MiAgoraPage() {
       <Breadcrumbs items={[{ label: "Mi Ágora" }]} />
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="font-serif text-4xl text-petrol dark:text-ivory">
+          <h1 className="font-display text-4xl text-oh-ink dark:text-foreground">
             Mi Ágora
           </h1>
           <p className="mt-2 text-muted">
@@ -56,7 +56,7 @@ export default async function MiAgoraPage() {
 
       <div className="mt-10 grid gap-6 lg:grid-cols-2">
         <section className="rounded-2xl border border-border bg-card p-6">
-          <h2 className="font-serif text-2xl">Debates en los que participas</h2>
+          <h2 className="font-display text-2xl">Debates en los que participas</h2>
           <ul className="mt-4 space-y-3 text-sm">
             {myPosts.length === 0 ? (
               <li className="text-muted">Aún no has publicado en el foro.</li>
@@ -65,7 +65,7 @@ export default async function MiAgoraPage() {
                 <li key={p.id}>
                   <Link
                     href={`/ideas-en-dialogo/${p.slug}`}
-                    className="text-gold hover:underline"
+                    className="text-oh-blue hover:underline"
                   >
                     {p.title}
                   </Link>
@@ -75,7 +75,7 @@ export default async function MiAgoraPage() {
           </ul>
         </section>
         <section className="rounded-2xl border border-border bg-card p-6">
-          <h2 className="font-serif text-2xl">Publicaciones guardadas</h2>
+          <h2 className="font-display text-2xl">Publicaciones guardadas</h2>
           <ul className="mt-4 space-y-3 text-sm">
             {saved.length === 0 ? (
               <li className="text-muted">No hay debates guardados.</li>
@@ -84,7 +84,7 @@ export default async function MiAgoraPage() {
                 <li key={p.id}>
                   <Link
                     href={`/ideas-en-dialogo/${p.slug}`}
-                    className="text-gold hover:underline"
+                    className="text-oh-blue hover:underline"
                   >
                     {p.title}
                   </Link>
@@ -94,7 +94,7 @@ export default async function MiAgoraPage() {
           </ul>
         </section>
         <section className="rounded-2xl border border-border bg-card p-6">
-          <h2 className="font-serif text-2xl">Trabajos pendientes</h2>
+          <h2 className="font-display text-2xl">Trabajos pendientes</h2>
           <ul className="mt-4 space-y-3 text-sm">
             {myDrafts.length === 0 ? (
               <li className="text-muted">
@@ -111,7 +111,7 @@ export default async function MiAgoraPage() {
           </ul>
         </section>
         <section className="rounded-2xl border border-border bg-card p-6">
-          <h2 className="font-serif text-2xl">Preferencias</h2>
+          <h2 className="font-display text-2xl">Preferencias</h2>
           <p className="mt-3 text-sm text-muted">
             Usa el interruptor de tema en el encabezado para modo claro/oscuro.
             Las notificaciones respetan permisos y no incluyen mensajería

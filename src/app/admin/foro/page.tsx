@@ -24,7 +24,7 @@ export default async function AdminForoPage() {
           { label: "Foro" },
         ]}
       />
-      <h1 className="font-serif text-4xl text-petrol dark:text-ivory">
+      <h1 className="font-display text-4xl text-oh-ink dark:text-foreground">
         Moderación · Ideas en diálogo
       </h1>
       <p className="mt-2 text-muted">
@@ -33,7 +33,7 @@ export default async function AdminForoPage() {
       </p>
 
       <section className="mt-8">
-        <h2 className="font-serif text-2xl">Reportes abiertos</h2>
+        <h2 className="font-display text-2xl">Reportes abiertos</h2>
         {forum.reports.filter((r) => r.status === "open").length === 0 ? (
           <p className="mt-3 text-sm text-muted">No hay reportes abiertos.</p>
         ) : (
@@ -57,13 +57,13 @@ export default async function AdminForoPage() {
       </section>
 
       <section className="mt-10">
-        <h2 className="font-serif text-2xl">Debates recientes</h2>
+        <h2 className="font-display text-2xl">Debates recientes</h2>
         <ul className="mt-3 space-y-2 text-sm">
           {forum.posts.slice(0, 20).map((p) => (
             <li key={p.id} className="flex flex-wrap items-center gap-2">
               <Link
                 href={`/ideas-en-dialogo/${p.slug}`}
-                className="text-gold hover:underline"
+                className="text-oh-blue hover:underline"
               >
                 {p.title}
               </Link>

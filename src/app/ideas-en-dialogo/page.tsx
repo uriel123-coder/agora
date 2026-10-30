@@ -38,7 +38,7 @@ export default async function IdeasEnDialogoPage({ searchParams }: Props) {
       <Breadcrumbs items={[{ label: "Ideas en diálogo" }]} />
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="max-w-2xl">
-          <h1 className="font-serif text-4xl text-petrol dark:text-ivory">
+          <h1 className="font-display text-4xl text-oh-ink dark:text-foreground">
             Ideas en diálogo
           </h1>
           <p className="mt-3 text-muted">
@@ -62,7 +62,7 @@ export default async function IdeasEnDialogoPage({ searchParams }: Props) {
             <h2 className="text-sm font-medium">Espacios</h2>
             <ul className="mt-3 space-y-2 text-sm">
               <li>
-                <Link href="/ideas-en-dialogo" className="hover:text-gold">
+                <Link href="/ideas-en-dialogo" className="hover:text-oh-blue">
                   Todos
                 </Link>
               </li>
@@ -70,7 +70,7 @@ export default async function IdeasEnDialogoPage({ searchParams }: Props) {
                 <li key={c.id}>
                   <Link
                     href={`/ideas-en-dialogo?community=${c.id}`}
-                    className="hover:text-gold"
+                    className="hover:text-oh-blue"
                   >
                     {c.name}
                   </Link>
@@ -127,11 +127,11 @@ export default async function IdeasEnDialogoPage({ searchParams }: Props) {
               return (
                 <li
                   key={post.id}
-                  className="rounded-xl border border-border bg-card p-5 transition hover:border-gold/40"
+                  className="rounded-xl border border-border bg-card p-5 transition hover:border-oh-blue/40"
                 >
                   <div className="flex gap-4">
                     <div className="w-12 text-center text-sm">
-                      <p className="font-semibold text-petrol dark:text-gold">
+                      <p className="font-semibold text-oh-ink dark:text-oh-blue">
                         {post.score}
                       </p>
                       <p className="text-xs text-muted">pts</p>
@@ -147,7 +147,7 @@ export default async function IdeasEnDialogoPage({ searchParams }: Props) {
                       </div>
                       <Link
                         href={`/ideas-en-dialogo/${post.slug}`}
-                        className="font-serif text-xl text-petrol hover:text-gold dark:text-ivory"
+                        className="font-display text-xl text-oh-ink hover:text-oh-blue dark:text-foreground"
                       >
                         {post.title}
                       </Link>

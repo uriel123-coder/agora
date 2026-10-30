@@ -34,7 +34,7 @@ export default async function DiagnosticoPage() {
           { label: "Diagnóstico Sheets" },
         ]}
       />
-      <h1 className="font-serif text-4xl text-petrol dark:text-ivory">
+      <h1 className="font-display text-4xl text-oh-ink dark:text-foreground">
         Diagnóstico Google Sheets
       </h1>
       <p className="mt-2 text-muted">
@@ -68,7 +68,7 @@ export default async function DiagnosticoPage() {
       </ul>
 
       <section className="mt-8 rounded-2xl border border-border bg-card p-5">
-        <h2 className="font-serif text-xl">Mensajes</h2>
+        <h2 className="font-display text-xl">Mensajes</h2>
         <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-muted">
           {diagnostic.messages.map((m) => (
             <li key={m}>{m}</li>
@@ -78,7 +78,7 @@ export default async function DiagnosticoPage() {
 
       <section className="mt-6 grid gap-4 md:grid-cols-2">
         <div className="rounded-2xl border border-border bg-card p-5 text-sm">
-          <h2 className="font-serif text-xl">Métricas</h2>
+          <h2 className="font-display text-xl">Métricas</h2>
           <ul className="mt-3 space-y-1 text-muted">
             <li>Filas: {diagnostic.rowCount}</li>
             <li>Eventos de cronología: {diagnostic.timelineEventCount}</li>
@@ -89,7 +89,7 @@ export default async function DiagnosticoPage() {
           </ul>
         </div>
         <div className="rounded-2xl border border-border bg-card p-5 text-sm">
-          <h2 className="font-serif text-xl">Encabezados detectados</h2>
+          <h2 className="font-display text-xl">Encabezados detectados</h2>
           <p className="mt-3 break-words text-muted">
             {diagnostic.headers.filter(Boolean).join(" · ") || "Sin encabezados"}
           </p>

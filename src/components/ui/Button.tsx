@@ -4,12 +4,12 @@ import type { ButtonHTMLAttributes, ReactNode } from "react";
 
 const variants = {
   primary:
-    "bg-petrol text-ivory hover:bg-deep focus-visible:ring-gold dark:bg-gold dark:text-deep dark:hover:bg-[#c4ad7a]",
+    "bg-oh-blue text-white hover:bg-oh-blue-deep focus-visible:ring-oh-blue",
   secondary:
-    "bg-transparent text-petrol border border-petrol/25 hover:border-gold hover:text-deep dark:text-ivory dark:border-white/20",
+    "bg-transparent text-oh-ink border border-oh-ink/25 hover:border-oh-blue hover:text-oh-blue dark:text-foreground dark:border-white/25",
   ghost:
-    "bg-transparent text-petrol hover:bg-beige/70 dark:text-ivory dark:hover:bg-white/5",
-  gold: "bg-gold text-deep hover:brightness-105 focus-visible:ring-petrol",
+    "bg-transparent text-oh-ink hover:bg-oh-stone dark:text-foreground dark:hover:bg-white/5",
+  soft: "bg-oh-stone text-oh-ink hover:bg-oh-line dark:bg-white/10 dark:text-foreground",
 } as const;
 
 const sizes = {
@@ -34,7 +34,7 @@ export function Button({
   ...props
 }: Props) {
   const classes = cn(
-    "inline-flex items-center justify-center gap-2 rounded-md font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none",
+    "inline-flex items-center justify-center gap-2 rounded-sm font-medium transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none",
     variants[variant],
     sizes[size],
     className,

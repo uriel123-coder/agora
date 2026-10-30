@@ -66,7 +66,7 @@ export default async function BuscarAlumnoPage({ searchParams }: Props) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
       <Breadcrumbs items={[{ label: "Buscar alumno" }]} />
-      <h1 className="font-serif text-4xl text-petrol dark:text-ivory">
+      <h1 className="font-display text-4xl text-oh-ink dark:text-foreground">
         Encuentra las producciones de nuestros alumnos.
       </h1>
       <p className="mt-3 max-w-2xl text-muted">
@@ -150,7 +150,7 @@ export default async function BuscarAlumnoPage({ searchParams }: Props) {
       </form>
 
       <section className="mt-10">
-        <h2 className="font-serif text-2xl text-petrol dark:text-ivory">
+        <h2 className="font-display text-2xl text-oh-ink dark:text-foreground">
           Alumnos autorizados
         </h2>
         {matchedStudents.length === 0 ? (
@@ -164,7 +164,7 @@ export default async function BuscarAlumnoPage({ searchParams }: Props) {
               <Link
                 key={student.id}
                 href={`/alumno/${student.id}`}
-                className="rounded-xl border border-border bg-card p-4 hover:border-gold/40"
+                className="rounded-xl border border-border bg-card p-4 hover:border-oh-blue/40"
               >
                 <p className="font-medium">{student.displayName}</p>
                 <p className="text-sm text-muted">
@@ -177,7 +177,7 @@ export default async function BuscarAlumnoPage({ searchParams }: Props) {
       </section>
 
       <section className="mt-10">
-        <h2 className="font-serif text-2xl text-petrol dark:text-ivory">
+        <h2 className="font-display text-2xl text-oh-ink dark:text-foreground">
           Resultados
         </h2>
         {filtered.length === 0 ? (
@@ -191,7 +191,7 @@ export default async function BuscarAlumnoPage({ searchParams }: Props) {
                 key={pub.id}
                 className="flex gap-4 rounded-xl border border-border bg-card p-4"
               >
-                <div className="relative h-24 w-32 shrink-0 overflow-hidden rounded-lg bg-beige">
+                <div className="relative h-24 w-32 shrink-0 overflow-hidden rounded-lg bg-oh-stone">
                   {pub.coverImage ? (
                     <Image
                       src={pub.coverImage}
@@ -205,7 +205,7 @@ export default async function BuscarAlumnoPage({ searchParams }: Props) {
                 <div>
                   <Link
                     href={`/publicacion/${pub.slug}`}
-                    className="font-serif text-xl text-petrol hover:text-gold dark:text-ivory"
+                    className="font-display text-xl text-oh-ink hover:text-oh-blue dark:text-foreground"
                   >
                     {pub.title}
                   </Link>

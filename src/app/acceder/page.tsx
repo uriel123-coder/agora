@@ -34,7 +34,7 @@ export default function AccederPage() {
   return (
     <div className="mx-auto max-w-lg px-4 py-10 sm:px-6">
       <Breadcrumbs items={[{ label: "Acceder" }]} />
-      <h1 className="font-serif text-4xl text-petrol dark:text-ivory">Acceder</h1>
+      <h1 className="font-display text-4xl text-oh-ink dark:text-foreground">Acceder</h1>
       <p className="mt-3 text-muted">
         Autenticación real con roles. Cuentas de demostración disponibles para
         pruebas locales.

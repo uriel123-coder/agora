@@ -75,7 +75,7 @@ export function CommentThread({
               {user && !locked ? (
                 <button
                   type="button"
-                  className="hover:text-gold"
+                  className="hover:text-oh-blue"
                   onClick={() => setReplyTo(comment.id)}
                 >
                   Responder
@@ -108,7 +108,7 @@ export function CommentThread({
 
   return (
     <section className="mt-10">
-      <h2 className="font-serif text-2xl text-petrol dark:text-ivory">
+      <h2 className="font-display text-2xl text-oh-ink dark:text-foreground">
         Comentarios ({comments.length})
       </h2>
       {user && !locked ? (
@@ -132,7 +132,7 @@ export function CommentThread({
         <p className="mt-4 text-sm text-muted">Este debate está cerrado.</p>
       ) : (
         <p className="mt-4 text-sm text-muted">
-          <a href="/acceder" className="text-gold hover:underline">
+          <a href="/acceder" className="text-oh-blue hover:underline">
             Accede
           </a>{" "}
           para comentar.

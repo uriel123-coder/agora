@@ -1,61 +1,66 @@
+import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils/cn";
 
 export function AgoraLogo({
   className,
   showWordmark = true,
+  size = "md",
 }: {
   className?: string;
   showWordmark?: boolean;
+  size?: "sm" | "md" | "lg";
 }) {
+  const logoSize = size === "lg" ? 56 : size === "sm" ? 36 : 44;
+
   return (
     <Link
       href="/"
       className={cn(
-        "group inline-flex items-center gap-2.5 text-petrol dark:text-ivory",
+        "group inline-flex items-center gap-3 text-oh-ink dark:text-foreground",
         className,
       )}
-      aria-label="Ágora — inicio"
+      aria-label="Or Hajayim · Ágora — inicio"
     >
-      <svg
-        width="36"
-        height="36"
-        viewBox="0 0 64 64"
-        fill="none"
-        aria-hidden="true"
-        className="shrink-0 transition-transform duration-300 group-hover:scale-[1.03]"
-      >
-        <rect width="64" height="64" rx="14" fill="currentColor" className="text-petrol dark:text-gold" />
-        <path
-          d="M14 42V22.5c0-1.2.7-2.3 1.8-2.8L30 13.2c1.3-.6 2.7-.6 4 0l14.2 6.5c1.1.5 1.8 1.6 1.8 2.8V42"
-          stroke="#F8F5EE"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M32 20v24"
-          stroke="#B49A65"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-        <path
-          d="M22 34c2.5 3 7.5 3 10 0M32 34c2.5 3 7.5 3 10 0"
-          stroke="#F8F5EE"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-        <circle cx="22" cy="34" r="2.2" fill="#B49A65" />
-        <circle cx="42" cy="34" r="2.2" fill="#B49A65" />
-      </svg>
+      <Image
+        src="/brand/or-hajayim-logo.png"
+        alt="Colegio Or Hajayim"
+        width={logoSize}
+        height={logoSize}
+        className="shrink-0 object-contain transition duration-300 group-hover:opacity-90"
+        priority
+      />
       {showWordmark ? (
-        <span className="flex flex-col leading-none">
-          <span className="font-serif text-xl tracking-tight">Ágora</span>
-          <span className="mt-0.5 text-[10px] uppercase tracking-[0.18em] text-muted">
+        <span className="flex min-w-0 flex-col leading-none">
+          <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-oh-muted dark:text-muted">
+            Or Hajayim
+          </span>
+          <span className="mt-1 font-display text-xl tracking-tight text-oh-ink dark:text-foreground sm:text-[1.35rem]">
+            Ágora
+          </span>
+          <span className="mt-1 hidden text-[10px] text-oh-muted sm:block dark:text-muted">
             Descubrir · Comprender · Compartir
           </span>
         </span>
       ) : null}
     </Link>
+  );
+}
+
+export function SchoolMark({
+  className,
+  size = 120,
+}: {
+  className?: string;
+  size?: number;
+}) {
+  return (
+    <Image
+      src="/brand/or-hajayim-logo.png"
+      alt="Colegio Or Hajayim"
+      width={size}
+      height={size}
+      className={cn("object-contain", className)}
+    />
   );
 }

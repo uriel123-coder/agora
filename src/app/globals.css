@@ -1,49 +1,56 @@
 @import "tailwindcss";
 
+/* Or Hajayim — derivados del sitio oficial oh.edu.mx y del logo (#3060C0 / #3968CC, #243746) */
 :root {
-  --petrol: #163a45;
-  --deep: #102c36;
-  --ivory: #f8f5ee;
-  --beige: #eae3d5;
-  --gold: #b49a65;
-  --white: #ffffff;
-  --ink: #30363a;
-  --muted: #5c676c;
-  --border: color-mix(in oklab, var(--petrol) 14%, transparent);
-  --card: var(--white);
-  --background: var(--ivory);
-  --foreground: var(--ink);
-  --ring: var(--gold);
-  --header-bg: color-mix(in oklab, var(--ivory) 88%, white);
-  --shadow-soft: 0 18px 40px -28px color-mix(in oklab, var(--deep) 45%, transparent);
+  --oh-ink: #243746;
+  --oh-ink-deep: #1a2a36;
+  --oh-blue: #3968cc;
+  --oh-blue-deep: #2f56ad;
+  --oh-paper: #f7f8fa;
+  --oh-stone: #e8ebf0;
+  --oh-line: #d5dae3;
+  --oh-text: #1c2430;
+  --oh-muted: #5a6573;
+  --oh-white: #ffffff;
+
+  --background: var(--oh-paper);
+  --foreground: var(--oh-text);
+  --card: var(--oh-white);
+  --border: var(--oh-line);
+  --muted: var(--oh-muted);
+  --header-bg: color-mix(in oklab, var(--oh-white) 92%, transparent);
 }
 
 .dark {
-  --background: var(--deep);
-  --foreground: #e7ecec;
-  --card: #14333d;
-  --muted: #a7b2b6;
+  --background: #121a22;
+  --foreground: #e8eef4;
+  --card: #1a2530;
   --border: color-mix(in oklab, white 14%, transparent);
-  --header-bg: color-mix(in oklab, var(--deep) 90%, black);
-  --ivory: #14333d;
-  --beige: #1a3d48;
-  --shadow-soft: 0 18px 40px -24px rgb(0 0 0 / 0.55);
+  --muted: #9aa6b2;
+  --header-bg: color-mix(in oklab, #121a22 92%, transparent);
+  --oh-paper: #121a22;
+  --oh-stone: #1e2a35;
+  --oh-ink: #d7e0ea;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-petrol: var(--petrol);
-  --color-deep: var(--deep);
-  --color-ivory: var(--ivory);
-  --color-beige: var(--beige);
-  --color-gold: var(--gold);
-  --color-ink: var(--ink);
-  --color-muted: var(--muted);
+  --color-oh-ink: var(--oh-ink);
+  --color-oh-ink-deep: var(--oh-ink-deep);
+  --color-oh-blue: var(--oh-blue);
+  --color-oh-blue-deep: var(--oh-blue-deep);
+  --color-oh-paper: var(--oh-paper);
+  --color-oh-stone: var(--oh-stone);
+  --color-oh-line: var(--oh-line);
+  --color-oh-text: var(--oh-text);
+  --color-oh-muted: var(--oh-muted);
+  --color-oh-white: var(--oh-white);
   --color-card: var(--card);
   --color-border: var(--border);
-  --font-sans: var(--font-inter);
-  --font-serif: var(--font-playfair);
+  --color-muted: var(--muted);
+  --font-sans: var(--font-ui);
+  --font-display: var(--font-display);
 }
 
 html {
@@ -51,34 +58,23 @@ html {
 }
 
 body {
-  background:
-    radial-gradient(
-      ellipse 80% 50% at 100% -10%,
-      color-mix(in oklab, var(--gold) 10%, transparent),
-      transparent 55%
-    ),
-    radial-gradient(
-      ellipse 60% 40% at -10% 30%,
-      color-mix(in oklab, var(--petrol) 8%, transparent),
-      transparent 50%
-    ),
-    var(--background);
+  background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), system-ui, sans-serif;
-  letter-spacing: 0.005em;
+  font-family: var(--font-ui), "Segoe UI", sans-serif;
 }
 
 h1,
 h2,
 h3,
-.font-serif {
-  font-family: var(--font-serif), Georgia, "Times New Roman", serif;
+.font-display {
+  font-family: var(--font-display), Georgia, serif;
   letter-spacing: -0.02em;
+  font-weight: 560;
 }
 
 ::selection {
-  background: color-mix(in oklab, var(--gold) 42%, white);
-  color: var(--deep);
+  background: color-mix(in oklab, var(--oh-blue) 28%, white);
+  color: var(--oh-ink-deep);
 }
 
 a:focus-visible,
@@ -86,82 +82,61 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid var(--gold);
-  outline-offset: 2px;
+  outline: 2px solid var(--oh-blue);
+  outline-offset: 3px;
 }
 
 .prose-agora {
-  max-width: 68ch;
+  max-width: 65ch;
   line-height: 1.85;
   font-size: 1.0625rem;
 }
 
 .prose-agora h2,
 .prose-agora h3 {
-  font-family: var(--font-serif), Georgia, serif;
-  color: var(--petrol);
-  margin-top: 1.8em;
-  margin-bottom: 0.6em;
+  font-family: var(--font-display), Georgia, serif;
+  color: var(--oh-ink);
+  margin-top: 1.7em;
+  margin-bottom: 0.55em;
 }
 
 .dark .prose-agora h2,
 .dark .prose-agora h3 {
-  color: var(--gold);
+  color: var(--oh-blue);
 }
 
 .prose-agora p {
-  margin-bottom: 1.15em;
+  margin-bottom: 1.05em;
 }
 
 .prose-agora blockquote {
-  border-left: 3px solid var(--gold);
+  border-left: 3px solid var(--oh-blue);
   padding-left: 1rem;
   color: var(--muted);
   font-style: italic;
-  margin: 1.5em 0;
+  margin: 1.4em 0;
 }
 
 .prose-agora mark {
-  background: color-mix(in oklab, var(--gold) 35%, transparent);
-  padding: 0 0.15em;
+  background: color-mix(in oklab, var(--oh-blue) 18%, transparent);
+  padding: 0 0.12em;
 }
 
 .prose-agora table {
   width: 100%;
   border-collapse: collapse;
-  margin: 1.5em 0;
+  margin: 1.4em 0;
   font-size: 0.95rem;
 }
 
 .prose-agora th,
 .prose-agora td {
   border: 1px solid var(--border);
-  padding: 0.55rem 0.75rem;
+  padding: 0.5rem 0.7rem;
   text-align: left;
 }
 
-.skeleton {
-  background: linear-gradient(
-    90deg,
-    color-mix(in oklab, var(--beige) 80%, transparent) 25%,
-    color-mix(in oklab, var(--beige) 40%, white) 50%,
-    color-mix(in oklab, var(--beige) 80%, transparent) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.4s ease-in-out infinite;
-  border-radius: 0.5rem;
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
-}
-
-@keyframes fade-up {
+@keyframes rise {
   from {
     opacity: 0;
     transform: translateY(14px);
@@ -172,61 +147,33 @@ textarea:focus-visible {
   }
 }
 
-.animate-fade-up {
-  animation: fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+@keyframes reveal-image {
+  from {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
-.animate-fade-up-delay {
-  animation: fade-up 0.75s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both;
+.animate-rise {
+  animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.hero-grid {
-  background-image:
-    linear-gradient(
-      115deg,
-      color-mix(in oklab, var(--ivory) 92%, white) 0%,
-      color-mix(in oklab, var(--beige) 55%, white) 48%,
-      color-mix(in oklab, var(--petrol) 10%, var(--beige)) 100%
-    ),
-    radial-gradient(
-      ellipse at 18% 20%,
-      color-mix(in oklab, var(--gold) 22%, transparent),
-      transparent 42%
-    ),
-    radial-gradient(
-      ellipse at 88% 8%,
-      color-mix(in oklab, var(--petrol) 16%, transparent),
-      transparent 38%
-    );
+.animate-rise-delay {
+  animation: rise 0.85s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both;
 }
 
-.dark .hero-grid {
-  background-image:
-    linear-gradient(160deg, var(--deep), #0c232b 70%, #163a45),
-    radial-gradient(
-      ellipse at 20% 20%,
-      color-mix(in oklab, var(--gold) 24%, transparent),
-      transparent 45%
-    ),
-    radial-gradient(
-      ellipse at 80% 0%,
-      color-mix(in oklab, white 7%, transparent),
-      transparent 40%
-    );
+.animate-reveal-image {
+  animation: reveal-image 1.1s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.surface-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-soft);
-}
-
-.editorial-rule {
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    color-mix(in oklab, var(--gold) 70%, transparent),
-    transparent
-  );
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise,
+  .animate-rise-delay,
+  .animate-reveal-image {
+    animation: none;
+  }
 }

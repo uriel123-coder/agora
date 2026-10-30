@@ -104,7 +104,7 @@ export const CATEGORIES: Category[] = [
     name: "Tres mundos, una historia",
     tagline: "Tres historias. Un mismo tiempo. Infinitas conexiones",
     description:
-      "Cronología comparativa de historia hebrea y judía, historia mundial e historia de México.",
+      "Cronología comparativa oficial de historia hebrea y judía, historia mundial e historia de México. En Ágora es un puente al proyecto existente; no la rehacemos aquí.",
     accent: "#B49A65",
     contentTypes: [
       "Historia hebrea y judía",

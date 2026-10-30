@@ -52,7 +52,7 @@ export default async function AdminPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
       <Breadcrumbs items={[{ label: "Administración" }]} />
-      <h1 className="font-serif text-4xl text-petrol dark:text-ivory">
+      <h1 className="font-display text-4xl text-oh-ink dark:text-foreground">
         Panel de administración
       </h1>
       <p className="mt-2 text-muted">
@@ -64,15 +64,15 @@ export default async function AdminPage() {
           <Link
             key={card.href}
             href={card.href}
-            className="rounded-2xl border border-border bg-card p-5 transition hover:border-gold/40"
+            className="rounded-2xl border border-border bg-card p-5 transition hover:border-oh-blue/40"
           >
-            <h2 className="font-serif text-xl">{card.title}</h2>
+            <h2 className="font-display text-xl">{card.title}</h2>
             <p className="mt-2 text-sm text-muted">{card.desc}</p>
           </Link>
         ))}
       </div>
       <section className="mt-10 rounded-2xl border border-border bg-card p-6">
-        <h2 className="font-serif text-2xl">Flujo editorial</h2>
+        <h2 className="font-display text-2xl">Flujo editorial</h2>
         <p className="mt-2 text-sm text-muted">
           Borrador → En revisión → Aprobado → Publicado. Los contenidos demo
           pueden retirarse desde el listado de publicaciones.
@@ -82,7 +82,7 @@ export default async function AdminPage() {
             (status) => (
               <span
                 key={status}
-                className="rounded-full bg-beige px-3 py-1 dark:bg-white/10"
+                className="rounded-full bg-oh-stone px-3 py-1 dark:bg-white/10"
               >
                 {status}:{" "}
                 {publications.filter((p) => p.status === status).length}

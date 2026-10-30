@@ -22,7 +22,7 @@ export default async function AdminUsuariosPage() {
           { label: "Usuarios" },
         ]}
       />
-      <h1 className="font-serif text-4xl text-petrol dark:text-ivory">Usuarios</h1>
+      <h1 className="font-display text-4xl text-oh-ink dark:text-foreground">Usuarios</h1>
       <p className="mt-2 text-muted">
         Cuentas de demostración locales. En producción conviene migrar a un
         proveedor gestionado (p. ej. Supabase/Clerk) sin exponer hashes.

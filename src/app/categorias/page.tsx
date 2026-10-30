@@ -9,7 +9,7 @@ export default function CategoriasPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
       <Breadcrumbs items={[{ label: "Categorías" }]} />
-      <h1 className="font-serif text-4xl text-petrol dark:text-ivory">
+      <h1 className="font-display text-4xl text-oh-ink dark:text-foreground">
         Categorías
       </h1>
       <p className="mt-3 max-w-2xl text-muted">
@@ -21,12 +21,12 @@ export default function CategoriasPage() {
           <Link
             key={cat.slug}
             href={`/${cat.slug}`}
-            className="rounded-2xl border border-border bg-card p-6 transition hover:border-gold/40"
+            className="rounded-2xl border border-border bg-card p-6 transition hover:border-oh-blue/40"
           >
             <p className="text-xs uppercase tracking-[0.18em] text-muted">
               {String(index + 1).padStart(2, "0")}
             </p>
-            <h2 className="mt-2 font-serif text-2xl text-petrol dark:text-ivory">
+            <h2 className="mt-2 font-display text-2xl text-oh-ink dark:text-foreground">
               {cat.name}
             </h2>
             <p className="mt-2 text-sm text-muted">{cat.description}</p>

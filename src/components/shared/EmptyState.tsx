@@ -12,8 +12,10 @@ export function EmptyState({
   actionLabel?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-dashed border-border bg-card/60 px-6 py-12 text-center">
-      <h3 className="font-serif text-2xl text-petrol dark:text-ivory">{title}</h3>
+    <div className="border border-dashed border-border bg-card px-6 py-12 text-center">
+      <h3 className="font-display text-2xl text-oh-ink dark:text-foreground">
+        {title}
+      </h3>
       <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted">
         {description}
       </p>

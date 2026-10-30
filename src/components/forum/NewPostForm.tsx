@@ -60,7 +60,7 @@ export function NewPostForm({
       onSubmit={onSubmit}
       className="space-y-3 rounded-xl border border-border bg-card p-5"
     >
-      <h2 className="font-serif text-xl">Nueva publicación</h2>
+      <h2 className="font-display text-xl">Nueva publicación</h2>
       <input
         required
         value={title}

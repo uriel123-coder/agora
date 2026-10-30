@@ -24,7 +24,7 @@ export default async function AdminPublicacionesPage() {
           { label: "Publicaciones" },
         ]}
       />
-      <h1 className="font-serif text-4xl text-petrol dark:text-ivory">
+      <h1 className="font-display text-4xl text-oh-ink dark:text-foreground">
         Publicaciones
       </h1>
       <p className="mt-2 text-muted">
@@ -33,7 +33,7 @@ export default async function AdminPublicacionesPage() {
       </p>
       <div className="mt-8 overflow-x-auto rounded-2xl border border-border">
         <table className="min-w-full text-left text-sm">
-          <thead className="bg-beige/50 dark:bg-white/5">
+          <thead className="bg-oh-stone/50 dark:bg-white/5">
             <tr>
               <th className="px-4 py-3">Título</th>
               <th className="px-4 py-3">Categoría</th>
@@ -47,7 +47,7 @@ export default async function AdminPublicacionesPage() {
                 <td className="px-4 py-3">
                   <Link
                     href={`/publicacion/${pub.slug}`}
-                    className="text-gold hover:underline"
+                    className="text-oh-blue hover:underline"
                   >
                     {pub.title}
                   </Link>
