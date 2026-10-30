@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
+import { MediaResources } from "@/components/publications/MediaResources";
 import { PublicationCard } from "@/components/publications/PublicationCard";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -113,41 +114,7 @@ export default async function PublicationPage({ params }: Props) {
             dangerouslySetInnerHTML={{ __html: publication.body }}
           />
 
-          {publication.media.length > 0 ? (
-            <section className="mt-10">
-              <h2 className="font-display text-2xl text-oh-ink dark:text-foreground">
-                Recursos
-              </h2>
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                {publication.media.map((asset) =>
-                  asset.type === "image" ? (
-                    <div
-                      key={asset.id}
-                      className="relative aspect-[4/3] overflow-hidden rounded-xl border border-border"
-                    >
-                      <Image
-                        src={asset.url}
-                        alt={asset.alt || asset.title || "Recurso"}
-                        fill
-                        className="object-cover"
-                        sizes="400px"
-                      />
-                    </div>
-                  ) : (
-                    <a
-                      key={asset.id}
-                      href={asset.url}
-                      className="rounded-xl border border-border p-4 text-sm hover:border-oh-blue"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {asset.type.toUpperCase()}: {asset.title || asset.url}
-                    </a>
-                  ),
-                )}
-              </div>
-            </section>
-          ) : null}
+          <MediaResources assets={publication.media} />
 
           {publication.bibliography && publication.bibliography.length > 0 ? (
             <section className="mt-10">

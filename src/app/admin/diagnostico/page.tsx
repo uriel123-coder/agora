@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { RefreshSheetsButton } from "@/components/admin/RefreshSheetsButton";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -34,13 +35,18 @@ export default async function DiagnosticoPage() {
           { label: "Diagnóstico Sheets" },
         ]}
       />
-      <h1 className="font-display text-4xl text-oh-ink dark:text-foreground">
-        Diagnóstico Google Sheets
-      </h1>
-      <p className="mt-2 text-muted">
-        Verifica conexión, autenticación, encabezados y conversión. No se
-        exponen credenciales.
-      </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="font-display text-4xl text-oh-ink dark:text-foreground">
+            Diagnóstico Google Sheets
+          </h1>
+          <p className="mt-2 text-muted">
+            Verifica conexión, autenticación, encabezados y conversión. No se
+            exponen credenciales.
+          </p>
+        </div>
+        <RefreshSheetsButton />
+      </div>
 
       <div className="mt-6 flex flex-wrap gap-2">
         <Badge tone={diagnostic.enabled ? "gold" : "muted"}>

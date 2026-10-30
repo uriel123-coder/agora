@@ -13,17 +13,18 @@ export const CATEGORY_SLUGS = [
   "voces-creadoras",
 ] as const satisfies readonly CategorySlug[];
 
+/** Formato flexible: id/summary/categories pueden completarse en el adaptador. */
 export const sheetsPublicationRowSchema = z.object({
-  id: z.string().min(1, "id es obligatorio"),
-  slug: z.string().min(1).optional(),
-  title: z.string().min(1, "title es obligatorio"),
+  id: z.string().optional().default(""),
+  slug: z.string().optional().default(""),
+  title: z.string().min(1, "Se necesita un título / nombre"),
   subtitle: z.string().optional().default(""),
-  summary: z.string().min(1, "summary es obligatorio"),
+  summary: z.string().optional().default(""),
   body: z.string().optional().default(""),
-  coverImage: z.string().url().optional().or(z.literal("")),
+  coverImage: z.string().optional().default(""),
   coverAlt: z.string().optional().default(""),
-  /** Separadas por | o coma. Debe incluir al menos una categoría oficial. */
-  categories: z.string().min(1, "categories es obligatorio"),
+  /** Separadas por | o coma. Puede inyectarse desde el nombre de la pestaña. */
+  categories: z.string().optional().default(""),
   primaryCategory: z.string().optional(),
   contentType: z.string().optional().default("articulo"),
   tags: z.string().optional().default(""),

@@ -8,12 +8,13 @@ import {
   rowToPublication,
   upsertPublications,
 } from "@/lib/data/adapters/publication";
+import { categorySlugFromTabTitle } from "@/lib/data/adapters/sheet-aliases";
 import { rowsToTimelineEvents } from "@/lib/data/adapters/timeline";
 import {
   validatePublicationUniqueness,
   type ValidationIssue,
 } from "@/lib/data/validation";
-import type { Publication } from "@/lib/types/content";
+import type { CategorySlug, Publication } from "@/lib/types/content";
 import type { TimelineBundle } from "@/lib/types/timeline";
 
 export interface SheetsConfig {
@@ -259,15 +260,48 @@ export async function loadTimelineFromSheets(): Promise<{
   return { bundle };
 }
 
+function convertSheetRows(
+  values: string[][],
+  defaultCategory?: CategorySlug,
+): { publications: Publication[]; issues: ValidationIssue[] } {
+  const { headers, rows } = rowsToObjects(values);
+  if (detectSheetKind(headers) === "timeline") {
+    return { publications: [], issues: [] };
+  }
+
+  const publications: Publication[] = [];
+  const issues: ValidationIssue[] = [];
+
+  for (const row of rows) {
+    if (!Object.values(row).some((v) => String(v).trim())) continue;
+    // Filas con solo un nombre y sin más datos aún no forman publicación.
+    const meaningful = Object.entries(row).filter(
+      ([, v]) => String(v).trim().length > 0,
+    );
+    if (meaningful.length <= 1 && !row.title && !row.Nombre && !row.nombre) {
+      // Permitir título único si hay categoría por pestaña.
+      const titleish = meaningful[0]?.[1];
+      if (!titleish || !defaultCategory) continue;
+    }
+    const result = rowToPublication(row, { defaultCategory });
+    issues.push(...result.issues);
+    if (result.publication) publications.push(result.publication);
+  }
+
+  return { publications, issues };
+}
+
 export async function loadPublicationsFromSheets(): Promise<{
   publications: Publication[];
   issues: ValidationIssue[];
   error?: string;
+  sources?: string[];
 }> {
   const cacheKey = "sheets:publications";
   const cached = getCached<{
     publications: Publication[];
     issues: ValidationIssue[];
+    sources?: string[];
   }>(cacheKey);
   if (cached) return cached;
 
@@ -280,35 +314,61 @@ export async function loadPublicationsFromSheets(): Promise<{
     };
   }
 
-  // Intentar rango de publicaciones; si la hoja actual es cronología, no forzar conversión.
-  const { values, error } = await fetchSheetValues(
-    config,
-    config.publicationsRange,
-  );
-  if (error) return { publications: [], issues: [], error };
-
-  const { headers, rows } = rowsToObjects(values);
-  if (detectSheetKind(headers) === "timeline") {
-    return {
-      publications: [],
-      issues: [],
-      error:
-        "La hoja conectada es la cronología comparativa, no un catálogo de publicaciones. El catálogo sigue en datos demo hasta que exista una pestaña Publicaciones.",
-    };
-  }
-
   const publications: Publication[] = [];
   const issues: ValidationIssue[] = [];
+  const sources: string[] = [];
+  const errors: string[] = [];
 
-  for (const row of rows) {
-    if (!Object.values(row).some((v) => v.trim())) continue;
-    const result = rowToPublication(row);
-    issues.push(...result.issues);
-    if (result.publication) publications.push(result.publication);
+  // 1) Pestaña Publicaciones (formato canónico o flexible).
+  const primary = await fetchSheetValues(config, config.publicationsRange);
+  if (!primary.error && primary.values.length > 0) {
+    const { headers } = rowsToObjects(primary.values);
+    if (detectSheetKind(headers) !== "timeline") {
+      const converted = convertSheetRows(primary.values);
+      publications.push(...converted.publications);
+      issues.push(...converted.issues);
+      sources.push(config.publicationsRange);
+    }
+  } else if (primary.error) {
+    errors.push(primary.error);
+  }
+
+  // 2) Pestañas por categoría (ej. "Taller de letras") si existen.
+  try {
+    const { listSheetTitles } = await import("@/lib/data/providers/sheets-auth");
+    const tabs = await listSheetTitles(config.spreadsheetId);
+    for (const tab of tabs) {
+      const slug = categorySlugFromTabTitle(tab.title) as CategorySlug | null;
+      if (!slug) continue;
+      const range = `'${tab.title.replace(/'/g, "''")}'!A:Z`;
+      const { values, error } = await fetchSheetValues(config, range);
+      if (error || !values.length) continue;
+      const converted = convertSheetRows(values, slug);
+      if (converted.publications.length === 0) continue;
+      publications.push(...converted.publications);
+      issues.push(...converted.issues);
+      sources.push(tab.title);
+    }
+  } catch {
+    // Si no hay service account para listar pestañas, seguimos con lo leído.
+  }
+
+  if (publications.length === 0) {
+    const payload = {
+      publications: [],
+      issues,
+      sources,
+      error:
+        errors[0] ||
+        "Aún no hay filas de publicaciones en Sheets. Crea la pestaña «Publicaciones» (o una pestaña por categoría) con nombre, descripción y archivo/URL.",
+    };
+    setCached(cacheKey, payload, CONTENT_CACHE_TTL_MS);
+    return payload;
   }
 
   issues.push(...validatePublicationUniqueness(publications));
-  const payload = { publications, issues };
+  const merged = upsertPublications([], publications);
+  const payload = { publications: merged, issues, sources };
   setCached(cacheKey, payload, CONTENT_CACHE_TTL_MS);
   return payload;
 }
@@ -393,25 +453,35 @@ export async function diagnoseSheetsConnection(): Promise<SheetsDiagnostic> {
       messages.push(
         `Cronología leída correctamente: ${bundle.totalRows} filas → ${bundle.events.length} eventos normalizados.`,
       );
-      messages.push(
-        "El catálogo editorial de Ágora sigue en datos de demostración hasta que exista una hoja Publicaciones con columnas canónicas.",
-      );
     } else if (diagnostic.sheetKind === "publications") {
-      const loaded = await loadPublicationsFromSheets();
-      diagnostic.convertedCount = loaded.publications.length;
-      diagnostic.conversionIssues = loaded.issues;
-      diagnostic.duplicateIssues = validatePublicationUniqueness(
-        loaded.publications,
-      );
       diagnostic.headersOk = EXPECTED_PUBLICATION_HEADERS.every((h) =>
         headers.includes(h),
       );
+    } else {
       messages.push(
-        `Publicaciones convertidas: ${loaded.publications.length}.`,
+        "La hoja principal es cronología u otra estructura. Eso está bien para Tres mundos.",
+      );
+    }
+
+    // Siempre intentar catálogo (Publicaciones + pestañas por categoría).
+    invalidateCache("sheets:publications");
+    const loaded = await loadPublicationsFromSheets();
+    diagnostic.convertedCount = loaded.publications.length;
+    diagnostic.conversionIssues = loaded.issues;
+    diagnostic.duplicateIssues = validatePublicationUniqueness(
+      loaded.publications,
+    );
+    if (loaded.publications.length > 0) {
+      messages.push(
+        `Catálogo desde Sheets: ${loaded.publications.length} publicaciones` +
+          (loaded.sources?.length
+            ? ` (fuentes: ${loaded.sources.join(", ")})`
+            : "."),
       );
     } else {
       messages.push(
-        "Estructura de hoja no reconocida. Revisa encabezados o indica el rango correcto.",
+        loaded.error ||
+          "Sin publicaciones todavía. Puedes usar columnas simples: nombre/título, descripción, archivo/URL, alumno, categoría.",
       );
     }
   } catch (err) {

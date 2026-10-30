@@ -1,4 +1,5 @@
 import { slugify } from "@/lib/utils/text";
+import { normalizeSheetRow } from "@/lib/data/adapters/sheet-aliases";
 import {
   CATEGORY_SLUGS,
   parseBool,
@@ -35,19 +36,52 @@ function parseAuthors(raw: string): AuthorRef[] {
   }));
 }
 
+function detectMediaType(url: string, hint = ""): MediaAsset["type"] {
+  const value = `${hint} ${url}`.toLowerCase();
+  if (/\.pdf(\?|$)/i.test(url) || value.includes("pdf")) return "pdf";
+  if (/\.(mp4|webm|mov)(\?|$)/i.test(url)) return "video";
+  if (/\.(mp3|wav|ogg|m4a)(\?|$)/i.test(url)) return "audio";
+  if (/\.(png|jpe?g|gif|webp|avif|svg)(\?|$)/i.test(url)) return "image";
+  if (
+    value.includes("docs.google") ||
+    value.includes("drive.google") ||
+    value.includes("documento") ||
+    /\.(docx?|pptx?|xlsx?)(\?|$)/i.test(url)
+  ) {
+    return "document";
+  }
+  return "document";
+}
+
+/** Acepta URLs sueltas o pares `título|url` / `título::url`. */
 function parseMedia(raw: string): MediaAsset[] {
-  return splitList(raw).map((url, index) => ({
-    id: `media-${index}`,
-    type: url.match(/\.(pdf)(\?|$)/i)
-      ? "pdf"
-      : url.match(/\.(mp4|webm)(\?|$)/i)
-        ? "video"
-        : url.match(/\.(mp3|wav|ogg)(\?|$)/i)
-          ? "audio"
-          : "image",
-    url,
-    alt: "Recurso vinculado",
-  }));
+  if (!raw?.trim()) return [];
+  const parts = raw
+    .split(/[\n;]+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  return parts.map((part, index) => {
+    const sep = part.includes("::") ? "::" : part.includes("|") ? "|" : null;
+    const title = sep ? part.split(sep)[0]?.trim() : undefined;
+    const url = sep ? part.split(sep).slice(1).join(sep).trim() : part;
+    if (!/^https?:\/\//i.test(url) && !url.startsWith("/")) {
+      return {
+        id: `media-${index}`,
+        type: "document" as const,
+        url,
+        title: title || url,
+        alt: title || "Recurso vinculado",
+      };
+    }
+    return {
+      id: `media-${index}`,
+      type: detectMediaType(url, title),
+      url,
+      title: title || undefined,
+      alt: title || "Recurso vinculado",
+    };
+  });
 }
 
 function asStatus(value: string): PublicationStatus {
@@ -95,14 +129,42 @@ export interface RowConversionResult {
 /** Convierte una fila estilo Google Sheets en Publication canónica. */
 export function rowToPublication(
   input: Record<string, string>,
+  options?: { defaultCategory?: CategorySlug },
 ): RowConversionResult {
   const issues: ValidationIssue[] = [];
-  const parsed = sheetsPublicationRowSchema.safeParse(input);
+  const normalized = normalizeSheetRow(input);
+
+  if (options?.defaultCategory && !normalized.categories?.trim()) {
+    normalized.categories = options.defaultCategory;
+  }
+
+  // Completar mínimos antes de validar.
+  if (!normalized.title?.trim()) {
+    issues.push({
+      field: "title",
+      message: "Fila sin título/nombre: se omitió.",
+      severity: "error",
+    });
+    return { issues };
+  }
+  if (!normalized.summary?.trim()) {
+    normalized.summary =
+      normalized.body?.trim() ||
+      normalized.subtitle?.trim() ||
+      normalized.title.trim();
+  }
+  if (!normalized.id?.trim()) {
+    normalized.id = `sheets-${slugify(normalized.title)}-${slugify(
+      normalized.authors || "anon",
+    )}`.slice(0, 80);
+  }
+
+  const parsed = sheetsPublicationRowSchema.safeParse(normalized);
 
   if (!parsed.success) {
     for (const issue of parsed.error.issues) {
       issues.push({
-        rowId: input.id,
+        rowId: normalized.id,
         field: issue.path.join("."),
         message: issue.message,
         severity: "error",
@@ -131,14 +193,18 @@ export function rowToPublication(
       ? categories.find((c) => c === primaryRaw)
       : undefined) ?? categories[0];
 
+  const media = parseMedia(row.media);
+  const coverFromMedia = media.find((m) => m.type === "image")?.url;
+  const coverImage = row.coverImage || coverFromMedia || undefined;
+
   const publication: Publication = {
-    id: row.id,
+    id: row.id || `sheets-${slugify(row.title)}`,
     slug: row.slug?.trim() || slugify(row.title),
     title: row.title.trim(),
     subtitle: row.subtitle || undefined,
-    summary: row.summary.trim(),
-    body: row.body || `<p>${row.summary}</p>`,
-    coverImage: row.coverImage || undefined,
+    summary: (row.summary || row.title).trim(),
+    body: row.body || `<p>${row.summary || row.title}</p>`,
+    coverImage,
     coverAlt: row.coverAlt || undefined,
     categorySlugs: categories,
     primaryCategory: primary,
@@ -155,7 +221,7 @@ export function rowToPublication(
     isDemo: false,
     bibliography: splitList(row.bibliography),
     credits: row.credits || undefined,
-    media: parseMedia(row.media),
+    media,
     relatedIds: splitList(row.relatedIds),
     historicalLinks:
       row.historicalYear || row.historicalEventId || row.historicalDeepUrl
@@ -187,7 +253,7 @@ export function rowToPublication(
     });
   }
 
-  if (row.coverImage && !/^https?:\/\//i.test(row.coverImage)) {
+  if (coverImage && !/^https?:\/\//i.test(coverImage)) {
     issues.push({
       rowId: row.id,
       field: "coverImage",
