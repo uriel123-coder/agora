@@ -18,8 +18,8 @@ export default async function HomePage() {
     <>
       <HomeHero />
       <StudentSearchBand />
-      <TresMundosHomeBand />
       <CategoryGrid />
+      <TresMundosHomeBand />
       <CatalogBlock publications={publications} />
     </>
   );
