@@ -27,5 +27,5 @@ export function invalidateCache(prefix?: string): void {
 }
 
 export const CONTENT_CACHE_TTL_MS = Number(
-  process.env.AGORA_CONTENT_CACHE_TTL_MS ?? 60_000,
+  process.env.AGORA_CONTENT_CACHE_TTL_MS ?? 300_000,
 );

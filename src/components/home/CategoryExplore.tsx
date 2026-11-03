@@ -28,7 +28,7 @@ export function CategoryExplore() {
           {CATEGORIES.map((cat) => {
             const isTimeline = cat.slug === "tres-mundos-una-historia";
             const className =
-              "group flex flex-col overflow-hidden rounded-md bg-white shadow-[0_8px_24px_rgba(0,0,0,0.18)] transition duration-300 hover:-translate-y-1.5 hover:shadow-[0_16px_36px_rgba(0,0,0,0.28)]";
+              "group flex cursor-pointer flex-col overflow-hidden rounded-md bg-white shadow-[0_8px_24px_rgba(0,0,0,0.18)] transition duration-200 hover:shadow-[0_16px_36px_rgba(0,0,0,0.28)]";
 
             const body = (
               <>

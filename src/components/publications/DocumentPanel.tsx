@@ -1,10 +1,19 @@
 "use client";
 
 import { useMemo } from "react";
-import { Download, ExternalLink, FileText, Film, ImageIcon, Link2, Music } from "lucide-react";
+import {
+  Download,
+  ExternalLink,
+  FileText,
+  Film,
+  ImageIcon,
+  Link2,
+  Music,
+} from "lucide-react";
 import { AgoraPdfViewer } from "@/components/publications/AgoraPdfViewer";
 import {
   detectMediaKind,
+  isPdfUrl,
   mediaKindLabel,
   toAgoraPdfProxyUrl,
   toEmbeddablePdfUrl,
@@ -13,7 +22,7 @@ import {
   youtubeEmbedUrl,
 } from "@/lib/utils/media-links";
 
-/** Panel de lectura Ágora: PDF propio, imagen, video o enlace — sin UI de Google. */
+/** Panel de lectura Ágora: PDF propio, imagen, video o enlace. */
 export function DocumentPanel({
   title,
   url,
@@ -24,10 +33,12 @@ export function DocumentPanel({
   const kind = detectMediaKind(url);
   const downloadUrl = toGoogleDownloadUrl(url) ?? url;
   const canPdf = Boolean(toEmbeddablePdfUrl(url));
-  const pdfSrc = useMemo(
-    () => (canPdf && (kind === "pdf" || kind === "google-doc") ? toAgoraPdfProxyUrl(url) : null),
-    [canPdf, kind, url],
-  );
+  const directPublicPdf = isPdfUrl(url) && !url.includes("drive.google.com") && !url.includes("docs.google.com");
+  const pdfSrc = useMemo(() => {
+    if (!(kind === "pdf" || kind === "google-doc") || !canPdf) return null;
+    // PDFs ya públicos (Blob, CDN) se cargan directo; Drive pasa por proxy
+    return directPublicPdf ? url : toAgoraPdfProxyUrl(url);
+  }, [canPdf, directPublicPdf, kind, url]);
 
   const yt = youtubeEmbedUrl(url);
   const vimeo = vimeoEmbedUrl(url);
@@ -50,7 +61,7 @@ export function DocumentPanel({
 
   return (
     <section className="mt-8 overflow-hidden rounded-2xl border border-border/80 bg-card shadow-[0_8px_28px_rgba(36,55,70,0.06)]">
-      <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 border-b border-border/70 bg-card px-4 py-3 sm:px-5">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/70 bg-card px-4 py-3 sm:px-5">
         <div className="flex min-w-0 items-center gap-2.5">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-oh-blue/10 text-oh-blue">
             <Icon className="h-4 w-4" />
@@ -64,12 +75,12 @@ export function DocumentPanel({
             </h2>
           </div>
         </div>
-        <div className="relative z-10 flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2">
           <a
-            href={openHref}
+            href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="relative z-10 inline-flex min-h-10 min-w-[5.5rem] items-center justify-center gap-1.5 rounded-lg bg-oh-blue px-4 py-2 text-sm font-medium text-white transition hover:bg-oh-blue-deep"
+            className="inline-flex min-h-11 min-w-[6rem] items-center justify-center gap-1.5 rounded-lg bg-oh-blue px-4 py-2.5 text-sm font-medium text-white transition hover:bg-oh-blue-deep"
           >
             <ExternalLink className="h-3.5 w-3.5" />
             Abrir
@@ -79,7 +90,7 @@ export function DocumentPanel({
               href={downloadUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="relative z-10 inline-flex min-h-10 min-w-[5.5rem] items-center justify-center gap-1.5 rounded-lg border border-border px-4 py-2 text-sm font-medium transition hover:border-oh-blue hover:text-oh-blue"
+              className="inline-flex min-h-11 min-w-[6rem] items-center justify-center gap-1.5 rounded-lg border border-border px-4 py-2.5 text-sm font-medium transition hover:border-oh-blue hover:text-oh-blue"
             >
               <Download className="h-3.5 w-3.5" />
               Descargar
@@ -88,7 +99,9 @@ export function DocumentPanel({
         </div>
       </div>
 
-      {pdfSrc ? <AgoraPdfViewer src={pdfSrc} title={title} /> : null}
+      {pdfSrc ? (
+        <AgoraPdfViewer src={pdfSrc} title={title} openHref={url} />
+      ) : null}
 
       {kind === "image" ? (
         <div className="bg-oh-stone/40 p-4 dark:bg-black/20">
@@ -103,11 +116,7 @@ export function DocumentPanel({
 
       {kind === "video" ? (
         <div className="bg-black">
-          <video
-            src={url}
-            controls
-            className="mx-auto max-h-[min(78vh,720px)] w-full"
-          >
+          <video src={url} controls className="mx-auto max-h-[min(78vh,720px)] w-full">
             Tu navegador no reproduce este video.
           </video>
         </div>
@@ -131,7 +140,7 @@ export function DocumentPanel({
         </div>
       ) : null}
 
-      {kind === "link" || (!pdfSrc && kind === "google-doc") ? (
+      {kind === "link" || (!pdfSrc && (kind === "google-doc" || kind === "pdf")) ? (
         <div
           className="flex flex-col items-start gap-3 px-5 py-8 sm:flex-row sm:items-center sm:justify-between"
           style={{
@@ -140,14 +149,14 @@ export function DocumentPanel({
           }}
         >
           <p className="max-w-md text-sm text-muted">
-            Este recurso se abre en su página original (Drive, web u otro
-            enlace). No pedimos permisos dentro de Ágora.
+            Si el PDF no carga aquí, ábrelo con el botón. Lo mejor es una carpeta
+            pública de Drive o subir el archivo en Admin.
           </p>
           <a
-            href={url}
+            href={openHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="relative z-10 inline-flex min-h-11 items-center gap-2 rounded-lg bg-oh-ink px-5 py-3 text-sm font-medium text-white transition hover:bg-oh-blue dark:bg-oh-blue"
+            className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-oh-ink px-5 py-3 text-sm font-medium text-white transition hover:bg-oh-blue dark:bg-oh-blue"
           >
             <ExternalLink className="h-4 w-4" />
             Abrir recurso

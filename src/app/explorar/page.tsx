@@ -29,7 +29,7 @@ export default async function ExplorarPage() {
         {CATEGORIES.map((cat) => {
           const isTimeline = cat.slug === "tres-mundos-una-historia";
           const className =
-            "group flex flex-col overflow-hidden rounded-sm border border-border bg-card transition duration-300 hover:-translate-y-1 hover:border-oh-blue/40";
+            "group flex cursor-pointer flex-col overflow-hidden rounded-sm border border-border bg-card transition duration-200 hover:border-oh-blue/40";
           const body = (
             <>
               <div className="relative aspect-[16/10] overflow-hidden">

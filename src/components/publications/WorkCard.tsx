@@ -9,7 +9,7 @@ import {
   toGoogleDownloadUrl,
 } from "@/lib/utils/media-links";
 
-/** Tarjeta compacta: zona de click completa + acciones claras. */
+/** Tarjeta compacta: click en toda el área + botones con hit-area grande. */
 export function WorkCard({
   publication,
   showAuthor = false,
@@ -33,74 +33,68 @@ export function WorkCard({
   const detailHref = `/publicacion/${publication.slug}`;
 
   return (
-    <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border/70 bg-card transition duration-300 hover:-translate-y-0.5 hover:border-oh-blue/35 hover:shadow-[0_8px_22px_rgba(36,55,70,0.08)]">
-      {/* Capa clickable de toda la tarjeta (debajo de botones) */}
-      <Link
-        href={detailHref}
-        className="absolute inset-0 z-0 rounded-2xl"
-        aria-label={`Ver ${publication.title}`}
-      />
+    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border/70 bg-card transition duration-200 hover:border-oh-blue/35 hover:shadow-[0_8px_22px_rgba(36,55,70,0.08)]">
+      <Link href={detailHref} className="flex min-h-0 flex-1 flex-col outline-none">
+        <div
+          className="flex h-[72px] items-center gap-2.5 px-3"
+          style={{
+            background: `linear-gradient(135deg, ${category.accent}18 0%, #2437460f 55%, #3968cc14 100%)`,
+          }}
+        >
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/90 text-oh-blue shadow-sm dark:bg-white/10">
+            <FileText className="h-3.5 w-3.5" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[10px] font-medium uppercase tracking-[0.1em] text-oh-ink/50 dark:text-white/50">
+              {category.name}
+              {publication.schoolYear ? ` · ${publication.schoolYear}` : ""}
+              {primaryUrl ? ` · ${mediaKindLabel(kind)}` : ""}
+            </p>
+            <p className="mt-0.5 line-clamp-2 font-display text-[0.85rem] leading-snug text-oh-ink group-hover:text-oh-blue dark:text-foreground">
+              {publication.title}
+            </p>
+          </div>
+        </div>
 
-      <div
-        className="pointer-events-none relative z-[1] flex h-[68px] items-center gap-2.5 px-3 sm:h-[72px]"
-        style={{
-          background: `linear-gradient(135deg, ${category.accent}18 0%, #2437460f 55%, #3968cc14 100%)`,
-        }}
-      >
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/90 text-oh-blue shadow-sm dark:bg-white/10">
-          <FileText className="h-3.5 w-3.5" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[10px] font-medium uppercase tracking-[0.1em] text-oh-ink/50 dark:text-white/50">
-            {category.name}
-            {publication.schoolYear ? ` · ${publication.schoolYear}` : ""}
-            {primaryUrl ? ` · ${mediaKindLabel(kind)}` : ""}
-          </p>
-          <p className="mt-0.5 line-clamp-2 font-display text-[0.82rem] leading-snug text-oh-ink transition group-hover:text-oh-blue dark:text-foreground">
-            {publication.title}
+        <div className="flex flex-1 flex-col gap-1 px-3 pb-2 pt-2">
+          {showAuthor && authors ? (
+            <p className="truncate text-[11px] text-muted">{authors}</p>
+          ) : null}
+          <p className="line-clamp-2 text-[11px] leading-relaxed text-muted">
+            {publication.summary}
           </p>
         </div>
-      </div>
+      </Link>
 
-      <div className="relative z-[1] flex flex-1 flex-col gap-1 px-3 pb-2.5 pt-2">
-        {showAuthor && authors ? (
-          <p className="pointer-events-none truncate text-[11px] text-muted">
-            {authors}
-          </p>
-        ) : null}
-        <p className="pointer-events-none line-clamp-2 text-[11px] leading-relaxed text-muted">
-          {publication.summary}
-        </p>
-        <div className="relative z-10 mt-auto flex flex-wrap gap-1.5 pt-1.5">
-          <Link
-            href={detailHref}
-            className="inline-flex min-h-8 items-center rounded-lg bg-oh-ink px-3 py-1.5 text-[11px] font-medium text-white transition hover:bg-oh-blue dark:bg-oh-blue"
+      <div className="flex flex-wrap gap-2 border-t border-border/50 px-3 py-2.5">
+        <Link
+          href={detailHref}
+          className="inline-flex min-h-10 flex-1 items-center justify-center rounded-lg bg-oh-ink px-3 text-xs font-medium text-white transition hover:bg-oh-blue dark:bg-oh-blue sm:flex-none"
+        >
+          Ver
+        </Link>
+        {openUrl ? (
+          <a
+            href={openUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-10 flex-1 items-center justify-center gap-1 rounded-lg border border-border bg-card px-3 text-xs transition hover:border-oh-blue hover:text-oh-blue sm:flex-none"
           >
-            Ver
-          </Link>
-          {openUrl ? (
-            <a
-              href={openUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex min-h-8 items-center gap-1 rounded-lg border border-border bg-card px-3 py-1.5 text-[11px] transition hover:border-oh-blue hover:text-oh-blue"
-            >
-              <ExternalLink className="h-3 w-3" />
-              Abrir
-            </a>
-          ) : null}
-          {downloadUrl && (kind === "pdf" || kind === "google-doc") ? (
-            <a
-              href={downloadUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex min-h-8 items-center gap-1 rounded-lg border border-border bg-card px-3 py-1.5 text-[11px] transition hover:border-oh-blue hover:text-oh-blue"
-            >
-              <Download className="h-3 w-3" />
-              PDF
-            </a>
-          ) : null}
-        </div>
+            <ExternalLink className="h-3.5 w-3.5" />
+            Abrir
+          </a>
+        ) : null}
+        {downloadUrl && (kind === "pdf" || kind === "google-doc") ? (
+          <a
+            href={downloadUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-10 items-center justify-center gap-1 rounded-lg border border-border bg-card px-3 text-xs transition hover:border-oh-blue hover:text-oh-blue"
+          >
+            <Download className="h-3.5 w-3.5" />
+            PDF
+          </a>
+        ) : null}
       </div>
     </article>
   );
