@@ -41,7 +41,7 @@ export function AgoraPdfViewer({ src, title, className }: Props) {
         });
         const pdf = await loadingTask.promise;
         if (cancelled) {
-          pdf.destroy();
+          void pdf.cleanup();
           return;
         }
         pdfRef.current = pdf;
@@ -57,7 +57,7 @@ export function AgoraPdfViewer({ src, title, className }: Props) {
 
     return () => {
       cancelled = true;
-      pdfRef.current?.destroy();
+      void pdfRef.current?.cleanup();
       pdfRef.current = null;
     };
   }, [src]);
