@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
-import { PublicationCard } from "@/components/publications/PublicationCard";
+import { WorkCard } from "@/components/publications/WorkCard";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { getSession } from "@/lib/auth/session";
 import { CATEGORIES, TIMELINE_EXTERNAL_URL } from "@/lib/categories";
@@ -81,9 +81,9 @@ export default async function ExplorarPage() {
           />
         </div>
       ) : (
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {publications.map((pub) => (
-            <PublicationCard key={pub.id} publication={pub} />
+            <WorkCard key={pub.id} publication={pub} showAuthor />
           ))}
         </div>
       )}

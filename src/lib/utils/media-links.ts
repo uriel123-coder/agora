@@ -28,7 +28,27 @@ export function toGoogleDownloadUrl(url: string): string | null {
   if (url.includes("/document/")) {
     return `https://docs.google.com/document/d/${id}/export?format=pdf`;
   }
+  if (url.includes("/presentation/")) {
+    return `https://docs.google.com/presentation/d/${id}/export/pdf`;
+  }
+  if (url.includes("/spreadsheets/")) {
+    return `https://docs.google.com/spreadsheets/d/${id}/export?format=pdf`;
+  }
   return `https://drive.google.com/uc?export=download&id=${id}`;
+}
+
+/** URL embebible en el visor nativo del navegador (sin UI de Google). */
+export function toEmbeddablePdfUrl(url: string): string | null {
+  if (isPdfUrl(url) && !isGoogleWorkspaceUrl(url)) return url;
+  const download = toGoogleDownloadUrl(url);
+  if (!download) return null;
+  if (url.includes("/document/") || url.includes("/presentation/") || url.includes("/spreadsheets/")) {
+    return download;
+  }
+  // Archivos de Drive: vista directa si es PDF público
+  const id = extractGoogleDocId(url);
+  if (!id) return null;
+  return `https://drive.google.com/uc?export=view&id=${id}`;
 }
 
 export function isGoogleWorkspaceUrl(url: string): boolean {
@@ -40,5 +60,5 @@ export function isDirectImageUrl(url: string): boolean {
 }
 
 export function isPdfUrl(url: string): boolean {
-  return /\.pdf(\?|$)/i.test(url) || /\/export\?format=pdf/i.test(url);
+  return /\.pdf(\?|$)/i.test(url) || /\/export\?format=pdf/i.test(url) || /\/export\/pdf/i.test(url);
 }

@@ -26,7 +26,8 @@ function param(value: string | string[] | undefined) {
 
 export default async function BuscarAlumnoPage({ searchParams }: Props) {
   const sp = await searchParams;
-  const alumno = param(sp.alumno) ?? param(sp.q) ?? "";
+  const alumno = (param(sp.alumno) ?? param(sp.q) ?? "").trim();
+  const hasQuery = alumno.length >= 2;
 
   const user = await getSession();
   const role = user?.role ?? "visitor";
@@ -35,35 +36,41 @@ export default async function BuscarAlumnoPage({ searchParams }: Props) {
     getAllPublications(role),
   ]);
 
-  const matchedStudents = alumno
+  const matchedStudents = hasQuery
     ? students.filter((s) =>
         normalizeText(s.displayName).includes(normalizeText(alumno)),
       )
-    : students;
+    : [];
 
   const studentIds = new Set(matchedStudents.map((s) => s.id));
   const studentNames = new Set(
     matchedStudents.map((s) => normalizeText(s.displayName)),
   );
 
-  const studentPubs = publications.filter((p) =>
-    p.authors.some(
-      (a) =>
-        a.nameVisible &&
-        ((a.studentId && studentIds.has(a.studentId)) ||
-          studentNames.has(normalizeText(a.displayName))),
-    ),
-  );
+  const studentPubs = hasQuery
+    ? publications.filter((p) =>
+        p.authors.some(
+          (a) =>
+            a.nameVisible &&
+            ((a.studentId && studentIds.has(a.studentId)) ||
+              studentNames.has(normalizeText(a.displayName)) ||
+              normalizeText(a.displayName).includes(normalizeText(alumno))),
+        ),
+      )
+    : [];
 
-  const filtered = alumno
+  const filtered = hasQuery
     ? searchPublications(studentPubs, {
-        query: "",
+        query: alumno,
         author: alumno,
         sort: "date",
         page: 1,
         pageSize: 50,
       }).items.map((i) => i.publication)
-    : studentPubs;
+    : [];
+
+  // Si Fuse no encuentra pero hay pubs por autor, usar esas
+  const works = filtered.length > 0 ? filtered : studentPubs;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -72,61 +79,71 @@ export default async function BuscarAlumnoPage({ searchParams }: Props) {
         Buscar alumno
       </h1>
       <p className="mt-3 max-w-2xl text-muted">
-        Encuentra portafolios y trabajos cargados desde Sheets.
+        Escribe un nombre. Solo aparecen coincidencias.
       </p>
 
-      <form className="mt-8 flex flex-wrap gap-3 rounded-md border border-border bg-card p-4">
+      <form className="mt-8 flex flex-wrap gap-3 rounded-2xl border border-border bg-card p-4">
         <input
           name="alumno"
           defaultValue={alumno}
-          className="min-w-[220px] flex-1 rounded-sm border border-border bg-background px-3 py-2.5"
+          required
+          minLength={2}
+          className="min-w-[220px] flex-1 rounded-xl border border-border bg-background px-3 py-2.5"
           placeholder="Nombre del alumno"
         />
         <Button type="submit">Buscar</Button>
       </form>
 
-      <section className="mt-10">
-        <h2 className="font-display text-2xl text-oh-ink dark:text-foreground">
-          Alumnos
-        </h2>
-        {matchedStudents.length === 0 ? (
-          <p className="mt-4 rounded-md border border-dashed border-border p-6 text-sm text-muted">
-            No hay alumnos con trabajos visibles todavía.
-          </p>
-        ) : (
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {matchedStudents.map((student) => (
-              <Link
-                key={student.id}
-                href={`/alumno/${student.id}`}
-                className="rounded-md border border-border bg-card p-4 transition hover:-translate-y-0.5 hover:border-oh-blue/40"
-              >
-                <p className="font-display text-lg">{student.displayName}</p>
-                <p className="mt-1 text-sm text-muted">
-                  {student.portfolioPublicationIds.length} trabajo
-                  {student.portfolioPublicationIds.length === 1 ? "" : "s"}
-                  {student.schoolYear ? ` · ${student.schoolYear}` : ""}
-                </p>
-              </Link>
-            ))}
-          </div>
-        )}
-      </section>
+      {!hasQuery ? (
+        <p className="mt-10 rounded-2xl border border-dashed border-border px-5 py-8 text-center text-sm text-muted">
+          Empieza escribiendo un nombre. No listamos a todos aquí.
+        </p>
+      ) : (
+        <>
+          <section className="mt-10">
+            <h2 className="font-display text-2xl text-oh-ink dark:text-foreground">
+              Alumnos
+            </h2>
+            {matchedStudents.length === 0 ? (
+              <p className="mt-4 rounded-xl border border-dashed border-border p-6 text-sm text-muted">
+                Sin alumnos con ese nombre.
+              </p>
+            ) : (
+              <div className="mt-4 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {matchedStudents.map((student) => (
+                  <Link
+                    key={student.id}
+                    href={`/alumno/${student.id}`}
+                    className="rounded-2xl border border-border bg-card p-3.5 transition hover:-translate-y-0.5 hover:border-oh-blue/40"
+                  >
+                    <p className="font-display text-base">{student.displayName}</p>
+                    <p className="mt-1 text-xs text-muted">
+                      {student.portfolioPublicationIds.length} trabajo
+                      {student.portfolioPublicationIds.length === 1 ? "" : "s"}
+                      {student.schoolYear ? ` · ${student.schoolYear}` : ""}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
 
-      <section className="mt-10">
-        <h2 className="font-display text-2xl text-oh-ink dark:text-foreground">
-          Trabajos
-        </h2>
-        {filtered.length === 0 ? (
-          <p className="mt-4 text-muted">Sin trabajos para esta búsqueda.</p>
-        ) : (
-          <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((pub) => (
-              <WorkCard key={pub.id} publication={pub} showAuthor />
-            ))}
-          </div>
-        )}
-      </section>
+          <section className="mt-10">
+            <h2 className="font-display text-2xl text-oh-ink dark:text-foreground">
+              Trabajos
+            </h2>
+            {works.length === 0 ? (
+              <p className="mt-4 text-sm text-muted">Sin trabajos para esta búsqueda.</p>
+            ) : (
+              <div className="mt-5 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {works.map((pub) => (
+                  <WorkCard key={pub.id} publication={pub} showAuthor />
+                ))}
+              </div>
+            )}
+          </section>
+        </>
+      )}
     </div>
   );
 }

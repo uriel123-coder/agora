@@ -12,8 +12,10 @@ export function HomeSearchPanel() {
             <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
             <input
               name="q"
-              placeholder="Buscar por tema, título, palabra clave o alumno…"
+              placeholder="Buscar trabajo, tema o nombre…"
               className="w-full border-0 bg-transparent py-3.5 pl-11 pr-3 text-sm text-oh-ink outline-none placeholder:text-muted sm:text-[0.95rem]"
+              required
+              minLength={2}
             />
           </div>
           <Button type="submit" className="shrink-0 rounded-none px-6" size="md">

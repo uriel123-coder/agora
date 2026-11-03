@@ -3,8 +3,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
+import { DocumentPanel } from "@/components/publications/DocumentPanel";
 import { MediaResources } from "@/components/publications/MediaResources";
-import { PublicationCard } from "@/components/publications/PublicationCard";
+import { WorkCard } from "@/components/publications/WorkCard";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { getSession } from "@/lib/auth/session";
@@ -13,10 +14,6 @@ import {
   getPublicationBySlug,
   getRelatedPublications,
 } from "@/lib/data/repository";
-import {
-  toGoogleDownloadUrl,
-  toGooglePreviewUrl,
-} from "@/lib/utils/media-links";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -113,43 +110,11 @@ export default async function PublicationPage({ params }: Props) {
             </div>
           ) : null}
 
-          {publication.media[0]?.url &&
-          toGooglePreviewUrl(publication.media[0].url) ? (
-            <section className="mt-8">
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <h2 className="font-display text-xl text-oh-ink dark:text-foreground">
-                  Vista previa
-                </h2>
-                <div className="flex flex-wrap gap-2 text-sm">
-                  <a
-                    href={publication.media[0].url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-oh-blue hover:underline"
-                  >
-                    Abrir original
-                  </a>
-                  {toGoogleDownloadUrl(publication.media[0].url) ? (
-                    <a
-                      href={toGoogleDownloadUrl(publication.media[0].url)!}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-oh-blue hover:underline"
-                    >
-                      Descargar PDF
-                    </a>
-                  ) : null}
-                </div>
-              </div>
-              <div className="overflow-hidden rounded-md border border-border bg-oh-stone">
-                <iframe
-                  title={`Vista previa ${publication.title}`}
-                  src={toGooglePreviewUrl(publication.media[0].url)!}
-                  className="h-[70vh] w-full border-0"
-                  loading="lazy"
-                />
-              </div>
-            </section>
+          {publication.media[0]?.url ? (
+            <DocumentPanel
+              title={publication.title}
+              url={publication.media[0].url}
+            />
           ) : null}
 
           <div
@@ -284,9 +249,9 @@ export default async function PublicationPage({ params }: Props) {
           <h2 className="mb-6 font-display text-3xl text-oh-ink dark:text-foreground">
             También te puede interesar
           </h2>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {related.map((pub) => (
-              <PublicationCard key={pub.id} publication={pub} />
+              <WorkCard key={pub.id} publication={pub} showAuthor />
             ))}
           </div>
         </section>

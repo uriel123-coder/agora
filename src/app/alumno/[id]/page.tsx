@@ -74,7 +74,7 @@ export default async function AlumnoPage({ params }: Props) {
         {publications.length === 0 ? (
           <p className="mt-4 text-sm text-muted">Sin trabajos visibles.</p>
         ) : (
-          <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-5 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
             {publications.map((pub) => (
               <WorkCard key={pub.id} publication={pub} />
             ))}
@@ -90,7 +90,7 @@ export default async function AlumnoPage({ params }: Props) {
           <p className="mt-2 text-sm text-muted">
             Otros trabajos relacionados por categoría o año.
           </p>
-          <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-5 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
             {connections.map((pub) => (
               <WorkCard key={pub.id} publication={pub} showAuthor />
             ))}
