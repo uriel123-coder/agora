@@ -157,25 +157,80 @@ export async function getStudentVoices(
   return getPublicationsByCategory("voces-creadoras", role);
 }
 
-export function getStudents(onlySearchable = true): StudentProfile[] {
-  if (!demoEnabled()) return [];
-  const students = demoStudents as StudentProfile[];
-  if (!onlySearchable) return students;
-  return students.filter(
+function studentsFromPublications(publications: Publication[]): StudentProfile[] {
+  const map = new Map<string, StudentProfile>();
+  for (const pub of publications) {
+    for (const author of pub.authors) {
+      if (!author.nameVisible || !author.displayName.trim()) continue;
+      const id = author.studentId || `alumno-${author.displayName}`;
+      const existing = map.get(id);
+      if (existing) {
+        if (!existing.portfolioPublicationIds.includes(pub.id)) {
+          existing.portfolioPublicationIds.push(pub.id);
+        }
+        if (pub.schoolYear) existing.schoolYear = pub.schoolYear;
+      } else {
+        map.set(id, {
+          id,
+          displayName: author.displayName,
+          searchable: true,
+          authorizationStatus: "approved",
+          schoolYear: pub.schoolYear,
+          portfolioPublicationIds: [pub.id],
+          isDemo: pub.isDemo,
+        });
+      }
+    }
+  }
+  return [...map.values()].sort((a, b) =>
+    a.displayName.localeCompare(b.displayName, "es"),
+  );
+}
+
+export async function getStudents(
+  onlySearchable = true,
+  role: UserRole = "visitor",
+): Promise<StudentProfile[]> {
+  const publications = await getAllPublications(role);
+  const fromSheets = studentsFromPublications(publications);
+  const demo = demoEnabled()
+    ? (demoStudents as StudentProfile[]).filter((s) =>
+        onlySearchable
+          ? s.searchable && s.authorizationStatus === "approved"
+          : true,
+      )
+    : [];
+
+  const byId = new Map<string, StudentProfile>();
+  for (const s of [...demo, ...fromSheets]) byId.set(s.id, s);
+  const all = [...byId.values()];
+  if (!onlySearchable) return all;
+  return all.filter(
     (s) => s.searchable && s.authorizationStatus === "approved",
   );
 }
 
-export function getStudentById(id: string): StudentProfile | null {
-  if (!demoEnabled()) return null;
-  return (demoStudents as StudentProfile[]).find((s) => s.id === id) ?? null;
+export async function getStudentById(
+  id: string,
+  role: UserRole = "visitor",
+): Promise<StudentProfile | null> {
+  const students = await getStudents(false, role);
+  return (
+    students.find((s) => s.id === id) ||
+    students.find(
+      (s) =>
+        s.displayName.toLowerCase() === id.toLowerCase() ||
+        s.id === `alumno-${id}`,
+    ) ||
+    null
+  );
 }
 
 export async function getStudentPortfolio(
   studentId: string,
   role: UserRole = "visitor",
 ): Promise<{ student: StudentProfile; publications: Publication[] } | null> {
-  const student = getStudentById(studentId);
+  const student = await getStudentById(studentId, role);
   if (!student) return null;
   if (
     (!student.searchable || student.authorizationStatus !== "approved") &&
@@ -187,7 +242,12 @@ export async function getStudentPortfolio(
   const publications = all.filter(
     (p) =>
       student.portfolioPublicationIds.includes(p.id) ||
-      p.authors.some((a) => a.studentId === studentId && a.nameVisible),
+      p.authors.some(
+        (a) =>
+          a.nameVisible &&
+          (a.studentId === student.id ||
+            a.displayName.toLowerCase() === student.displayName.toLowerCase()),
+      ),
   );
   return { student, publications };
 }

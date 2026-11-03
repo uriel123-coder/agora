@@ -8,7 +8,10 @@ import {
   rowToPublication,
   upsertPublications,
 } from "@/lib/data/adapters/publication";
-import { categorySlugFromTabTitle } from "@/lib/data/adapters/sheet-aliases";
+import {
+  categorySlugFromTabTitle,
+  TIMELINE_TAB_CANDIDATES,
+} from "@/lib/data/adapters/sheet-aliases";
 import { rowsToTimelineEvents } from "@/lib/data/adapters/timeline";
 import {
   validatePublicationUniqueness,
@@ -113,7 +116,8 @@ export function getSheetsConfig(): SheetsConfig {
     publicationsRange:
       process.env.GOOGLE_SHEETS_PUBLICATIONS_RANGE ?? "Publicaciones!A:AD",
     timelineRange:
-      process.env.GOOGLE_SHEETS_TIMELINE_RANGE ?? "'Hoja1'!A:N",
+      process.env.GOOGLE_SHEETS_TIMELINE_RANGE ??
+      "'Tres Mundos, una historia'!A:N",
     apiKey: process.env.GOOGLE_SHEETS_API_KEY,
     serviceAccountEmail: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
     privateKey: process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(
@@ -241,28 +245,50 @@ export async function loadTimelineFromSheets(): Promise<{
     };
   }
 
-  const { values, error } = await fetchSheetValues(config, config.timelineRange);
-  if (error) {
+  let values: string[][] = [];
+  let error: string | undefined;
+  let sheetTitle = "Tres Mundos, una historia";
+
+  const ranges = [
+    config.timelineRange,
+    ...TIMELINE_TAB_CANDIDATES.map((t) => `'${t.replace(/'/g, "''")}'!A:N`),
+  ];
+  for (const range of ranges) {
+    const result = await fetchSheetValues(config, range);
+    if (!result.error && result.values.length > 0) {
+      values = result.values;
+      error = undefined;
+      sheetTitle =
+        range.match(/'([^']+)'/)?.[1] ||
+        range.split("!")[0]?.replace(/^'|'$/g, "") ||
+        "Tres Mundos, una historia";
+      break;
+    }
+    error = result.error;
+  }
+
+  if (!values.length) {
     return {
       bundle: {
         events: [],
         etapas: [],
         totalRows: 0,
         source: "empty",
-        sheetTitle: "Hoja1",
+        sheetTitle,
       },
-      error,
+      error: error || "No se encontró la hoja de cronología.",
     };
   }
 
   const bundle = rowsToTimelineEvents(values);
+  bundle.sheetTitle = sheetTitle;
   setCached(cacheKey, bundle, CONTENT_CACHE_TTL_MS);
   return { bundle };
 }
 
 function convertSheetRows(
   values: string[][],
-  defaultCategory?: CategorySlug,
+  opts?: { defaultCategory?: CategorySlug; sheetsTab?: string },
 ): { publications: Publication[]; issues: ValidationIssue[] } {
   const { headers, rows } = rowsToObjects(values);
   if (detectSheetKind(headers) === "timeline") {
@@ -272,21 +298,34 @@ function convertSheetRows(
   const publications: Publication[] = [];
   const issues: ValidationIssue[] = [];
 
-  for (const row of rows) {
-    if (!Object.values(row).some((v) => String(v).trim())) continue;
-    // Filas con solo un nombre y sin más datos aún no forman publicación.
-    const meaningful = Object.entries(row).filter(
-      ([, v]) => String(v).trim().length > 0,
+  rows.forEach((row, index) => {
+    if (!Object.values(row).some((v) => String(v).trim())) return;
+    const hasAuthor = Boolean(
+      row.Autor || row.autor || row.authors || row.Alumno,
     );
-    if (meaningful.length <= 1 && !row.title && !row.Nombre && !row.nombre) {
-      // Permitir título único si hay categoría por pestaña.
-      const titleish = meaningful[0]?.[1];
-      if (!titleish || !defaultCategory) continue;
-    }
-    const result = rowToPublication(row, { defaultCategory });
+    const hasLink = Boolean(
+      row.Enlace || row.enlace || row.media || row.url || row.URL,
+    );
+    const hasTema = Boolean(
+      row.Tema ||
+        row.tema ||
+        row.Género ||
+        row.genero ||
+        row.Clasificación ||
+        row.title,
+    );
+    // Requiere al menos autor+tema o autor+enlace (formato OH).
+    if (!hasAuthor && !hasTema && !hasLink) return;
+    if (hasAuthor && !hasTema && !hasLink) return;
+
+    const result = rowToPublication(row, {
+      defaultCategory: opts?.defaultCategory,
+      sheetsTab: opts?.sheetsTab,
+      sheetsRowNumber: index + 2, // +1 header, +1 1-based
+    });
     issues.push(...result.issues);
     if (result.publication) publications.push(result.publication);
-  }
+  });
 
   return { publications, issues };
 }
@@ -319,21 +358,26 @@ export async function loadPublicationsFromSheets(): Promise<{
   const sources: string[] = [];
   const errors: string[] = [];
 
-  // 1) Pestaña Publicaciones (formato canónico o flexible).
+  // 1) Pestaña Publicaciones (si existe).
   const primary = await fetchSheetValues(config, config.publicationsRange);
   if (!primary.error && primary.values.length > 0) {
     const { headers } = rowsToObjects(primary.values);
     if (detectSheetKind(headers) !== "timeline") {
-      const converted = convertSheetRows(primary.values);
+      const converted = convertSheetRows(primary.values, {
+        sheetsTab: "Publicaciones",
+      });
       publications.push(...converted.publications);
       issues.push(...converted.issues);
-      sources.push(config.publicationsRange);
+      if (converted.publications.length) sources.push("Publicaciones");
     }
   } else if (primary.error) {
-    errors.push(primary.error);
+    // Normal si aún no existe la pestaña.
+    if (!/unable to parse range|not found|no se encuentra/i.test(primary.error)) {
+      errors.push(primary.error);
+    }
   }
 
-  // 2) Pestañas por categoría (ej. "Taller de letras") si existen.
+  // 2) Pestañas por categoría (formato real OH: Autor | Tema | Año | Enlace).
   try {
     const { listSheetTitles } = await import("@/lib/data/providers/sheets-auth");
     const tabs = await listSheetTitles(config.spreadsheetId);
@@ -343,7 +387,10 @@ export async function loadPublicationsFromSheets(): Promise<{
       const range = `'${tab.title.replace(/'/g, "''")}'!A:Z`;
       const { values, error } = await fetchSheetValues(config, range);
       if (error || !values.length) continue;
-      const converted = convertSheetRows(values, slug);
+      const converted = convertSheetRows(values, {
+        defaultCategory: slug,
+        sheetsTab: tab.title,
+      });
       if (converted.publications.length === 0) continue;
       publications.push(...converted.publications);
       issues.push(...converted.issues);

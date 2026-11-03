@@ -1,7 +1,8 @@
 /**
- * Normaliza encabezados de Sheets (ES/EN, informal) → campos canónicos.
- * Así el colegio puede empezar simple (nombre, descripción, archivo)
- * y luego adoptar el formato completo.
+ * Formato real Or Hajayim (2026):
+ * Cada categoría = pestaña con columnas:
+ *   Autor | Tema|Género|Clasificación | Año | Enlace
+ * Timeline = "Tres Mundos, una historia"
  */
 const ALIAS_TO_CANONICAL: Record<string, string> = {
   id: "id",
@@ -10,36 +11,23 @@ const ALIAS_TO_CANONICAL: Record<string, string> = {
   titulo: "title",
   título: "title",
   nombre: "title",
+  tema: "title",
+  género: "title",
+  genero: "title",
+  clasificación: "title",
+  clasificacion: "title",
   "nombre del trabajo": "title",
-  "nombre de la publicacion": "title",
-  "nombre de la publicación": "title",
   subtitle: "subtitle",
-  subtitulo: "subtitle",
-  subtítulo: "subtitle",
   summary: "summary",
   resumen: "summary",
   descripcion: "summary",
   descripción: "summary",
   body: "body",
-  cuerpo: "body",
-  contenido: "body",
-  texto: "body",
-  coverimage: "coverImage",
-  portada: "coverImage",
-  imagen: "coverImage",
-  "imagen de portada": "coverImage",
-  coveralt: "coverAlt",
+  contenttype: "contentType",
+  tipo: "contentType",
   categories: "categories",
   categoria: "categories",
   categoría: "categories",
-  categorias: "categories",
-  categorías: "categories",
-  primarycategory: "primaryCategory",
-  contenttype: "contentType",
-  tipo: "contentType",
-  "tipo de contenido": "contentType",
-  tags: "tags",
-  etiquetas: "tags",
   authors: "authors",
   autor: "authors",
   autores: "authors",
@@ -49,40 +37,18 @@ const ALIAS_TO_CANONICAL: Record<string, string> = {
   materia: "subject",
   schoolyear: "schoolYear",
   ciclo: "schoolYear",
-  "ciclo escolar": "schoolYear",
-  ano: "schoolYear",
   año: "schoolYear",
-  publishedat: "publishedAt",
-  fecha: "publishedAt",
-  status: "status",
-  estado: "status",
-  accesslevel: "accessLevel",
-  acceso: "accessLevel",
-  featured: "featured",
-  destacado: "featured",
-  bibliography: "bibliography",
-  bibliografia: "bibliography",
-  bibliografía: "bibliography",
-  credits: "credits",
-  creditos: "credits",
-  créditos: "credits",
+  ano: "schoolYear",
   media: "media",
   archivo: "media",
-  archivos: "media",
   documento: "media",
-  documentos: "media",
-  recurso: "media",
-  recursos: "media",
   url: "media",
   enlace: "media",
   link: "media",
-  relatedids: "relatedIds",
-  historicalyear: "historicalYear",
-  historicalyearend: "historicalYearEnd",
-  historicalline: "historicalLine",
-  historicaleventid: "historicalEventId",
-  historicaldeepurl: "historicalDeepUrl",
-  historicallabel: "historicalLabel",
+  tags: "tags",
+  etiquetas: "tags",
+  status: "status",
+  estado: "status",
 };
 
 export function normalizeHeaderKey(raw: string): string {
@@ -90,7 +56,7 @@ export function normalizeHeaderKey(raw: string): string {
   return ALIAS_TO_CANONICAL[key] ?? raw.trim();
 }
 
-/** Renombra claves de una fila a nombres canónicos. */
+/** Renombra claves de una fila a nombres canónicos; conserva originales en __raw. */
 export function normalizeSheetRow(
   row: Record<string, string>,
 ): Record<string, string> {
@@ -98,10 +64,24 @@ export function normalizeSheetRow(
   for (const [key, value] of Object.entries(row)) {
     const canonical = normalizeHeaderKey(key);
     if (!canonical) continue;
-    // Si hay colisión, prioriza el valor no vacío más específico.
     if (!out[canonical] || !String(out[canonical]).trim()) {
       out[canonical] = value ?? "";
     }
+  }
+  // Conservar género/clasificación como contentType si aplica
+  const genre =
+    row["Género"] ||
+    row["Género"] ||
+    row["genero"] ||
+    row["Género"] ||
+    row["Clasificación"] ||
+    row["Clasificacion"] ||
+    "";
+  if (genre && !out.contentType) out.contentType = String(genre);
+  // Si el título vino de Género (Taller), contentType = mismo valor está bien
+  const rawGenre = row["Género"] || row["genero"] || row["Genero"];
+  if (rawGenre && out.title === rawGenre) {
+    out.contentType = String(rawGenre);
   }
   return out;
 }
@@ -121,9 +101,28 @@ export const CATEGORY_TAB_ALIASES: Record<string, string> = {
   publicaciones: "publicaciones",
 };
 
+/** Título de pestaña → slug de categoría (null = no es catálogo). */
 export function categorySlugFromTabTitle(title: string): string | null {
-  const key = title.trim().toLowerCase();
+  const key = title.trim().toLowerCase().replace(/\s+/g, " ");
+  // Timeline no es catálogo de trabajos
+  if (key.includes("tres mundos")) return null;
   const slug = CATEGORY_TAB_ALIASES[key];
-  if (!slug || slug === "publicaciones") return null;
+  if (!slug || slug === "publicaciones" || slug === "tres-mundos-una-historia") {
+    return null;
+  }
   return slug;
 }
+
+/** Qué columna B usa cada pestaña (Tema / Género / Clasificación). */
+export function titleColumnLabelForTab(tabTitle: string): string {
+  const key = tabTitle.trim().toLowerCase().replace(/\s+/g, " ");
+  if (key === "taller de letras") return "Género";
+  if (key === "expresiones del arte") return "Clasificación";
+  return "Tema";
+}
+
+export const TIMELINE_TAB_CANDIDATES = [
+  "Tres Mundos, una historia",
+  "Hoja1",
+  "Hoja 1",
+];

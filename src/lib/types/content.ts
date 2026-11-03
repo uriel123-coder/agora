@@ -110,6 +110,10 @@ export interface Publication {
   historicalLinks: HistoricalLink[];
   /** ID estable de la fila en Google Sheets (cuando exista). */
   sheetsRowId?: string;
+  /** Pestaña de origen en el spreadsheet. */
+  sheetsTab?: string;
+  /** Índice 1-based de la fila en la pestaña (incluye encabezado: datos empiezan en 2). */
+  sheetsRowNumber?: number;
   source: "demo" | "google-sheets" | "local";
 }
 

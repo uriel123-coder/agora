@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { RefreshSheetsButton } from "@/components/admin/RefreshSheetsButton";
+import { SheetRowEditor } from "@/components/admin/SheetRowEditor";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { Badge } from "@/components/ui/Badge";
 import { canAccessAdmin, getSession } from "@/lib/auth/session";
+import { getCategory } from "@/lib/categories";
 import { getAllPublications } from "@/lib/data/repository";
 import { loadPublicationsFromSheets } from "@/lib/data/providers/sheets";
-import { getCategory } from "@/lib/categories";
+import { categorySlugFromTabTitle } from "@/lib/data/adapters/sheet-aliases";
 
 export const metadata: Metadata = {
   title: "Admin · Publicaciones",
@@ -24,8 +25,17 @@ export default async function AdminPublicacionesPage() {
     loadPublicationsFromSheets(),
   ]);
 
-  const published = publications.filter((p) => p.status === "published");
-  const fromSheets = publications.filter((p) => p.source === "google-sheets");
+  const byTab = new Map<string, typeof publications>();
+  for (const pub of publications) {
+    const tab = pub.sheetsTab || "Sin pestaña";
+    const list = byTab.get(tab) ?? [];
+    list.push(pub);
+    byTab.set(tab, list);
+  }
+
+  const tabsForAppend = [...byTab.keys()].filter(
+    (t) => t !== "Sin pestaña" && categorySlugFromTabTitle(t),
+  );
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -38,12 +48,12 @@ export default async function AdminPublicacionesPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="font-display text-4xl text-oh-ink dark:text-foreground">
-            Publicaciones
+            Publicaciones · Sheets
           </h1>
           <p className="mt-2 max-w-2xl text-muted">
-            Biblioteca editorial: cada fila de Sheets se convierte en un
-            cuadrito y una página completa (texto, imagen, documento,
-            descarga).
+            Formato del colegio: cada categoría es una pestaña con{" "}
+            <strong>Autor · Tema/Género · Año · Enlace</strong>. Aquí actualizas
+            cada fila y se refleja en Ágora.
           </p>
         </div>
         <RefreshSheetsButton />
@@ -51,110 +61,139 @@ export default async function AdminPublicacionesPage() {
 
       <div className="mt-6 grid gap-3 sm:grid-cols-3">
         <div className="rounded-md border border-border bg-card p-4">
-          <p className="text-xs uppercase tracking-wide text-muted">En catálogo</p>
+          <p className="text-xs uppercase tracking-wide text-muted">Trabajos</p>
           <p className="mt-1 font-display text-2xl">{publications.length}</p>
         </div>
         <div className="rounded-md border border-border bg-card p-4">
-          <p className="text-xs uppercase tracking-wide text-muted">Publicadas</p>
-          <p className="mt-1 font-display text-2xl">{published.length}</p>
+          <p className="text-xs uppercase tracking-wide text-muted">Pestañas</p>
+          <p className="mt-1 font-display text-2xl">{byTab.size}</p>
         </div>
         <div className="rounded-md border border-border bg-card p-4">
-          <p className="text-xs uppercase tracking-wide text-muted">Desde Sheets</p>
-          <p className="mt-1 font-display text-2xl">{fromSheets.length}</p>
+          <p className="text-xs uppercase tracking-wide text-muted">Fuentes</p>
+          <p className="mt-1 text-sm text-muted">
+            {sheetsLoad.sources?.join(", ") || "—"}
+          </p>
         </div>
       </div>
 
       <section className="mt-6 rounded-md border border-border bg-oh-stone/40 p-4 text-sm dark:bg-white/[0.03]">
-        <p className="font-medium text-oh-ink dark:text-foreground">
-          Cómo cargar contenido (formato flexible)
-        </p>
+        <p className="font-medium">Estructura detectada en Google Sheets</p>
+        <ul className="mt-2 list-disc space-y-1 pl-5 text-muted">
+          <li>
+            <code>Taller de letras</code>: Autor, Género, Año, Enlace
+          </li>
+          <li>
+            Resto de categorías: Autor, Tema, Año, Enlace (Arte usa
+            Clasificación)
+          </li>
+          <li>
+            <code>Tres Mundos, una historia</code>: cronología (no se edita aquí)
+          </li>
+        </ul>
         <p className="mt-2 text-muted">
-          Crea la pestaña <strong>Publicaciones</strong> o una pestaña con el
-          nombre de la categoría (ej. «Taller de letras»). Columnas mínimas
-          recomendadas: <code>nombre</code> o <code>titulo</code>,{" "}
-          <code>descripcion</code>, <code>archivo</code> o <code>imagen</code>{" "}
-          (URL), <code>alumno</code>, <code>categoria</code> (slug). Cuando
-          definan el formato final lo afinamos; Ágora ya entiende alias en
-          español.
+          Para guardar cambios, la cuenta de servicio debe tener permiso de{" "}
+          <strong>editor</strong> en el spreadsheet.
         </p>
-        {sheetsLoad.error ? (
-          <p className="mt-2 text-amber-800 dark:text-amber-200">
-            Sheets: {sheetsLoad.error}
-          </p>
-        ) : (
-          <p className="mt-2 text-muted">
-            Fuentes leídas:{" "}
-            {sheetsLoad.sources?.length
-              ? sheetsLoad.sources.join(", ")
-              : "ninguna aún"}
-            .
-          </p>
-        )}
       </section>
 
       {publications.length === 0 ? (
         <div className="mt-10 rounded-md border border-dashed border-border px-6 py-12 text-center">
-          <h2 className="font-display text-2xl text-oh-ink dark:text-foreground">
-            Todavía no hay publicaciones
-          </h2>
+          <h2 className="font-display text-2xl">Sin trabajos todavía</h2>
           <p className="mx-auto mt-2 max-w-lg text-sm text-muted">
-            La conexión a Sheets funciona (cronología OK). Cuando carguen filas
-            en Publicaciones o en pestañas por categoría, aparecerán aquí como
-            fichas.
+            {sheetsLoad.error ||
+              "Agrega filas en las pestañas de categoría del spreadsheet y pulsa Actualizar."}
           </p>
-          <Link
-            href="/admin/diagnostico"
-            className="mt-4 inline-block text-sm text-oh-blue hover:underline"
-          >
-            Ver diagnóstico de Sheets →
-          </Link>
         </div>
       ) : (
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {publications.map((pub) => {
-            const category = getCategory(pub.primaryCategory);
-            return (
-              <article
-                key={pub.id}
-                className="overflow-hidden rounded-md border border-border bg-card"
-              >
-                <div className="relative aspect-[16/10] bg-oh-stone">
-                  {pub.coverImage ? (
-                    <Image
-                      src={pub.coverImage}
-                      alt=""
-                      fill
-                      className="object-cover"
-                      sizes="320px"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-xs text-muted">
-                      Sin portada · {pub.media.length} recurso
-                      {pub.media.length === 1 ? "" : "s"}
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-2 p-4">
-                  <div className="flex flex-wrap gap-2">
-                    <Badge>{category.name}</Badge>
-                    <Badge tone="muted">{pub.status}</Badge>
-                    <Badge tone="muted">{pub.source}</Badge>
-                  </div>
-                  <h2 className="font-display text-lg leading-snug">
-                    <Link
-                      href={`/publicacion/${pub.slug}`}
-                      className="hover:text-oh-blue"
+        <div className="mt-10 space-y-10">
+          {[...byTab.entries()].map(([tab, pubs]) => (
+            <section key={tab}>
+              <h2 className="font-display text-2xl text-oh-ink dark:text-foreground">
+                {tab}
+              </h2>
+              <p className="mt-1 text-sm text-muted">
+                {pubs.length} trabajo{pubs.length === 1 ? "" : "s"}
+              </p>
+              <ul className="mt-4 space-y-4">
+                {pubs.map((pub) => {
+                  const author =
+                    pub.authors.find((a) => a.nameVisible)?.displayName || "";
+                  const tema =
+                    pub.subject ||
+                    pub.tags[0] ||
+                    pub.title.replace(/\s+de\s+.+$/, "");
+                  return (
+                    <li
+                      key={pub.id}
+                      className="rounded-md border border-border bg-card p-4"
                     >
-                      {pub.title}
-                    </Link>
-                  </h2>
-                  <p className="line-clamp-2 text-sm text-muted">{pub.summary}</p>
+                      <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
+                        <div>
+                          <div className="flex flex-wrap gap-2">
+                            <Badge>
+                              {getCategory(pub.primaryCategory).name}
+                            </Badge>
+                            {pub.schoolYear ? (
+                              <Badge tone="muted">{pub.schoolYear}</Badge>
+                            ) : null}
+                          </div>
+                          <h3 className="mt-2 font-display text-xl">
+                            <Link
+                              href={`/publicacion/${pub.slug}`}
+                              className="hover:text-oh-blue"
+                            >
+                              {pub.title}
+                            </Link>
+                          </h3>
+                          <p className="text-sm text-muted">
+                            {author}
+                            {pub.sheetsRowNumber
+                              ? ` · fila ${pub.sheetsRowNumber}`
+                              : ""}
+                          </p>
+                        </div>
+                        {author ? (
+                          <Link
+                            href={`/alumno/${pub.authors[0]?.studentId || ""}`}
+                            className="text-sm text-oh-blue hover:underline"
+                          >
+                            Ver portafolio →
+                          </Link>
+                        ) : null}
+                      </div>
+                      {pub.sheetsTab && pub.sheetsRowNumber ? (
+                        <SheetRowEditor
+                          tabTitle={pub.sheetsTab}
+                          rowNumber={pub.sheetsRowNumber}
+                          initial={{
+                            autor: author,
+                            tema,
+                            anio: pub.schoolYear || "",
+                            enlace: pub.media[0]?.url || "",
+                          }}
+                        />
+                      ) : (
+                        <p className="text-xs text-muted">
+                          Esta entrada no tiene fila editable en Sheets.
+                        </p>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+
+              {categorySlugFromTabTitle(tab) ? (
+                <div className="mt-4">
+                  <p className="mb-2 text-sm font-medium">Agregar trabajo a {tab}</p>
+                  <SheetRowEditor tabTitle={tab} mode="append" />
                 </div>
-              </article>
-            );
-          })}
+              ) : null}
+            </section>
+          ))}
         </div>
       )}
+
+      {tabsForAppend.length === 0 && publications.length === 0 ? null : null}
     </div>
   );
 }

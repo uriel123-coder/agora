@@ -28,12 +28,16 @@ function parseCategories(raw: string): CategorySlug[] {
 }
 
 function parseAuthors(raw: string): AuthorRef[] {
-  return splitList(raw).map((name, index) => ({
-    id: `sheets-author-${slugify(name) || index}`,
-    displayName: name,
-    nameVisible: true,
-    role: "institucional" as const,
-  }));
+  return splitList(raw).map((name, index) => {
+    const id = `alumno-${slugify(name) || index}`;
+    return {
+      id,
+      displayName: name,
+      nameVisible: true,
+      role: "alumno" as const,
+      studentId: id,
+    };
+  });
 }
 
 function detectMediaType(url: string, hint = ""): MediaAsset["type"] {
@@ -106,7 +110,29 @@ function asAccess(value: string): AccessLevel {
 }
 
 function asContentType(value: string): ContentType {
-  return (value || "articulo") as ContentType;
+  const v = (value || "articulo").trim().toLowerCase();
+  const map: Record<string, ContentType> = {
+    articulo: "articulo",
+    artículo: "articulo",
+    cuento: "cuento",
+    poema: "poema",
+    ensayo: "ensayo",
+    investigacion: "investigacion",
+    investigación: "investigacion",
+    experimento: "experimento",
+    galeria: "galeria",
+    galería: "galeria",
+    video: "video",
+    audio: "audio",
+    documento: "documento",
+    entrevista: "entrevista",
+    proyecto: "proyecto",
+    obra: "obra",
+    reflexion: "reflexion",
+    reflexión: "reflexion",
+    shorashim: "ensayo",
+  };
+  return map[v] || "otro";
 }
 
 function asLine(value: string): HistoricalLine | undefined {
@@ -126,10 +152,17 @@ export interface RowConversionResult {
   issues: ValidationIssue[];
 }
 
+export type RowToPublicationOptions = {
+  defaultCategory?: CategorySlug;
+  sheetsTab?: string;
+  /** Número de fila 1-based en la hoja (encabezado = 1). */
+  sheetsRowNumber?: number;
+};
+
 /** Convierte una fila estilo Google Sheets en Publication canónica. */
 export function rowToPublication(
   input: Record<string, string>,
-  options?: { defaultCategory?: CategorySlug },
+  options?: RowToPublicationOptions,
 ): RowConversionResult {
   const issues: ValidationIssue[] = [];
   const normalized = normalizeSheetRow(input);
@@ -196,24 +229,52 @@ export function rowToPublication(
   const media = parseMedia(row.media);
   const coverFromMedia = media.find((m) => m.type === "image")?.url;
   const coverImage = row.coverImage || coverFromMedia || undefined;
+  const authors = parseAuthors(row.authors);
+  const authorLabel = authors[0]?.displayName;
+  const titleBase = row.title.trim();
+  // Título amigable: "Operación Moises" o "Cuento de …" / "Shorashim · Autor"
+  const looksGeneric =
+    !titleBase ||
+    /^(cuento|poema|ensayo|shorashim|artículo|articulo)$/i.test(titleBase);
+  const title =
+    titleBase && authorLabel && looksGeneric
+      ? `${titleBase} · ${authorLabel}`
+      : titleBase || (authorLabel ? `Trabajo de ${authorLabel}` : "Sin título");
+
+  const year = row.schoolYear?.trim();
+  const summary =
+    (row.summary || "").trim() ||
+    [titleBase || title, authorLabel, year].filter(Boolean).join(" · ");
+
+  const stableId =
+    row.id?.trim() ||
+    `sheets-${slugify(options?.sheetsTab || primary)}-${slugify(authorLabel || "anon")}-${slugify(titleBase || title)}-${year || "s"}`;
 
   const publication: Publication = {
-    id: row.id || `sheets-${slugify(row.title)}`,
-    slug: row.slug?.trim() || slugify(row.title),
-    title: row.title.trim(),
-    subtitle: row.subtitle || undefined,
-    summary: (row.summary || row.title).trim(),
-    body: row.body || `<p>${row.summary || row.title}</p>`,
+    id: stableId,
+    slug: row.slug?.trim() || slugify(`${title}-${authorLabel || ""}-${year || ""}`),
+    title,
+    subtitle: row.subtitle || authorLabel,
+    summary,
+    body:
+      row.body ||
+      `<p><strong>${title}</strong></p><p>${authorLabel ? `Autoría: ${authorLabel}.` : ""} ${year ? `Año: ${year}.` : ""}</p>`,
     coverImage,
     coverAlt: row.coverAlt || undefined,
     categorySlugs: categories,
     primaryCategory: primary,
-    contentType: asContentType(row.contentType),
-    tags: splitList(row.tags),
-    authors: parseAuthors(row.authors),
-    subject: row.subject || undefined,
-    schoolYear: row.schoolYear || undefined,
-    publishedAt: row.publishedAt || new Date().toISOString(),
+    contentType: asContentType(row.contentType || titleBase || "articulo"),
+    tags: splitList(row.tags).length
+      ? splitList(row.tags)
+      : [titleBase, year].filter(Boolean) as string[],
+    authors,
+    subject: row.subject || titleBase || undefined,
+    schoolYear: year || undefined,
+    publishedAt:
+      row.publishedAt ||
+      (year && /^\d{4}$/.test(year)
+        ? `${year}-06-15T12:00:00.000Z`
+        : new Date().toISOString()),
     updatedAt: row.updatedAt || undefined,
     status: asStatus(row.status),
     accessLevel: asAccess(row.accessLevel),
@@ -240,7 +301,9 @@ export function rowToPublication(
             },
           ]
         : [],
-    sheetsRowId: row.id,
+    sheetsRowId: stableId,
+    sheetsTab: options?.sheetsTab,
+    sheetsRowNumber: options?.sheetsRowNumber,
     source: "google-sheets",
   };
 

@@ -1,5 +1,5 @@
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
-import { PublicationCard } from "@/components/publications/PublicationCard";
+import { WorkCard } from "@/components/publications/WorkCard";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Badge } from "@/components/ui/Badge";
 import { getCategory, TIMELINE_EXTERNAL_URL } from "@/lib/categories";
@@ -69,7 +69,7 @@ export async function CategoryPageView({ slug }: { slug: CategorySlug }) {
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {publications.map((pub) => (
-            <PublicationCard key={pub.id} publication={pub} />
+            <WorkCard key={pub.id} publication={pub} showAuthor />
           ))}
         </div>
       )}

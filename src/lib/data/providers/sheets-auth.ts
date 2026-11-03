@@ -20,7 +20,7 @@ async function withTimeout<T>(promise: Promise<T>, label: string): Promise<T> {
 }
 
 /** Autenticación server-side con service account. Nunca exponer al cliente. */
-export async function getSheetsClient() {
+export async function getSheetsClient(write = false) {
   const config = getSheetsConfig();
   if (!config.serviceAccountEmail || !config.privateKey) {
     throw new Error(
@@ -31,7 +31,11 @@ export async function getSheetsClient() {
   const auth = new google.auth.JWT({
     email: config.serviceAccountEmail,
     key: config.privateKey,
-    scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
+    scopes: [
+      write
+        ? "https://www.googleapis.com/auth/spreadsheets"
+        : "https://www.googleapis.com/auth/spreadsheets.readonly",
+    ],
   });
 
   return google.sheets({ version: "v4", auth });
@@ -41,7 +45,7 @@ export async function fetchSheetValuesWithServiceAccount(
   spreadsheetId: string,
   range: string,
 ): Promise<string[][]> {
-  const sheets = await getSheetsClient();
+  const sheets = await getSheetsClient(false);
   const res = await withTimeout(
     sheets.spreadsheets.values.get({ spreadsheetId, range }),
     `values:${range}`,
@@ -52,7 +56,7 @@ export async function fetchSheetValuesWithServiceAccount(
 export async function listSheetTitles(
   spreadsheetId: string,
 ): Promise<{ title: string; sheetId: number }[]> {
-  const sheets = await getSheetsClient();
+  const sheets = await getSheetsClient(false);
   const res = await withTimeout(
     sheets.spreadsheets.get({
       spreadsheetId,
@@ -65,5 +69,57 @@ export async function listSheetTitles(
       title: s.properties?.title ?? "",
       sheetId: s.properties?.sheetId ?? 0,
     })) ?? []
+  );
+}
+
+/** Actualiza una fila A:D de una pestaña de categoría (Autor, Tema, Año, Enlace). */
+export async function updateCategorySheetRow(input: {
+  spreadsheetId: string;
+  tabTitle: string;
+  rowNumber: number;
+  autor: string;
+  tema: string;
+  anio: string;
+  enlace: string;
+}): Promise<void> {
+  const sheets = await getSheetsClient(true);
+  const safeTab = input.tabTitle.replace(/'/g, "''");
+  const range = `'${safeTab}'!A${input.rowNumber}:D${input.rowNumber}`;
+  await withTimeout(
+    sheets.spreadsheets.values.update({
+      spreadsheetId: input.spreadsheetId,
+      range,
+      valueInputOption: "USER_ENTERED",
+      requestBody: {
+        values: [[input.autor, input.tema, input.anio, input.enlace]],
+      },
+    }),
+    `update:${range}`,
+  );
+}
+
+/** Agrega una fila al final de una pestaña de categoría. */
+export async function appendCategorySheetRow(input: {
+  spreadsheetId: string;
+  tabTitle: string;
+  autor: string;
+  tema: string;
+  anio: string;
+  enlace: string;
+}): Promise<void> {
+  const sheets = await getSheetsClient(true);
+  const safeTab = input.tabTitle.replace(/'/g, "''");
+  const range = `'${safeTab}'!A:D`;
+  await withTimeout(
+    sheets.spreadsheets.values.append({
+      spreadsheetId: input.spreadsheetId,
+      range,
+      valueInputOption: "USER_ENTERED",
+      insertDataOption: "INSERT_ROWS",
+      requestBody: {
+        values: [[input.autor, input.tema, input.anio, input.enlace]],
+      },
+    }),
+    `append:${range}`,
   );
 }

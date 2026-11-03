@@ -13,6 +13,10 @@ import {
   getPublicationBySlug,
   getRelatedPublications,
 } from "@/lib/data/repository";
+import {
+  toGoogleDownloadUrl,
+  toGooglePreviewUrl,
+} from "@/lib/utils/media-links";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -97,7 +101,7 @@ export default async function PublicationPage({ params }: Props) {
           </div>
 
           {publication.coverImage ? (
-            <div className="relative mt-8 aspect-[16/9] overflow-hidden rounded-2xl border border-border">
+            <div className="relative mt-8 aspect-[16/9] overflow-hidden rounded-md border border-border">
               <Image
                 src={publication.coverImage}
                 alt={publication.coverAlt || publication.title}
@@ -109,12 +113,71 @@ export default async function PublicationPage({ params }: Props) {
             </div>
           ) : null}
 
+          {publication.media[0]?.url &&
+          toGooglePreviewUrl(publication.media[0].url) ? (
+            <section className="mt-8">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <h2 className="font-display text-xl text-oh-ink dark:text-foreground">
+                  Vista previa
+                </h2>
+                <div className="flex flex-wrap gap-2 text-sm">
+                  <a
+                    href={publication.media[0].url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-oh-blue hover:underline"
+                  >
+                    Abrir original
+                  </a>
+                  {toGoogleDownloadUrl(publication.media[0].url) ? (
+                    <a
+                      href={toGoogleDownloadUrl(publication.media[0].url)!}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-oh-blue hover:underline"
+                    >
+                      Descargar PDF
+                    </a>
+                  ) : null}
+                </div>
+              </div>
+              <div className="overflow-hidden rounded-md border border-border bg-oh-stone">
+                <iframe
+                  title={`Vista previa ${publication.title}`}
+                  src={toGooglePreviewUrl(publication.media[0].url)!}
+                  className="h-[70vh] w-full border-0"
+                  loading="lazy"
+                />
+              </div>
+            </section>
+          ) : null}
+
           <div
             className="prose-agora mt-10"
             dangerouslySetInnerHTML={{ __html: publication.body }}
           />
 
           <MediaResources assets={publication.media} />
+
+          {publication.authors.some((a) => a.nameVisible && a.studentId) ? (
+            <section className="mt-8 rounded-md border border-border bg-card p-5">
+              <h2 className="font-display text-lg">Más de esta persona</h2>
+              <ul className="mt-3 space-y-2 text-sm">
+                {publication.authors
+                  .filter((a) => a.nameVisible && a.studentId)
+                  .map((a) => (
+                    <li key={a.studentId}>
+                      <Link
+                        href={`/alumno/${a.studentId}`}
+                        className="text-oh-blue hover:underline"
+                      >
+                        Ver portafolio de {a.displayName} →
+                      </Link>
+                    </li>
+                  ))}
+              </ul>
+            </section>
+          ) : null}
 
           {publication.bibliography && publication.bibliography.length > 0 ? (
             <section className="mt-10">
