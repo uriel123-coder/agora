@@ -123,3 +123,50 @@ export async function appendCategorySheetRow(input: {
     `append:${range}`,
   );
 }
+
+/** Borra una fila de una pestaña (por número 1-based de Sheets). */
+export async function deleteCategorySheetRow(input: {
+  spreadsheetId: string;
+  tabTitle: string;
+  rowNumber: number;
+}): Promise<void> {
+  const sheets = await getSheetsClient(true);
+  const meta = await withTimeout(
+    sheets.spreadsheets.get({
+      spreadsheetId: input.spreadsheetId,
+      fields: "sheets.properties",
+    }),
+    "spreadsheet.meta.delete",
+  );
+  const sheet = meta.data.sheets?.find(
+    (s) => s.properties?.title === input.tabTitle,
+  );
+  const sheetId = sheet?.properties?.sheetId;
+  if (sheetId == null) {
+    throw new Error(`No se encontró la pestaña «${input.tabTitle}»`);
+  }
+  if (input.rowNumber < 2) {
+    throw new Error("No se puede borrar la fila de encabezados");
+  }
+
+  await withTimeout(
+    sheets.spreadsheets.batchUpdate({
+      spreadsheetId: input.spreadsheetId,
+      requestBody: {
+        requests: [
+          {
+            deleteDimension: {
+              range: {
+                sheetId,
+                dimension: "ROWS",
+                startIndex: input.rowNumber - 1,
+                endIndex: input.rowNumber,
+              },
+            },
+          },
+        ],
+      },
+    }),
+    `delete-row:${input.tabTitle}:${input.rowNumber}`,
+  );
+}

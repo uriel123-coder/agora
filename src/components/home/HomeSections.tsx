@@ -16,7 +16,7 @@ export function HomeHero() {
         />
         {/* Oscurece un poco el centro para legibilidad del texto */}
         <div
-          className="absolute inset-0"
+          className="pointer-events-none absolute inset-0"
           aria-hidden
           style={{
             background:

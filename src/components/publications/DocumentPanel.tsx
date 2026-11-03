@@ -1,14 +1,19 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Download, ExternalLink, FileText } from "lucide-react";
+import { useMemo } from "react";
+import { Download, ExternalLink, FileText, Film, ImageIcon, Link2, Music } from "lucide-react";
+import { AgoraPdfViewer } from "@/components/publications/AgoraPdfViewer";
 import {
-  isGoogleWorkspaceUrl,
+  detectMediaKind,
+  mediaKindLabel,
+  toAgoraPdfProxyUrl,
   toEmbeddablePdfUrl,
   toGoogleDownloadUrl,
+  vimeoEmbedUrl,
+  youtubeEmbedUrl,
 } from "@/lib/utils/media-links";
 
-/** Visor propio de Ágora: PDF embebido sin UI ni login de Google. */
+/** Panel de lectura Ágora: PDF propio, imagen, video o enlace — sin UI de Google. */
 export function DocumentPanel({
   title,
   url,
@@ -16,79 +21,117 @@ export function DocumentPanel({
   title: string;
   url: string;
 }) {
+  const kind = detectMediaKind(url);
   const downloadUrl = toGoogleDownloadUrl(url) ?? url;
-  const canEmbed = Boolean(toEmbeddablePdfUrl(url));
-  const viewerSrc = useMemo(
-    () => (canEmbed ? `/api/doc-pdf?url=${encodeURIComponent(url)}` : null),
-    [canEmbed, url],
+  const canPdf = Boolean(toEmbeddablePdfUrl(url));
+  const pdfSrc = useMemo(
+    () => (canPdf && (kind === "pdf" || kind === "google-doc") ? toAgoraPdfProxyUrl(url) : null),
+    [canPdf, kind, url],
   );
-  const [failed, setFailed] = useState(false);
 
-  const kind = isGoogleWorkspaceUrl(url)
-    ? "Documento"
-    : url.match(/\.pdf(\?|$)/i)
-      ? "PDF"
-      : "Archivo";
+  const yt = youtubeEmbedUrl(url);
+  const vimeo = vimeoEmbedUrl(url);
 
-  const showViewer = Boolean(viewerSrc) && !failed;
+  const Icon =
+    kind === "image"
+      ? ImageIcon
+      : kind === "video" || kind === "youtube" || kind === "vimeo"
+        ? Film
+        : kind === "audio"
+          ? Music
+          : kind === "link"
+            ? Link2
+            : FileText;
+
+  const openHref =
+    kind === "pdf" || kind === "google-doc"
+      ? `/leer?url=${encodeURIComponent(url)}&titulo=${encodeURIComponent(title)}`
+      : url;
 
   return (
     <section className="mt-8 overflow-hidden rounded-2xl border border-border/80 bg-card shadow-[0_8px_28px_rgba(36,55,70,0.06)]">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/70 px-4 py-3 sm:px-5">
+      <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 border-b border-border/70 bg-card px-4 py-3 sm:px-5">
         <div className="flex min-w-0 items-center gap-2.5">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-oh-blue/10 text-oh-blue">
-            <FileText className="h-4 w-4" />
+            <Icon className="h-4 w-4" />
           </span>
           <div className="min-w-0">
             <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted">
-              {kind}
+              {mediaKindLabel(kind)}
             </p>
             <h2 className="truncate font-display text-base text-oh-ink dark:text-foreground sm:text-lg">
               {title}
             </h2>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="relative z-10 flex flex-wrap gap-2">
           <a
-            href={url}
+            href={openHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-oh-blue px-3 py-1.5 text-xs font-medium text-white transition hover:bg-oh-blue-deep"
+            className="relative z-10 inline-flex min-h-10 min-w-[5.5rem] items-center justify-center gap-1.5 rounded-lg bg-oh-blue px-4 py-2 text-sm font-medium text-white transition hover:bg-oh-blue-deep"
           >
             <ExternalLink className="h-3.5 w-3.5" />
             Abrir
           </a>
-          <a
-            href={downloadUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2.5 text-xs font-medium transition hover:border-oh-blue hover:text-oh-blue sm:py-1.5"
-          >
-            <Download className="h-3.5 w-3.5" />
-            PDF
-          </a>
+          {(kind === "pdf" || kind === "google-doc") && (
+            <a
+              href={downloadUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="relative z-10 inline-flex min-h-10 min-w-[5.5rem] items-center justify-center gap-1.5 rounded-lg border border-border px-4 py-2 text-sm font-medium transition hover:border-oh-blue hover:text-oh-blue"
+            >
+              <Download className="h-3.5 w-3.5" />
+              Descargar
+            </a>
+          )}
         </div>
       </div>
 
-      {showViewer ? (
-        <div className="relative bg-oh-stone/40 dark:bg-black/20">
-          <iframe
-            src={`${viewerSrc}#toolbar=1&navpanes=0`}
-            title={title}
-            className="h-[min(72vh,640px)] w-full border-0"
-            onError={() => setFailed(true)}
+      {pdfSrc ? <AgoraPdfViewer src={pdfSrc} title={title} /> : null}
+
+      {kind === "image" ? (
+        <div className="bg-oh-stone/40 p-4 dark:bg-black/20">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={url}
+            alt={title}
+            className="mx-auto max-h-[min(78vh,720px)] w-auto max-w-full rounded-lg object-contain"
           />
-          <div className="absolute bottom-3 right-3">
-            <button
-              type="button"
-              onClick={() => setFailed(true)}
-              className="rounded-lg bg-white/90 px-2.5 py-1 text-[10px] text-muted shadow-sm backdrop-blur hover:text-oh-ink dark:bg-black/50"
-            >
-              ¿No se ve? Abrir afuera
-            </button>
-          </div>
         </div>
-      ) : (
+      ) : null}
+
+      {kind === "video" ? (
+        <div className="bg-black">
+          <video
+            src={url}
+            controls
+            className="mx-auto max-h-[min(78vh,720px)] w-full"
+          >
+            Tu navegador no reproduce este video.
+          </video>
+        </div>
+      ) : null}
+
+      {yt || vimeo ? (
+        <div className="aspect-video bg-black">
+          <iframe
+            src={yt || vimeo || ""}
+            title={title}
+            className="h-full w-full border-0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+      ) : null}
+
+      {kind === "audio" ? (
+        <div className="px-5 py-8">
+          <audio src={url} controls className="w-full" />
+        </div>
+      ) : null}
+
+      {kind === "link" || (!pdfSrc && kind === "google-doc") ? (
         <div
           className="flex flex-col items-start gap-3 px-5 py-8 sm:flex-row sm:items-center sm:justify-between"
           style={{
@@ -97,20 +140,20 @@ export function DocumentPanel({
           }}
         >
           <p className="max-w-md text-sm text-muted">
-            Lee el trabajo en el archivo original. Aquí no pedimos cuenta de
-            Google ni permisos.
+            Este recurso se abre en su página original (Drive, web u otro
+            enlace). No pedimos permisos dentro de Ágora.
           </p>
           <a
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-lg bg-oh-ink px-4 py-2.5 text-sm font-medium text-white transition hover:bg-oh-blue dark:bg-oh-blue"
+            className="relative z-10 inline-flex min-h-11 items-center gap-2 rounded-lg bg-oh-ink px-5 py-3 text-sm font-medium text-white transition hover:bg-oh-blue dark:bg-oh-blue"
           >
             <ExternalLink className="h-4 w-4" />
-            Abrir documento
+            Abrir recurso
           </a>
         </div>
-      )}
+      ) : null}
     </section>
   );
 }

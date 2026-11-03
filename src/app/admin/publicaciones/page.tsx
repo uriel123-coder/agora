@@ -52,8 +52,10 @@ export default async function AdminPublicacionesPage() {
           </h1>
           <p className="mt-2 max-w-2xl text-muted">
             Formato del colegio: cada categoría es una pestaña con{" "}
-            <strong>Autor · Tema/Género · Año · Enlace</strong>. Aquí actualizas
-            cada fila y se refleja en Ágora.
+            <strong>Autor · Tema/Género · Año · Enlace</strong>. Aquí agregas,
+            editas o quitas filas. El enlace puede ser PDF, Drive público,
+            imagen, video o YouTube. Para vista previa limpia, sube el archivo a
+            la carpeta pública de Ágora.
           </p>
         </div>
         <RefreshSheetsButton />

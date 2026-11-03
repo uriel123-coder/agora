@@ -6,17 +6,18 @@ import {
 } from "@/lib/data/providers/sheets";
 import {
   appendCategorySheetRow,
+  deleteCategorySheetRow,
   updateCategorySheetRow,
 } from "@/lib/data/providers/sheets-auth";
 
 type Body = {
-  action: "update" | "append";
+  action: "update" | "append" | "delete";
   tabTitle: string;
   rowNumber?: number;
-  autor: string;
-  tema: string;
-  anio: string;
-  enlace: string;
+  autor?: string;
+  tema?: string;
+  anio?: string;
+  enlace?: string;
 };
 
 export async function POST(request: Request) {
@@ -40,14 +41,34 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
   }
 
-  if (!body.tabTitle || !body.autor?.trim() || !body.tema?.trim()) {
-    return NextResponse.json(
-      { error: "Faltan tabTitle, autor o tema" },
-      { status: 400 },
-    );
+  if (!body.tabTitle) {
+    return NextResponse.json({ error: "Falta tabTitle" }, { status: 400 });
   }
 
   try {
+    if (body.action === "delete") {
+      if (!body.rowNumber || body.rowNumber < 2) {
+        return NextResponse.json(
+          { error: "rowNumber inválido" },
+          { status: 400 },
+        );
+      }
+      await deleteCategorySheetRow({
+        spreadsheetId: config.spreadsheetId,
+        tabTitle: body.tabTitle,
+        rowNumber: body.rowNumber,
+      });
+      refreshSheetsCache();
+      return NextResponse.json({ ok: true });
+    }
+
+    if (!body.autor?.trim() || !body.tema?.trim()) {
+      return NextResponse.json(
+        { error: "Faltan autor o tema" },
+        { status: 400 },
+      );
+    }
+
     if (body.action === "append") {
       await appendCategorySheetRow({
         spreadsheetId: config.spreadsheetId,
