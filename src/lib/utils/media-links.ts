@@ -96,17 +96,38 @@ export function isDirectAudioUrl(url: string): boolean {
   return /\.(mp3|wav|ogg|m4a|aac)(\?|$)/i.test(url);
 }
 
+export function youtubeVideoId(url: string): string | null {
+  const m = url.match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{6,})/,
+  );
+  return m?.[1] ?? null;
+}
+
 export function youtubeEmbedUrl(url: string): string | null {
-  const m =
-    url.match(
-      /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{6,})/,
-    ) ?? null;
-  return m ? `https://www.youtube.com/embed/${m[1]}` : null;
+  const id = youtubeVideoId(url);
+  return id ? `https://www.youtube.com/embed/${id}` : null;
 }
 
 export function vimeoEmbedUrl(url: string): string | null {
   const m = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
   return m ? `https://player.vimeo.com/video/${m[1]}` : null;
+}
+
+/** Miniatura para tarjetas: YouTube, imagen directa o thumbnail de Drive. */
+export function getMediaThumbnail(
+  url: string | undefined,
+  coverImage?: string,
+): string | null {
+  if (coverImage) return coverImage;
+  if (!url) return null;
+  const yt = youtubeVideoId(url);
+  if (yt) return `https://i.ytimg.com/vi/${yt}/hqdefault.jpg`;
+  if (isDirectImageUrl(url)) return url;
+  if (isGoogleWorkspaceUrl(url)) {
+    const id = extractGoogleDocId(url);
+    if (id) return `https://drive.google.com/thumbnail?id=${id}&sz=w640`;
+  }
+  return null;
 }
 
 export function detectMediaKind(url: string): MediaKind {

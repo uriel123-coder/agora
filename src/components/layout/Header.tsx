@@ -42,7 +42,7 @@ export function Header({
               key={link.href}
               href={link.href}
               className={cn(
-                "rounded-sm px-3 py-2 text-sm transition duration-300 hover:-translate-y-0.5 hover:text-oh-blue",
+                "rounded-lg px-3 py-2.5 text-sm touch-manipulation transition hover:text-oh-blue",
                 pathname === link.href ||
                   (link.href !== "/" && pathname.startsWith(link.href))
                   ? "text-oh-blue"
@@ -57,19 +57,19 @@ export function Header({
           <button
             type="button"
             onClick={onOpenSearch}
-            className="inline-flex items-center gap-2 rounded-sm border border-border px-3 py-2 text-sm text-muted transition hover:border-oh-blue hover:text-oh-blue"
+            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border px-3.5 py-2 text-sm text-muted touch-manipulation transition hover:border-oh-blue hover:text-oh-blue"
             aria-label="Abrir buscador global"
           >
             <Search className="h-4 w-4" />
             <span className="hidden sm:inline">Buscar</span>
-            <kbd className="hidden rounded-sm border border-border px-1.5 text-[10px] md:inline">
+            <kbd className="hidden rounded-md border border-border px-1.5 text-[10px] md:inline">
               ⌘K
             </kbd>
           </button>
           <ThemeToggle />
           <Link
             href={user ? "/mi-agora" : "/acceder"}
-            className="hidden rounded-sm bg-oh-ink px-3 py-2 text-sm text-white sm:inline-flex hover:bg-oh-ink-deep dark:bg-oh-blue"
+            className="hidden min-h-11 items-center rounded-xl bg-oh-ink px-4 py-2 text-sm text-white touch-manipulation sm:inline-flex hover:bg-oh-ink-deep dark:bg-oh-blue"
           >
             {user ? "Mi cuenta" : "Acceder"}
           </Link>

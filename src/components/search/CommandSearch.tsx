@@ -1,27 +1,36 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Search, X } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Publication } from "@/lib/types/content";
 import { getCategory } from "@/lib/categories";
+import type { CategorySlug } from "@/lib/types/content";
 
 const HISTORY_KEY = "agora-search-history";
+
+type SuggestItem = {
+  id: string;
+  slug: string;
+  title: string;
+  summary: string;
+  coverImage?: string;
+  primaryCategory: CategorySlug;
+  author: string;
+};
 
 export function CommandSearch({
   open,
   onOpenChange,
-  initialPublications,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  initialPublications: Publication[];
 }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [history, setHistory] = useState<string[]>([]);
+  const [items, setItems] = useState<SuggestItem[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     try {
@@ -44,25 +53,39 @@ export function CommandSearch({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onOpenChange]);
 
-  const suggestions = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return initialPublications.filter((p) => p.featured).slice(0, 6);
-    return initialPublications
-      .filter((p) => {
-        const hay = `${p.title} ${p.summary} ${p.tags.join(" ")} ${p.authors
-          .filter((a) => a.nameVisible)
-          .map((a) => a.displayName)
-          .join(" ")}`.toLowerCase();
-        return hay.includes(q) || q.split(/\s+/).every((t) => hay.includes(t));
-      })
-      .slice(0, 8);
-  }, [query, initialPublications]);
+  useEffect(() => {
+    if (!open) return;
+    const q = query.trim();
+    const ctrl = new AbortController();
+    const t = window.setTimeout(async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(
+          `/api/search/suggest?q=${encodeURIComponent(q)}`,
+          { signal: ctrl.signal },
+        );
+        const data = (await res.json()) as { items?: SuggestItem[] };
+        setItems(data.items ?? []);
+      } catch {
+        if (!ctrl.signal.aborted) setItems([]);
+      } finally {
+        if (!ctrl.signal.aborted) setLoading(false);
+      }
+    }, q ? 180 : 0);
+    return () => {
+      ctrl.abort();
+      window.clearTimeout(t);
+    };
+  }, [open, query]);
 
-  const persistHistory = useCallback((value: string) => {
-    const next = [value, ...history.filter((h) => h !== value)].slice(0, 8);
-    setHistory(next);
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(next));
-  }, [history]);
+  const persistHistory = useCallback(
+    (value: string) => {
+      const next = [value, ...history.filter((h) => h !== value)].slice(0, 8);
+      setHistory(next);
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(next));
+    },
+    [history],
+  );
 
   function goSearch(value = query) {
     const q = value.trim();
@@ -80,18 +103,18 @@ export function CommandSearch({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-oh-ink-deep/55 p-4 pt-[12vh] backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-start justify-center bg-[#1a2a36]/60 p-4 pt-[10vh] backdrop-blur-md"
       role="dialog"
       aria-modal="true"
-      aria-label="Buscador global"
+      aria-label="Buscador"
       onClick={() => onOpenChange(false)}
     >
       <div
-        className="w-full max-w-2xl overflow-hidden rounded-2xl border border-border bg-card shadow-2xl"
+        className="w-full max-w-2xl overflow-hidden rounded-2xl border border-white/10 bg-card shadow-[0_24px_80px_rgba(26,42,54,0.45)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-3 border-b border-border px-4">
-          <Search className="h-5 w-5 text-muted" aria-hidden />
+          <Search className="h-5 w-5 shrink-0 text-muted" aria-hidden />
           <input
             autoFocus
             value={query}
@@ -99,84 +122,80 @@ export function CommandSearch({
             onKeyDown={(e) => {
               if (e.key === "Enter") goSearch();
             }}
-            placeholder="Buscar por título, autor, etiqueta, materia…"
-            className="h-14 w-full bg-transparent text-base outline-none placeholder:text-muted"
-            aria-label="Consulta de búsqueda"
+            placeholder="Tema, título, autor…"
+            className="min-h-14 w-full bg-transparent text-base outline-none placeholder:text-muted"
           />
           <button
             type="button"
-            aria-label="Cerrar"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-xl text-muted hover:bg-oh-stone hover:text-oh-ink"
             onClick={() => onOpenChange(false)}
-            className="rounded-md p-2 hover:bg-oh-stone/60 dark:hover:bg-white/5"
+            aria-label="Cerrar"
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="max-h-[50vh] overflow-y-auto p-2">
-          {!query && history.length ? (
-            <div className="mb-2 px-2">
-              <p className="px-2 py-1 text-xs uppercase tracking-wider text-muted">
-                Historial local
-              </p>
-              {history.map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-oh-stone/50 dark:hover:bg-white/5"
-                  onClick={() => goSearch(item)}
-                >
-                  {item}
-                </button>
-              ))}
+
+        <div className="max-h-[55vh] overflow-y-auto p-2">
+          {!query && history.length > 0 ? (
+            <div className="mb-2 px-2 py-1">
+              <p className="mb-1 text-[11px] text-muted">Recientes</p>
+              <div className="flex flex-wrap gap-1.5">
+                {history.map((h) => (
+                  <button
+                    key={h}
+                    type="button"
+                    onClick={() => goSearch(h)}
+                    className="rounded-full border border-border px-3 py-1.5 text-xs hover:border-oh-blue hover:text-oh-blue"
+                  >
+                    {h}
+                  </button>
+                ))}
+              </div>
             </div>
           ) : null}
-          {suggestions.length === 0 ? (
-            <p className="px-4 py-8 text-center text-sm text-muted">
-              Sin sugerencias. Prueba otras palabras o ve al buscador avanzado.
+
+          {loading ? (
+            <p className="px-3 py-6 text-sm text-muted">Buscando…</p>
+          ) : items.length === 0 ? (
+            <p className="px-3 py-6 text-sm text-muted">
+              {query.trim().length >= 2
+                ? "Sin coincidencias"
+                : "Escribe para buscar en el archivo"}
             </p>
           ) : (
-            suggestions.map((pub) => {
-              const cat = getCategory(pub.primaryCategory);
-              return (
-                <Link
-                  key={pub.id}
-                  href={`/publicacion/${pub.slug}`}
-                  onClick={() => {
-                    if (query.trim()) persistHistory(query.trim());
-                    onOpenChange(false);
-                  }}
-                  className="flex gap-3 rounded-xl p-3 hover:bg-oh-stone/50 dark:hover:bg-white/5"
-                >
-                  <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded-md bg-oh-stone">
-                    {pub.coverImage ? (
-                      <Image
-                        src={pub.coverImage}
-                        alt=""
-                        fill
-                        className="object-cover"
-                        sizes="80px"
-                      />
-                    ) : null}
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground">{pub.title}</p>
-                    <p className="text-xs text-muted">
-                      {cat.name} · {pub.contentType}
-                    </p>
-                  </div>
-                </Link>
-              );
-            })
+            <ul className="space-y-0.5">
+              {items.map((item) => {
+                const cat = getCategory(item.primaryCategory);
+                return (
+                  <li key={item.id}>
+                    <Link
+                      href={`/publicacion/${item.slug}`}
+                      onClick={() => onOpenChange(false)}
+                      className="block rounded-xl px-3 py-3 transition hover:bg-oh-stone/80 dark:hover:bg-white/5"
+                    >
+                      <p className="text-[11px] text-muted">{cat.name}</p>
+                      <p className="font-display text-[1.05rem] leading-snug text-oh-ink dark:text-foreground">
+                        {item.title}
+                      </p>
+                      {item.author ? (
+                        <p className="mt-0.5 text-xs text-muted">{item.author}</p>
+                      ) : null}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
           )}
         </div>
-        <div className="flex items-center justify-between border-t border-border px-4 py-3 text-xs text-muted">
-          <span>Enter para buscar · Esc para cerrar</span>
+
+        <div className="flex items-center justify-between border-t border-border px-4 py-2.5 text-xs text-muted">
+          <span>Enter para ver resultados</span>
           <button
             type="button"
-            className="text-oh-blue hover:underline"
+            className="min-h-9 rounded-lg px-3 text-oh-blue hover:underline"
             onClick={() => goSearch()}
           >
-            Buscador avanzado
+            Abrir buscador completo
           </button>
         </div>
       </div>

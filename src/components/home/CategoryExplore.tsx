@@ -5,22 +5,28 @@ import Link from "next/link";
 import { CATEGORIES, TIMELINE_EXTERNAL_URL } from "@/lib/categories";
 
 /**
- * Categorías estilo recuerdo / oh.edu.mx: foto clara, barra OH, hover suave.
- * Tres mundos es un cuadrito más (abre cronología en otra pestaña).
+ * Rejilla editorial: foto protagonista, tipografía limpia, sin look de “aula”.
  */
 export function CategoryExplore() {
   return (
-    <section id="categorias" className="relative bg-[#243746] text-white">
-      <div className="mx-auto max-w-6xl px-4 pb-12 pt-2 sm:px-6 sm:pb-14">
-        <div className="mb-7 max-w-xl">
-          <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-[#8eb4ff]">
-            Catálogo
+    <section
+      id="categorias"
+      className="relative bg-[#1a2a36] text-white"
+      style={{
+        backgroundImage:
+          "radial-gradient(ellipse at 20% 0%, rgba(57,104,204,0.18), transparent 45%), radial-gradient(ellipse at 90% 20%, rgba(255,255,255,0.04), transparent 40%)",
+      }}
+    >
+      <div className="mx-auto max-w-6xl px-4 pb-16 pt-4 sm:px-6 sm:pb-20">
+        <div className="mb-8 max-w-lg">
+          <p className="text-[12px] font-medium tracking-[0.22em] text-[#9db6f0] uppercase">
+            Archivo vivo
           </p>
-          <h2 className="mt-2 font-display text-2xl sm:text-3xl">
-            Explora por categoría
+          <h2 className="mt-2 font-display text-3xl leading-tight sm:text-4xl">
+            Encuentra tu camino
           </h2>
-          <p className="mt-1.5 text-sm text-white/70">
-            Recuerdos, ideas y trabajos de la comunidad Or Hajayim.
+          <p className="mt-2 text-sm leading-relaxed text-white/65 sm:text-base">
+            Letras, pensamiento, historia y creación — un mismo lugar.
           </p>
         </div>
 
@@ -28,25 +34,27 @@ export function CategoryExplore() {
           {CATEGORIES.map((cat) => {
             const isTimeline = cat.slug === "tres-mundos-una-historia";
             const className =
-              "group flex cursor-pointer flex-col overflow-hidden rounded-md bg-white shadow-[0_8px_24px_rgba(0,0,0,0.18)] transition duration-200 hover:shadow-[0_16px_36px_rgba(0,0,0,0.28)]";
+              "group relative flex aspect-[4/5] cursor-pointer flex-col overflow-hidden rounded-2xl touch-manipulation focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8eb4ff]";
 
             const body = (
               <>
-                <div className="relative aspect-[4/3] overflow-hidden bg-[#e8ebf0]">
-                  <Image
-                    src={cat.coverImage}
-                    alt=""
-                    fill
-                    className="object-cover transition duration-500 group-hover:scale-[1.06]"
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                  />
-                  <div
-                    className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent opacity-80"
-                    aria-hidden
-                  />
-                </div>
-                <div className="flex min-h-[3.1rem] items-center bg-[#1a2a36] px-3 py-2.5">
-                  <span className="font-display text-[0.82rem] leading-snug text-white sm:text-sm">
+                <Image
+                  src={cat.coverImage}
+                  alt=""
+                  fill
+                  className="object-cover transition duration-700 group-hover:scale-[1.05]"
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                />
+                <div
+                  className="pointer-events-none absolute inset-0"
+                  aria-hidden
+                  style={{
+                    background:
+                      "linear-gradient(180deg, rgba(18,28,36,0.05) 20%, rgba(18,28,36,0.78) 100%)",
+                  }}
+                />
+                <div className="relative mt-auto p-3.5 sm:p-4">
+                  <span className="font-display text-[0.95rem] leading-snug text-white drop-shadow sm:text-lg">
                     {cat.name}
                   </span>
                 </div>
@@ -69,7 +77,12 @@ export function CategoryExplore() {
             }
 
             return (
-              <Link key={cat.slug} href={`/${cat.slug}`} className={className}>
+              <Link
+                key={cat.slug}
+                href={`/${cat.slug}`}
+                className={className}
+                prefetch
+              >
                 {body}
               </Link>
             );

@@ -3,7 +3,6 @@ import { Fraunces, Source_Sans_3 } from "next/font/google";
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
 import { AppShell } from "@/components/layout/AppShell";
 import { getSession } from "@/lib/auth/session";
-import { getAllPublications } from "@/lib/data/repository";
 import "./globals.css";
 
 const sourceSans = Source_Sans_3({
@@ -53,7 +52,6 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const user = await getSession();
-  const publications = await getAllPublications(user?.role ?? "visitor");
 
   return (
     <html lang="es" suppressHydrationWarning className="h-full">
@@ -61,9 +59,7 @@ export default async function RootLayout({
         className={`${sourceSans.variable} ${fraunces.variable} flex min-h-full flex-col antialiased`}
       >
         <ThemeProvider>
-          <AppShell user={user} searchPublications={publications}>
-            {children}
-          </AppShell>
+          <AppShell user={user}>{children}</AppShell>
         </ThemeProvider>
       </body>
     </html>

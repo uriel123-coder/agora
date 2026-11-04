@@ -1,15 +1,20 @@
+import Image from "next/image";
 import Link from "next/link";
-import { Download, ExternalLink, FileText } from "lucide-react";
+import { ExternalLink, FileText, Play } from "lucide-react";
 import { getCategory } from "@/lib/categories";
 import type { Publication } from "@/lib/types/content";
 import {
   detectMediaKind,
+  getMediaThumbnail,
   mediaKindLabel,
   toEmbeddablePdfUrl,
-  toGoogleDownloadUrl,
 } from "@/lib/utils/media-links";
 
-/** Tarjeta compacta: click en toda el área + botones con hit-area grande. */
+function isRemoteThumb(src: string) {
+  return /^https?:\/\//i.test(src);
+}
+
+/** Tarjeta con portada de imagen/video y zona de click completa. */
 export function WorkCard({
   publication,
   showAuthor = false,
@@ -20,12 +25,14 @@ export function WorkCard({
   const category = getCategory(publication.primaryCategory);
   const primaryUrl = publication.media[0]?.url;
   const kind = primaryUrl ? detectMediaKind(primaryUrl) : "link";
+  const thumb = getMediaThumbnail(primaryUrl, publication.coverImage);
+  const isVideo =
+    kind === "youtube" || kind === "vimeo" || kind === "video";
   const canPdf = primaryUrl ? Boolean(toEmbeddablePdfUrl(primaryUrl)) : false;
   const openUrl =
     primaryUrl && canPdf && (kind === "pdf" || kind === "google-doc")
       ? `/leer?url=${encodeURIComponent(primaryUrl)}&titulo=${encodeURIComponent(publication.title)}`
       : primaryUrl;
-  const downloadUrl = primaryUrl ? toGoogleDownloadUrl(primaryUrl) : null;
   const authors = publication.authors
     .filter((a) => a.nameVisible)
     .map((a) => a.displayName)
@@ -33,68 +40,85 @@ export function WorkCard({
   const detailHref = `/publicacion/${publication.slug}`;
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border/70 bg-card transition duration-200 hover:border-oh-blue/35 hover:shadow-[0_8px_22px_rgba(36,55,70,0.08)]">
-      <Link href={detailHref} className="flex min-h-0 flex-1 flex-col outline-none">
-        <div
-          className="flex h-[72px] items-center gap-2.5 px-3"
-          style={{
-            background: `linear-gradient(135deg, ${category.accent}18 0%, #2437460f 55%, #3968cc14 100%)`,
-          }}
-        >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/90 text-oh-blue shadow-sm dark:bg-white/10">
-            <FileText className="h-3.5 w-3.5" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[10px] font-medium uppercase tracking-[0.1em] text-oh-ink/50 dark:text-white/50">
-              {category.name}
-              {publication.schoolYear ? ` · ${publication.schoolYear}` : ""}
-              {primaryUrl ? ` · ${mediaKindLabel(kind)}` : ""}
-            </p>
-            <p className="mt-0.5 line-clamp-2 font-display text-[0.85rem] leading-snug text-oh-ink group-hover:text-oh-blue dark:text-foreground">
-              {publication.title}
-            </p>
+    <article className="group flex h-full flex-col overflow-hidden rounded-2xl bg-card shadow-[0_1px_0_rgba(36,55,70,0.06)] ring-1 ring-border/70 transition hover:ring-oh-blue/35">
+      <Link
+        href={detailHref}
+        className="relative block aspect-[16/10] overflow-hidden bg-oh-stone touch-manipulation"
+      >
+        {thumb ? (
+          isRemoteThumb(thumb) ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={thumb}
+              alt=""
+              className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+              loading="lazy"
+            />
+          ) : (
+            <Image
+              src={thumb}
+              alt=""
+              fill
+              className="object-cover transition duration-500 group-hover:scale-[1.03]"
+              sizes="(max-width:640px) 50vw, 25vw"
+            />
+          )
+        ) : (
+          <div
+            className="flex h-full w-full items-center justify-center"
+            style={{
+              background: `linear-gradient(145deg, ${category.accent}33, #24374622 55%, #3968cc22)`,
+            }}
+          >
+            <FileText className="h-8 w-8 text-oh-blue/70" />
           </div>
-        </div>
+        )}
 
-        <div className="flex flex-1 flex-col gap-1 px-3 pb-2 pt-2">
-          {showAuthor && authors ? (
-            <p className="truncate text-[11px] text-muted">{authors}</p>
-          ) : null}
-          <p className="line-clamp-2 text-[11px] leading-relaxed text-muted">
-            {publication.summary}
-          </p>
-        </div>
+        {isVideo ? (
+          <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-full bg-black/65 px-2 py-1 text-[10px] font-medium text-white backdrop-blur-sm">
+            <Play className="h-3 w-3 fill-white" />
+            Video
+          </span>
+        ) : (
+          <span className="absolute bottom-2 left-2 rounded-full bg-black/55 px-2 py-1 text-[10px] font-medium text-white/95 backdrop-blur-sm">
+            {mediaKindLabel(kind)}
+          </span>
+        )}
       </Link>
 
-      <div className="flex flex-wrap gap-2 border-t border-border/50 px-3 py-2.5">
-        <Link
-          href={detailHref}
-          className="inline-flex min-h-10 flex-1 items-center justify-center rounded-lg bg-oh-ink px-3 text-xs font-medium text-white transition hover:bg-oh-blue dark:bg-oh-blue sm:flex-none"
-        >
-          Ver
+      <div className="flex flex-1 flex-col px-3.5 pb-3.5 pt-3">
+        <Link href={detailHref} className="touch-manipulation outline-none">
+          <p className="text-[11px] text-muted">
+            {category.name}
+            {publication.schoolYear ? ` · ${publication.schoolYear}` : ""}
+          </p>
+          <h3 className="mt-1 line-clamp-2 font-display text-[1.02rem] leading-snug text-oh-ink group-hover:text-oh-blue dark:text-foreground">
+            {publication.title}
+          </h3>
+          {showAuthor && authors ? (
+            <p className="mt-1 truncate text-xs text-muted">{authors}</p>
+          ) : null}
         </Link>
-        {openUrl ? (
-          <a
-            href={openUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex min-h-10 flex-1 items-center justify-center gap-1 rounded-lg border border-border bg-card px-3 text-xs transition hover:border-oh-blue hover:text-oh-blue sm:flex-none"
+
+        <div className="mt-auto flex gap-2 pt-3">
+          <Link
+            href={detailHref}
+            className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl bg-oh-ink px-3 text-sm font-medium text-white touch-manipulation transition hover:bg-oh-blue dark:bg-oh-blue"
           >
-            <ExternalLink className="h-3.5 w-3.5" />
-            Abrir
-          </a>
-        ) : null}
-        {downloadUrl && (kind === "pdf" || kind === "google-doc") ? (
-          <a
-            href={downloadUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex min-h-10 items-center justify-center gap-1 rounded-lg border border-border bg-card px-3 text-xs transition hover:border-oh-blue hover:text-oh-blue"
-          >
-            <Download className="h-3.5 w-3.5" />
-            PDF
-          </a>
-        ) : null}
+            Ver
+          </Link>
+          {openUrl ? (
+            <a
+              href={openUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border border-border px-3 text-sm touch-manipulation transition hover:border-oh-blue hover:text-oh-blue"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              Abrir
+            </a>
+          ) : null}
+        </div>
       </div>
     </article>
   );
