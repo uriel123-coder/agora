@@ -121,6 +121,24 @@ export function titleColumnLabelForTab(tabTitle: string): string {
   return "Tema";
 }
 
+/** Nombre preferido de pestaña en Sheets para una categoría. */
+export function sheetTabTitleForCategorySlug(slug: string): string | null {
+  if (slug === "tres-mundos-una-historia" || slug === "publicaciones") {
+    return null;
+  }
+  const known: Record<string, string> = {
+    "taller-de-letras": "Taller de letras",
+    "mentes-curiosas": "Mentes curiosas",
+    "fe-y-pensamiento": "Fe y pensamiento",
+    shorashim: "Shorashim",
+    "ecos-de-la-historia": "Ecos de la historia",
+    "expresiones-del-arte": "Expresiones del arte",
+    "ideas-en-dialogo": "Ideas en diálogo",
+    "voces-creadoras": "Voces creadoras",
+  };
+  return known[slug] ?? null;
+}
+
 export const TIMELINE_TAB_CANDIDATES = [
   "Tres Mundos, una historia",
   "Hoja1",

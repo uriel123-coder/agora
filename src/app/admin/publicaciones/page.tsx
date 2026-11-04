@@ -1,20 +1,42 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AdminCategorySection } from "@/components/admin/AdminCategorySection";
 import { RefreshSheetsButton } from "@/components/admin/RefreshSheetsButton";
-import { SheetRowEditor } from "@/components/admin/SheetRowEditor";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
-import { Badge } from "@/components/ui/Badge";
 import { canAccessAdmin, getSession } from "@/lib/auth/session";
-import { getCategory } from "@/lib/categories";
-import { getAllPublications } from "@/lib/data/repository";
+import {
+  sheetTabTitleForCategorySlug,
+  titleColumnLabelForTab,
+} from "@/lib/data/adapters/sheet-aliases";
 import { loadPublicationsFromSheets } from "@/lib/data/providers/sheets";
-import { categorySlugFromTabTitle } from "@/lib/data/adapters/sheet-aliases";
+import { getAllPublications } from "@/lib/data/repository";
+import { CATEGORIES } from "@/lib/categories";
+import type { Publication } from "@/lib/types/content";
 
 export const metadata: Metadata = {
   title: "Admin · Publicaciones",
   robots: { index: false, follow: false },
 };
+
+function rowFromPublication(pub: Publication) {
+  const autor =
+    pub.authors.find((a) => a.nameVisible)?.displayName ||
+    pub.authors[0]?.displayName ||
+    "";
+  const tema =
+    pub.subject ||
+    pub.tags[0] ||
+    pub.title.replace(/\s+de\s+.+$/i, "").trim() ||
+    pub.title;
+  return {
+    publication: pub,
+    autor,
+    tema,
+    anio: pub.schoolYear || "",
+    enlace: pub.media[0]?.url || "",
+    editable: Boolean(pub.sheetsTab && pub.sheetsRowNumber),
+  };
+}
 
 export default async function AdminPublicacionesPage() {
   const user = await getSession();
@@ -25,177 +47,160 @@ export default async function AdminPublicacionesPage() {
     loadPublicationsFromSheets(),
   ]);
 
-  const byTab = new Map<string, typeof publications>();
-  for (const pub of publications) {
-    const tab = pub.sheetsTab || "Sin pestaña";
-    const list = byTab.get(tab) ?? [];
-    list.push(pub);
-    byTab.set(tab, list);
-  }
-
-  const tabsForAppend = [...byTab.keys()].filter(
-    (t) => t !== "Sin pestaña" && categorySlugFromTabTitle(t),
+  const catalogCategories = CATEGORIES.filter(
+    (c) => c.slug !== "tres-mundos-una-historia",
   );
 
+  const sections = catalogCategories.map((cat) => {
+    const pubs = publications.filter((p) => p.primaryCategory === cat.slug);
+    // Usa el nombre real de la pestaña si ya hay filas; si no, el nombre de categoría
+    const tabTitle =
+      pubs.find((p) => p.sheetsTab)?.sheetsTab ||
+      sheetTabTitleForCategorySlug(cat.slug) ||
+      cat.name;
+    return {
+      cat,
+      tabTitle,
+      temaLabel: titleColumnLabelForTab(tabTitle),
+      rows: pubs
+        .slice()
+        .sort((a, b) =>
+          (a.title || "").localeCompare(b.title || "", "es", {
+            sensitivity: "base",
+          }),
+        )
+        .map(rowFromPublication),
+    };
+  });
+
+  const firstWithContent = sections.findIndex((s) => s.rows.length > 0);
+
+  const otherPubs = publications.filter(
+    (p) =>
+      p.primaryCategory === "tres-mundos-una-historia" ||
+      !catalogCategories.some((c) => c.slug === p.primaryCategory),
+  );
+
+  const totalEditable = publications.filter(
+    (p) => p.sheetsTab && p.sheetsRowNumber,
+  ).length;
+
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
       <Breadcrumbs
         items={[
           { label: "Administración", href: "/admin" },
           { label: "Publicaciones" },
         ]}
       />
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="font-display text-4xl text-oh-ink dark:text-foreground">
-            Publicaciones · Sheets
+
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <div className="max-w-2xl">
+          <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-oh-blue">
+            Catálogo por categoría
+          </p>
+          <h1 className="mt-2 font-display text-4xl text-oh-ink dark:text-foreground">
+            Editar trabajos
           </h1>
-          <p className="mt-2 max-w-2xl text-muted">
-            Formato del colegio: cada categoría es una pestaña con{" "}
-            <strong>Autor · Tema/Género · Año · Enlace</strong>. Aquí agregas,
-            editas o quitas filas. El enlace puede ser PDF, Drive público,
-            imagen, video o YouTube. Para vista previa limpia, sube el archivo a
-            la carpeta pública de Ágora.
+          <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
+            Cada apartado es una categoría. Abre uno, corrige autor, tema, año o
+            enlace (errores chiquitos incluidos) y guarda. También puedes agregar
+            o quitar filas.
           </p>
         </div>
         <RefreshSheetsButton />
       </div>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-3">
-        <div className="rounded-md border border-border bg-card p-4">
-          <p className="text-xs uppercase tracking-wide text-muted">Trabajos</p>
-          <p className="mt-1 font-display text-2xl">{publications.length}</p>
+        <div className="rounded-2xl border border-border bg-card p-4">
+          <p className="text-[11px] uppercase tracking-wide text-muted">
+            Trabajos
+          </p>
+          <p className="mt-1 font-display text-3xl">{publications.length}</p>
         </div>
-        <div className="rounded-md border border-border bg-card p-4">
-          <p className="text-xs uppercase tracking-wide text-muted">Pestañas</p>
-          <p className="mt-1 font-display text-2xl">{byTab.size}</p>
+        <div className="rounded-2xl border border-border bg-card p-4">
+          <p className="text-[11px] uppercase tracking-wide text-muted">
+            Editables en Sheets
+          </p>
+          <p className="mt-1 font-display text-3xl">{totalEditable}</p>
         </div>
-        <div className="rounded-md border border-border bg-card p-4">
-          <p className="text-xs uppercase tracking-wide text-muted">Fuentes</p>
-          <p className="mt-1 text-sm text-muted">
+        <div className="rounded-2xl border border-border bg-card p-4">
+          <p className="text-[11px] uppercase tracking-wide text-muted">
+            Fuentes
+          </p>
+          <p className="mt-2 line-clamp-3 text-sm text-muted">
             {sheetsLoad.sources?.join(", ") || "—"}
           </p>
         </div>
       </div>
 
-      <section className="mt-6 rounded-md border border-border bg-oh-stone/40 p-4 text-sm dark:bg-white/[0.03]">
-        <p className="font-medium">Estructura detectada en Google Sheets</p>
-        <ul className="mt-2 list-disc space-y-1 pl-5 text-muted">
-          <li>
-            <code>Taller de letras</code>: Autor, Género, Año, Enlace
-          </li>
-          <li>
-            Resto de categorías: Autor, Tema, Año, Enlace (Arte usa
-            Clasificación)
-          </li>
-          <li>
-            <code>Tres Mundos, una historia</code>: cronología (no se edita aquí)
-          </li>
-        </ul>
-        <p className="mt-2 text-muted">
-          Para guardar cambios, la cuenta de servicio debe tener permiso de{" "}
-          <strong>editor</strong> en el spreadsheet.
-        </p>
-      </section>
+      <nav
+        aria-label="Ir a categoría"
+        className="mt-6 flex flex-wrap gap-2 rounded-2xl border border-border bg-oh-stone/40 p-3 dark:bg-white/[0.03]"
+      >
+        {sections.map(({ cat, rows }) => (
+          <a
+            key={cat.slug}
+            href={`#cat-${cat.slug}`}
+            className="inline-flex min-h-10 items-center rounded-full border border-border bg-card px-3.5 text-sm transition hover:border-oh-blue hover:text-oh-blue"
+            style={{ touchAction: "manipulation" }}
+          >
+            {cat.name}
+            <span className="ml-1.5 text-muted">({rows.length})</span>
+          </a>
+        ))}
+      </nav>
 
-      {publications.length === 0 ? (
-        <div className="mt-10 rounded-md border border-dashed border-border px-6 py-12 text-center">
-          <h2 className="font-display text-2xl">Sin trabajos todavía</h2>
+      <p className="mt-4 text-xs text-muted">
+        Para guardar, la cuenta de servicio necesita permiso de{" "}
+        <strong>Editor</strong> en el Google Sheet. Tres mundos (cronología) no
+        se edita aquí.
+      </p>
+
+      {sheetsLoad.error && publications.length === 0 ? (
+        <div className="mt-8 rounded-2xl border border-dashed border-border px-6 py-10 text-center">
+          <h2 className="font-display text-2xl">Sin datos de Sheets</h2>
           <p className="mx-auto mt-2 max-w-lg text-sm text-muted">
-            {sheetsLoad.error ||
-              "Agrega filas en las pestañas de categoría del spreadsheet y pulsa Actualizar."}
+            {sheetsLoad.error}
           </p>
         </div>
-      ) : (
-        <div className="mt-10 space-y-10">
-          {[...byTab.entries()].map(([tab, pubs]) => (
-            <section key={tab}>
-              <h2 className="font-display text-2xl text-oh-ink dark:text-foreground">
-                {tab}
-              </h2>
-              <p className="mt-1 text-sm text-muted">
-                {pubs.length} trabajo{pubs.length === 1 ? "" : "s"}
-              </p>
-              <ul className="mt-4 space-y-4">
-                {pubs.map((pub) => {
-                  const author =
-                    pub.authors.find((a) => a.nameVisible)?.displayName || "";
-                  const tema =
-                    pub.subject ||
-                    pub.tags[0] ||
-                    pub.title.replace(/\s+de\s+.+$/, "");
-                  return (
-                    <li
-                      key={pub.id}
-                      className="rounded-md border border-border bg-card p-4"
-                    >
-                      <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
-                        <div>
-                          <div className="flex flex-wrap gap-2">
-                            <Badge>
-                              {getCategory(pub.primaryCategory).name}
-                            </Badge>
-                            {pub.schoolYear ? (
-                              <Badge tone="muted">{pub.schoolYear}</Badge>
-                            ) : null}
-                          </div>
-                          <h3 className="mt-2 font-display text-xl">
-                            <Link
-                              href={`/publicacion/${pub.slug}`}
-                              className="hover:text-oh-blue"
-                            >
-                              {pub.title}
-                            </Link>
-                          </h3>
-                          <p className="text-sm text-muted">
-                            {author}
-                            {pub.sheetsRowNumber
-                              ? ` · fila ${pub.sheetsRowNumber}`
-                              : ""}
-                          </p>
-                        </div>
-                        {author ? (
-                          <Link
-                            href={`/alumno/${pub.authors[0]?.studentId || ""}`}
-                            className="text-sm text-oh-blue hover:underline"
-                          >
-                            Ver portafolio →
-                          </Link>
-                        ) : null}
-                      </div>
-                      {pub.sheetsTab && pub.sheetsRowNumber ? (
-                        <SheetRowEditor
-                          tabTitle={pub.sheetsTab}
-                          rowNumber={pub.sheetsRowNumber}
-                          initial={{
-                            autor: author,
-                            tema,
-                            anio: pub.schoolYear || "",
-                            enlace: pub.media[0]?.url || "",
-                          }}
-                        />
-                      ) : (
-                        <p className="text-xs text-muted">
-                          Esta entrada no tiene fila editable en Sheets.
-                        </p>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
+      ) : null}
 
-              {categorySlugFromTabTitle(tab) ? (
-                <div className="mt-4">
-                  <p className="mb-2 text-sm font-medium">Agregar trabajo a {tab}</p>
-                  <SheetRowEditor tabTitle={tab} mode="append" />
-                </div>
-              ) : null}
-            </section>
-          ))}
-        </div>
-      )}
+      <div className="mt-8 space-y-4">
+        {sections.map(({ cat, tabTitle, temaLabel, rows }, index) => (
+          <AdminCategorySection
+            key={cat.slug}
+            id={`cat-${cat.slug}`}
+            name={cat.name}
+            accent={cat.accent}
+            tabTitle={tabTitle}
+            temaLabel={temaLabel}
+            rows={rows}
+            defaultOpen={index === firstWithContent || firstWithContent < 0}
+          />
+        ))}
+      </div>
 
-      {tabsForAppend.length === 0 && publications.length === 0 ? null : null}
+      {otherPubs.length > 0 ? (
+        <section className="mt-10 rounded-2xl border border-dashed border-border p-5">
+          <h2 className="font-display text-xl">Otras entradas</h2>
+          <p className="mt-1 text-sm text-muted">
+            No pertenecen a las categorías editables del catálogo.
+          </p>
+          <ul className="mt-4 space-y-2 text-sm">
+            {otherPubs.map((p) => (
+              <li key={p.id}>
+                <a
+                  href={`/publicacion/${p.slug}`}
+                  className="text-oh-blue hover:underline"
+                >
+                  {p.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </div>
   );
 }
