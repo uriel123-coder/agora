@@ -46,7 +46,6 @@ export function toGoogleDownloadUrl(url: string): string | null {
   if (url.includes("/spreadsheets/")) {
     return `https://docs.google.com/spreadsheets/d/${id}/export?format=pdf`;
   }
-  // confirm=t evita la página intermedia de Google Drive
   return `https://drive.google.com/uc?export=download&confirm=t&id=${id}`;
 }
 
@@ -72,6 +71,11 @@ export function toAgoraPdfProxyUrl(url: string): string {
   return `/api/doc-pdf?url=${encodeURIComponent(url)}`;
 }
 
+/** Miniatura proxied (misma en todas las PCs). */
+export function toAgoraThumbUrl(fileId: string): string {
+  return `/api/media/thumb?id=${encodeURIComponent(fileId)}`;
+}
+
 export function isGoogleWorkspaceUrl(url: string): boolean {
   return /docs\.google\.com|drive\.google\.com/i.test(url);
 }
@@ -89,7 +93,7 @@ export function isPdfUrl(url: string): boolean {
 }
 
 export function isDirectVideoUrl(url: string): boolean {
-  return /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
+  return /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(url);
 }
 
 export function isDirectAudioUrl(url: string): boolean {
@@ -113,7 +117,15 @@ export function vimeoEmbedUrl(url: string): string | null {
   return m ? `https://player.vimeo.com/video/${m[1]}` : null;
 }
 
-/** Miniatura para tarjetas: YouTube, imagen directa o thumbnail de Drive. */
+function hintSuggestsVideo(hint = ""): boolean {
+  return /\b(video|vídeo|mp4|mov|webm|reel|filmaci[oó]n|clip)\b/i.test(hint);
+}
+
+function hintSuggestsImage(hint = ""): boolean {
+  return /\b(imagen|image|foto|photo|png|jpe?g|webp|galer[ií]a)\b/i.test(hint);
+}
+
+/** Miniatura para tarjetas: YouTube, imagen, o proxy de Drive. */
 export function getMediaThumbnail(
   url: string | undefined,
   coverImage?: string,
@@ -123,25 +135,36 @@ export function getMediaThumbnail(
   const yt = youtubeVideoId(url);
   if (yt) return `https://i.ytimg.com/vi/${yt}/hqdefault.jpg`;
   if (isDirectImageUrl(url)) return url;
-  if (isGoogleWorkspaceUrl(url)) {
-    const id = extractGoogleDocId(url);
-    if (id) return `https://drive.google.com/thumbnail?id=${id}&sz=w640`;
-  }
+  const id = extractGoogleDocId(url);
+  if (id && isGoogleWorkspaceUrl(url)) return toAgoraThumbUrl(id);
   return null;
 }
 
-export function detectMediaKind(url: string): MediaKind {
+export function detectMediaKind(
+  url: string,
+  opts?: { mediaType?: string; title?: string },
+): MediaKind {
+  const hint = `${opts?.mediaType ?? ""} ${opts?.title ?? ""}`;
   if (youtubeEmbedUrl(url)) return "youtube";
   if (vimeoEmbedUrl(url)) return "vimeo";
-  if (isDirectImageUrl(url)) return "image";
-  if (isDirectVideoUrl(url)) return "video";
-  if (isDirectAudioUrl(url)) return "audio";
-  if (isPdfUrl(url)) return "pdf";
+  if (isDirectImageUrl(url) || opts?.mediaType === "image" || hintSuggestsImage(hint)) {
+    return "image";
+  }
+  if (
+    isDirectVideoUrl(url) ||
+    opts?.mediaType === "video" ||
+    hintSuggestsVideo(hint)
+  ) {
+    return "video";
+  }
+  if (isDirectAudioUrl(url) || opts?.mediaType === "audio") return "audio";
+  if (isPdfUrl(url) || opts?.mediaType === "pdf") return "pdf";
   if (isGoogleWorkspaceUrl(url)) {
     if (url.includes("/document/") || url.includes("/presentation/")) {
       return "google-doc";
     }
-    return "pdf"; // Drive file: intentamos PDF
+    // Archivo de Drive sin extensión: por defecto documento/PDF
+    return "pdf";
   }
   return "link";
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -16,12 +16,20 @@ type Props = {
   title: string;
   openHref?: string;
   className?: string;
+  /** Si el archivo no es PDF o falla la carga. */
+  onError?: (message: string) => void;
 };
 
 /**
  * Visor PDF propio con PDF.js: sin barra de Chrome/Google.
  */
-export function AgoraPdfViewer({ src, title, openHref, className }: Props) {
+export function AgoraPdfViewer({
+  src,
+  title,
+  openHref,
+  className,
+  onError,
+}: Props) {
   const [numPages, setNumPages] = useState(0);
   const [page, setPage] = useState(1);
   const [scale, setScale] = useState(1.1);
@@ -30,6 +38,9 @@ export function AgoraPdfViewer({ src, title, openHref, className }: Props) {
   const pdfRef = useRef<import("pdfjs-dist").PDFDocumentProxy | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [ready, setReady] = useState(0); // fuerza re-render al montar canvas
+  const reportError = useEffectEvent((message: string) => {
+    onError?.(message);
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -70,12 +81,13 @@ export function AgoraPdfViewer({ src, title, openHref, className }: Props) {
         setReady((n) => n + 1);
       } catch (err) {
         if (!cancelled) {
-          setError(
+          const message =
             err instanceof Error
               ? err.message
-              : "No se pudo cargar el PDF.",
-          );
+              : "No se pudo cargar el PDF.";
+          setError(message);
           setLoading(false);
+          reportError(message);
         }
       }
     })();

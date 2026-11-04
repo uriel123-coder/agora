@@ -114,6 +114,8 @@ export default async function PublicationPage({ params }: Props) {
             <DocumentPanel
               title={publication.title}
               url={publication.media[0].url}
+              mediaType={publication.media[0].type}
+              mediaTitle={publication.media[0].title}
             />
           ) : null}
 

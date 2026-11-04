@@ -1,15 +1,14 @@
-import { FileText, Play } from "lucide-react";
+import { WorkCardMedia } from "@/components/publications/WorkCardMedia";
 import { getCategory } from "@/lib/categories";
 import type { Publication } from "@/lib/types/content";
 import {
   detectMediaKind,
   getMediaThumbnail,
-  mediaKindLabel,
 } from "@/lib/utils/media-links";
 
 /**
- * Toda la tarjeta es un solo <a> nativo (navegación completa).
- * El soft-nav de Next se sentía como “no pica” porque tarda con Sheets.
+ * Toda la tarjeta es un solo <a> nativo.
+ * Miniatura vía proxy Ágora + fallback si falla.
  */
 export function WorkCard({
   publication,
@@ -19,8 +18,22 @@ export function WorkCard({
   showAuthor?: boolean;
 }) {
   const category = getCategory(publication.primaryCategory);
-  const primaryUrl = publication.media[0]?.url;
-  const kind = primaryUrl ? detectMediaKind(primaryUrl) : "link";
+  const primary = publication.media[0];
+  const primaryUrl = primary?.url;
+  const kind = primaryUrl
+    ? detectMediaKind(primaryUrl, {
+        mediaType:
+          primary?.type === "document" && publication.contentType === "video"
+            ? "video"
+            : primary?.type === "document" && publication.contentType === "audio"
+              ? "audio"
+              : primary?.type === "document" &&
+                  publication.contentType === "galeria"
+                ? "image"
+                : primary?.type,
+        title: `${primary?.title ?? ""} ${publication.title} ${publication.contentType}`,
+      })
+    : "link";
   const thumb = getMediaThumbnail(primaryUrl, publication.coverImage);
   const isVideo =
     kind === "youtube" || kind === "vimeo" || kind === "video";
@@ -37,36 +50,12 @@ export function WorkCard({
       style={{ touchAction: "manipulation" }}
     >
       <div className="relative aspect-[16/11] overflow-hidden bg-oh-stone">
-        {thumb ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={thumb}
-            alt=""
-            className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
-            loading="lazy"
-            decoding="async"
-          />
-        ) : (
-          <div
-            className="flex h-full w-full items-center justify-center"
-            style={{
-              background: `linear-gradient(145deg, ${category.accent}33, #24374618 55%, #3968cc22)`,
-            }}
-          >
-            <FileText className="h-7 w-7 text-oh-blue/65" />
-          </div>
-        )}
-
-        <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-full bg-black/60 px-2 py-1 text-[10px] font-medium text-white backdrop-blur-sm">
-          {isVideo ? (
-            <>
-              <Play className="h-3 w-3 fill-white" />
-              Video
-            </>
-          ) : (
-            mediaKindLabel(kind)
-          )}
-        </span>
+        <WorkCardMedia
+          src={thumb}
+          accent={category.accent}
+          kind={kind}
+          mediaUrl={primaryUrl}
+        />
       </div>
 
       <div className="flex flex-1 flex-col px-3.5 py-3">
@@ -81,7 +70,7 @@ export function WorkCard({
           <p className="mt-1 truncate text-xs text-muted">{authors}</p>
         ) : null}
         <span className="mt-3 inline-flex min-h-10 items-center justify-center rounded-xl bg-oh-ink text-sm font-medium text-white group-hover:bg-oh-blue dark:bg-oh-blue">
-          Ver trabajo
+          {isVideo ? "Ver video" : "Ver trabajo"}
         </span>
       </div>
     </a>

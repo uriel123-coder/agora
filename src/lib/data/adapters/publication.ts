@@ -42,10 +42,23 @@ function parseAuthors(raw: string): AuthorRef[] {
 
 function detectMediaType(url: string, hint = ""): MediaAsset["type"] {
   const value = `${hint} ${url}`.toLowerCase();
+  if (
+    /youtube\.com|youtu\.be|vimeo\.com/i.test(url) ||
+    /\.(mp4|webm|mov|m4v)(\?|$)/i.test(url) ||
+    /\b(video|vídeo|reel|clip)\b/.test(value)
+  ) {
+    return "video";
+  }
   if (/\.pdf(\?|$)/i.test(url) || value.includes("pdf")) return "pdf";
-  if (/\.(mp4|webm|mov)(\?|$)/i.test(url)) return "video";
-  if (/\.(mp3|wav|ogg|m4a)(\?|$)/i.test(url)) return "audio";
-  if (/\.(png|jpe?g|gif|webp|avif|svg)(\?|$)/i.test(url)) return "image";
+  if (/\.(mp3|wav|ogg|m4a)(\?|$)/i.test(url) || /\baudio\b/.test(value)) {
+    return "audio";
+  }
+  if (
+    /\.(png|jpe?g|gif|webp|avif|svg)(\?|$)/i.test(url) ||
+    /\b(imagen|foto|photo|image)\b/.test(value)
+  ) {
+    return "image";
+  }
   if (
     value.includes("docs.google") ||
     value.includes("drive.google") ||
@@ -58,7 +71,7 @@ function detectMediaType(url: string, hint = ""): MediaAsset["type"] {
 }
 
 /** Acepta URLs sueltas o pares `título|url` / `título::url`. */
-function parseMedia(raw: string): MediaAsset[] {
+function parseMedia(raw: string, extraHint = ""): MediaAsset[] {
   if (!raw?.trim()) return [];
   const parts = raw
     .split(/[\n;]+/)
@@ -80,7 +93,7 @@ function parseMedia(raw: string): MediaAsset[] {
     }
     return {
       id: `media-${index}`,
-      type: detectMediaType(url, title),
+      type: detectMediaType(url, `${title ?? ""} ${extraHint}`),
       url,
       title: title || undefined,
       alt: title || "Recurso vinculado",
@@ -226,9 +239,6 @@ export function rowToPublication(
       ? categories.find((c) => c === primaryRaw)
       : undefined) ?? categories[0];
 
-  const media = parseMedia(row.media);
-  const coverFromMedia = media.find((m) => m.type === "image")?.url;
-  const coverImage = row.coverImage || coverFromMedia || undefined;
   const authors = parseAuthors(row.authors);
   const authorLabel = authors[0]?.displayName;
   const titleBase = row.title.trim();
@@ -240,6 +250,23 @@ export function rowToPublication(
     titleBase && authorLabel && looksGeneric
       ? `${titleBase} · ${authorLabel}`
       : titleBase || (authorLabel ? `Trabajo de ${authorLabel}` : "Sin título");
+
+  const contentType = asContentType(row.contentType || titleBase || "articulo");
+  const mediaHint = [titleBase, row.contentType, contentType].filter(Boolean).join(" ");
+  let media = parseMedia(row.media, mediaHint);
+  // Si el tipo de contenido es video/audio/galería, forzar el primer media
+  if (media[0] && contentType === "video" && media[0].type !== "video") {
+    media = [{ ...media[0], type: "video" }];
+  }
+  if (media[0] && contentType === "audio" && media[0].type !== "audio") {
+    media = [{ ...media[0], type: "audio" }];
+  }
+  if (media[0] && contentType === "galeria" && media[0].type === "document") {
+    media = [{ ...media[0], type: "image" }];
+  }
+
+  const coverFromMedia = media.find((m) => m.type === "image")?.url;
+  const coverImage = row.coverImage || coverFromMedia || undefined;
 
   const year = row.schoolYear?.trim();
   const summary =
@@ -263,7 +290,7 @@ export function rowToPublication(
     coverAlt: row.coverAlt || undefined,
     categorySlugs: categories,
     primaryCategory: primary,
-    contentType: asContentType(row.contentType || titleBase || "articulo"),
+    contentType,
     tags: splitList(row.tags).length
       ? splitList(row.tags)
       : [titleBase, year].filter(Boolean) as string[],

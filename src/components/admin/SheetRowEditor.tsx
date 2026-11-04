@@ -29,8 +29,15 @@ export function SheetRowEditor({
   const [open, setOpen] = useState(mode === "append" || !compact);
 
   const kindHint = useMemo(
-    () => (enlace.trim() ? mediaKindLabel(detectMediaKind(enlace.trim())) : null),
-    [enlace],
+    () =>
+      enlace.trim()
+        ? mediaKindLabel(
+            detectMediaKind(enlace.trim(), {
+              title: tema,
+            }),
+          )
+        : null,
+    [enlace, tema],
   );
 
   const dirty =
@@ -222,6 +229,11 @@ export function SheetRowEditor({
                   Tipo: {kindHint}
                 </span>
               ) : null}
+              <span className="mt-1 block text-[11px] font-normal text-muted">
+                Si es video en Drive, pon «video» en {temaLabel.toLowerCase()} o
+                en el título del enlace (`video::https://…`) para que se
+                reproduzca aquí.
+              </span>
             </label>
           </div>
 
