@@ -1,7 +1,7 @@
 import { google } from "googleapis";
 import { getSheetsConfig } from "@/lib/data/providers/sheets";
 
-const SHEETS_TIMEOUT_MS = Number(process.env.GOOGLE_SHEETS_TIMEOUT_MS ?? 6_000);
+const SHEETS_TIMEOUT_MS = Number(process.env.GOOGLE_SHEETS_TIMEOUT_MS ?? 20_000);
 
 async function withTimeout<T>(promise: Promise<T>, label: string): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;

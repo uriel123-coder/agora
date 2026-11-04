@@ -381,23 +381,39 @@ export async function loadPublicationsFromSheets(): Promise<{
   try {
     const { listSheetTitles } = await import("@/lib/data/providers/sheets-auth");
     const tabs = await listSheetTitles(config.spreadsheetId);
-    for (const tab of tabs) {
-      const slug = categorySlugFromTabTitle(tab.title) as CategorySlug | null;
-      if (!slug) continue;
-      const range = `'${tab.title.replace(/'/g, "''")}'!A:Z`;
-      const { values, error } = await fetchSheetValues(config, range);
-      if (error || !values.length) continue;
-      const converted = convertSheetRows(values, {
-        defaultCategory: slug,
-        sheetsTab: tab.title,
-      });
-      if (converted.publications.length === 0) continue;
-      publications.push(...converted.publications);
-      issues.push(...converted.issues);
-      sources.push(tab.title);
+    const categoryTabs = tabs.filter(
+      (tab) => categorySlugFromTabTitle(tab.title) != null,
+    );
+
+    const tabResults = await Promise.all(
+      categoryTabs.map(async (tab) => {
+        const slug = categorySlugFromTabTitle(tab.title) as CategorySlug;
+        const range = `'${tab.title.replace(/'/g, "''")}'!A:Z`;
+        const { values, error } = await fetchSheetValues(config, range);
+        if (error || !values.length) {
+          return null;
+        }
+        const converted = convertSheetRows(values, {
+          defaultCategory: slug,
+          sheetsTab: tab.title,
+        });
+        if (converted.publications.length === 0) return null;
+        return { tabTitle: tab.title, converted };
+      }),
+    );
+
+    for (const result of tabResults) {
+      if (!result) continue;
+      publications.push(...result.converted.publications);
+      issues.push(...result.converted.issues);
+      sources.push(result.tabTitle);
     }
-  } catch {
-    // Si no hay service account para listar pestañas, seguimos con lo leído.
+  } catch (err) {
+    errors.push(
+      err instanceof Error
+        ? err.message
+        : "No se pudieron listar las pestañas de categoría.",
+    );
   }
 
   if (publications.length === 0) {

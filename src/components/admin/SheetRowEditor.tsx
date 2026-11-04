@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { detectMediaKind, mediaKindLabel } from "@/lib/utils/media-links";
@@ -16,7 +15,6 @@ export function SheetRowEditor({
   initial?: { autor: string; tema: string; anio: string; enlace: string };
   mode?: "update" | "append";
 }) {
-  const router = useRouter();
   const [autor, setAutor] = useState(initial?.autor ?? "");
   const [tema, setTema] = useState(initial?.tema ?? "");
   const [anio, setAnio] = useState(initial?.anio ?? "");
@@ -47,7 +45,14 @@ export function SheetRowEditor({
           enlace,
         }),
       });
-      const data = await res.json();
+      const text = await res.text();
+      let data: { error?: string } = {};
+      try {
+        data = JSON.parse(text) as { error?: string };
+      } catch {
+        setStatus(`Error del servidor (${res.status})`);
+        return;
+      }
       if (!res.ok) {
         setStatus(data.error || "Error al guardar");
         return;
@@ -59,7 +64,8 @@ export function SheetRowEditor({
         setAnio("");
         setEnlace("");
       }
-      router.refresh();
+      // Recarga dura para ver datos frescos sin soft-nav colgado
+      window.location.reload();
     } catch {
       setStatus("Error de red");
     } finally {
@@ -88,13 +94,20 @@ export function SheetRowEditor({
           rowNumber,
         }),
       });
-      const data = await res.json();
+      const text = await res.text();
+      let data: { error?: string } = {};
+      try {
+        data = JSON.parse(text) as { error?: string };
+      } catch {
+        setStatus(`Error del servidor (${res.status})`);
+        return;
+      }
       if (!res.ok) {
         setStatus(data.error || "Error al borrar");
         return;
       }
       setStatus("Fila eliminada");
-      router.refresh();
+      window.location.reload();
     } catch {
       setStatus("Error de red");
     } finally {

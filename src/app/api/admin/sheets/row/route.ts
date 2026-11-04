@@ -10,6 +10,23 @@ import {
   updateCategorySheetRow,
 } from "@/lib/data/providers/sheets-auth";
 
+export const runtime = "nodejs";
+export const maxDuration = 30;
+
+function friendlyWriteError(err: unknown): string {
+  const message = err instanceof Error ? err.message : String(err);
+  if (/permission|forbidden|403|The caller does not have permission/i.test(message)) {
+    return "Sin permiso para escribir. Comparte el Google Sheet con la cuenta de servicio como Editor (no solo Lector).";
+  }
+  if (/timeout|Timeout/i.test(message)) {
+    return "Sheets tardó demasiado al guardar. Intenta otra vez.";
+  }
+  if (/Unable to parse range|Unable to parse/i.test(message)) {
+    return "No se encontró esa pestaña en el spreadsheet. Revisa el nombre exacto.";
+  }
+  return message || "No se pudo escribir en Google Sheets";
+}
+
 type Body = {
   action: "update" | "append" | "delete";
   tabTitle: string;
@@ -100,12 +117,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   } catch (err) {
     return NextResponse.json(
-      {
-        error:
-          err instanceof Error
-            ? err.message
-            : "No se pudo escribir en Google Sheets",
-      },
+      { error: friendlyWriteError(err) },
       { status: 500 },
     );
   }
