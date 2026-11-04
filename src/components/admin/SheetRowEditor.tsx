@@ -230,9 +230,9 @@ export function SheetRowEditor({
                 </span>
               ) : null}
               <span className="mt-1 block text-[11px] font-normal text-muted">
-                Si es video en Drive, pon «video» en {temaLabel.toLowerCase()} o
-                en el título del enlace (`video::https://…`) para que se
-                reproduzca aquí.
+                Ideal: PDF o Google Doc. También vale Word (docx), PowerPoint,
+                etc. (vista Drive). Si es video, pon «video» en{" "}
+                {temaLabel.toLowerCase()} o `video::https://…`.
               </span>
             </label>
           </div>

@@ -4,6 +4,10 @@
  *   Autor | Tema|Género|Clasificación | Año | Enlace
  * Timeline = "Tres Mundos, una historia"
  */
+/**
+ * Mapeo de encabezados OH → campos canónicos.
+ * Importante: Género/Clasificación NO pisan el Título (Taller tiene ambos).
+ */
 const ALIAS_TO_CANONICAL: Record<string, string> = {
   id: "id",
   slug: "slug",
@@ -12,10 +16,6 @@ const ALIAS_TO_CANONICAL: Record<string, string> = {
   título: "title",
   nombre: "title",
   tema: "title",
-  género: "title",
-  genero: "title",
-  clasificación: "title",
-  clasificacion: "title",
   "nombre del trabajo": "title",
   subtitle: "subtitle",
   summary: "summary",
@@ -25,6 +25,10 @@ const ALIAS_TO_CANONICAL: Record<string, string> = {
   body: "body",
   contenttype: "contentType",
   tipo: "contentType",
+  género: "contentType",
+  genero: "contentType",
+  clasificación: "contentType",
+  clasificacion: "contentType",
   categories: "categories",
   categoria: "categories",
   categoría: "categories",
@@ -56,7 +60,19 @@ export function normalizeHeaderKey(raw: string): string {
   return ALIAS_TO_CANONICAL[key] ?? raw.trim();
 }
 
-/** Renombra claves de una fila a nombres canónicos; conserva originales en __raw. */
+function cell(row: Record<string, string>, ...names: string[]): string {
+  for (const name of names) {
+    const direct = row[name];
+    if (direct?.trim()) return direct.trim();
+    const found = Object.entries(row).find(
+      ([k]) => k.trim().toLowerCase() === name.toLowerCase(),
+    );
+    if (found?.[1]?.trim()) return found[1].trim();
+  }
+  return "";
+}
+
+/** Renombra claves de una fila a nombres canónicos. */
 export function normalizeSheetRow(
   row: Record<string, string>,
 ): Record<string, string> {
@@ -68,21 +84,27 @@ export function normalizeSheetRow(
       out[canonical] = value ?? "";
     }
   }
-  // Conservar género/clasificación como contentType si aplica
-  const genre =
-    row["Género"] ||
-    row["Género"] ||
-    row["genero"] ||
-    row["Género"] ||
-    row["Clasificación"] ||
-    row["Clasificacion"] ||
-    "";
-  if (genre && !out.contentType) out.contentType = String(genre);
-  // Si el título vino de Género (Taller), contentType = mismo valor está bien
-  const rawGenre = row["Género"] || row["genero"] || row["Genero"];
-  if (rawGenre && out.title === rawGenre) {
-    out.contentType = String(rawGenre);
+
+  // Título real: Título > Tema > Nombre (nunca dejar que Género gane si hay Título)
+  const explicitTitle = cell(row, "Título", "Titulo", "title", "Tema", "Nombre");
+  if (explicitTitle) out.title = explicitTitle;
+
+  const genre = cell(
+    row,
+    "Género",
+    "Genero",
+    "género",
+    "genero",
+    "Clasificación",
+    "Clasificacion",
+    "tipo",
+  );
+  if (genre) {
+    out.contentType = genre;
+    // Solo si no hay título de trabajo, usar género/clasificación como título
+    if (!out.title?.trim()) out.title = genre;
   }
+
   return out;
 }
 
@@ -113,12 +135,27 @@ export function categorySlugFromTabTitle(title: string): string | null {
   return slug;
 }
 
-/** Qué columna B usa cada pestaña (Tema / Género / Clasificación). */
+/** Etiqueta del campo principal editable (título del trabajo). */
 export function titleColumnLabelForTab(tabTitle: string): string {
   const key = tabTitle.trim().toLowerCase().replace(/\s+/g, " ");
-  if (key === "taller de letras") return "Género";
+  if (key === "taller de letras") return "Título";
   if (key === "expresiones del arte") return "Clasificación";
   return "Tema";
+}
+
+/** Resuelve el nombre real de pestaña aunque haya espacios dobles o mayúsculas. */
+export function resolveSheetTabTitle(
+  availableTitles: string[],
+  wanted: string,
+): string | null {
+  const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
+  const want = norm(wanted);
+  const exact = availableTitles.find((t) => norm(t) === want);
+  if (exact) return exact;
+  return (
+    availableTitles.find((t) => norm(t).includes(want) || want.includes(norm(t))) ||
+    null
+  );
 }
 
 /** Nombre preferido de pestaña en Sheets para una categoría. */

@@ -5,10 +5,11 @@ import { FileText, Film, ImageIcon } from "lucide-react";
 import {
   extractGoogleDocId,
   isGoogleWorkspaceUrl,
+  mapApiKindToMediaKind,
   type MediaKind,
 } from "@/lib/utils/media-links";
 
-/** Miniatura con fallback si Drive/la red fallan (evita cuadro vacío o roto). */
+/** Miniatura con fallback si Drive/la red fallan. */
 export function MediaThumb({
   src,
   accent,
@@ -36,13 +37,20 @@ export function MediaThumb({
 
   useEffect(() => {
     setResolvedKind(kind);
-  }, [kind]);
+    setFailed(false);
+  }, [kind, src]);
 
-  // Si es Drive y aún no sabemos si es video, preguntar al servidor (API key)
   useEffect(() => {
     if (!mediaUrl || !isGoogleWorkspaceUrl(mediaUrl)) return;
-    if (kind === "youtube" || kind === "vimeo" || kind === "image") return;
-    if (kind === "video" || kind === "audio") return;
+    if (
+      kind === "youtube" ||
+      kind === "vimeo" ||
+      kind === "video" ||
+      kind === "image" ||
+      kind === "audio"
+    ) {
+      return;
+    }
     const id = extractGoogleDocId(mediaUrl);
     if (!id) return;
 
@@ -52,17 +60,8 @@ export function MediaThumb({
         const res = await fetch(`/api/media/kind?id=${encodeURIComponent(id)}`);
         if (!res.ok || cancelled) return;
         const data = (await res.json()) as { kind?: string };
-        if (cancelled || !data.kind || data.kind === "unknown") return;
-        const next =
-          data.kind === "video"
-            ? ("video" as const)
-            : data.kind === "image"
-              ? ("image" as const)
-              : data.kind === "pdf"
-                ? ("pdf" as const)
-                : data.kind === "audio"
-                  ? ("audio" as const)
-                  : null;
+        if (cancelled) return;
+        const next = mapApiKindToMediaKind(data.kind);
         if (!next) return;
         setResolvedKind(next);
         onKindResolved?.(next);

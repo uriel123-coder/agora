@@ -3,8 +3,51 @@ import { NextRequest, NextResponse } from "next/server";
 export const runtime = "nodejs";
 export const maxDuration = 15;
 
+type ApiKind = "video" | "image" | "pdf" | "audio" | "document" | "unknown";
+
+function classify(mime: string, name: string): ApiKind {
+  const m = mime.toLowerCase();
+  const n = name.toLowerCase();
+
+  if (m.startsWith("video/") || /\.(mp4|mov|webm|m4v|mkv)$/i.test(n)) {
+    return "video";
+  }
+  if (m.startsWith("image/") || /\.(png|jpe?g|gif|webp|avif|svg)$/i.test(n)) {
+    return "image";
+  }
+  if (m.startsWith("audio/") || /\.(mp3|wav|m4a|aac|ogg)$/i.test(n)) {
+    return "audio";
+  }
+  if (m === "application/pdf" || n.endsWith(".pdf")) {
+    return "pdf";
+  }
+
+  // Word / PowerPoint / Excel / OpenDocument / Google Docs nativos
+  if (
+    m.includes("word") ||
+    m.includes("officedocument.wordprocessing") ||
+    m.includes("msword") ||
+    m.includes("opendocument.text") ||
+    m.includes("presentation") ||
+    m.includes("spreadsheet") ||
+    m.includes("excel") ||
+    m === "application/vnd.google-apps.document" ||
+    m === "application/vnd.google-apps.presentation" ||
+    m === "application/vnd.google-apps.spreadsheet" ||
+    /\.(docx?|pptx?|xlsx?|odt|ods|odp|rtf)$/i.test(n)
+  ) {
+    return "document";
+  }
+
+  if (m.includes("document") || m.includes("text/")) {
+    return "document";
+  }
+
+  return "unknown";
+}
+
 /**
- * Detecta si un archivo de Drive es video/imagen/pdf.
+ * Detecta el tipo real de un archivo de Drive.
  * GET /api/media/kind?id=FILE_ID
  */
 export async function GET(req: NextRequest) {
@@ -15,7 +58,7 @@ export async function GET(req: NextRequest) {
 
   const key = process.env.GOOGLE_SHEETS_API_KEY?.trim();
   if (!key) {
-    return NextResponse.json({ kind: "unknown" });
+    return NextResponse.json({ kind: "unknown" as ApiKind });
   }
 
   try {
@@ -24,28 +67,15 @@ export async function GET(req: NextRequest) {
       { next: { revalidate: 3600 } },
     );
     if (!metaRes.ok) {
-      return NextResponse.json({ kind: "unknown" });
+      return NextResponse.json({ kind: "unknown" as ApiKind });
     }
     const meta = (await metaRes.json()) as {
       mimeType?: string;
       name?: string;
     };
-    const mime = (meta.mimeType ?? "").toLowerCase();
+    const mime = meta.mimeType ?? "";
     const name = meta.name ?? "";
-
-    let kind: "video" | "image" | "pdf" | "audio" | "document" | "unknown" =
-      "unknown";
-    if (mime.startsWith("video/") || /\.(mp4|mov|webm|m4v)$/i.test(name)) {
-      kind = "video";
-    } else if (mime.startsWith("image/") || /\.(png|jpe?g|gif|webp)$/i.test(name)) {
-      kind = "image";
-    } else if (mime === "application/pdf" || /\.pdf$/i.test(name)) {
-      kind = "pdf";
-    } else if (mime.startsWith("audio/")) {
-      kind = "audio";
-    } else if (mime.includes("document") || mime.includes("presentation")) {
-      kind = "document";
-    }
+    const kind = classify(mime, name);
 
     return NextResponse.json(
       { kind, mimeType: mime, name },
@@ -56,6 +86,6 @@ export async function GET(req: NextRequest) {
       },
     );
   } catch {
-    return NextResponse.json({ kind: "unknown" });
+    return NextResponse.json({ kind: "unknown" as ApiKind });
   }
 }

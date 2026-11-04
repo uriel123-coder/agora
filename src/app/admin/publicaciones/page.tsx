@@ -23,11 +23,8 @@ function rowFromPublication(pub: Publication) {
     pub.authors.find((a) => a.nameVisible)?.displayName ||
     pub.authors[0]?.displayName ||
     "";
-  const tema =
-    pub.subject ||
-    pub.tags[0] ||
-    pub.title.replace(/\s+de\s+.+$/i, "").trim() ||
-    pub.title;
+  // El campo editable es el título real de la fila (Título/Tema), no un recorte.
+  const tema = pub.title || pub.subject || "";
   return {
     publication: pub,
     autor,

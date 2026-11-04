@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { canAccessAdmin, getSession } from "@/lib/auth/session";
 import {
@@ -8,6 +9,16 @@ import {
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
+
+function revalidatePublicCatalog() {
+  revalidatePath("/", "layout");
+  revalidatePath("/explorar");
+  revalidatePath("/buscar");
+  revalidatePath("/buscar-alumno");
+  revalidatePath("/admin");
+  revalidatePath("/admin/publicaciones");
+  revalidatePath("/admin/diagnostico");
+}
 
 /** Recarga el catálogo y la cronología desde Google Sheets. */
 export async function POST() {
@@ -25,6 +36,7 @@ export async function POST() {
     ]);
 
     const errors = [pubs.error, timeline.error].filter(Boolean) as string[];
+    revalidatePublicCatalog();
 
     return NextResponse.json({
       ok: errors.length === 0 || pubs.publications.length > 0,

@@ -37,7 +37,11 @@ export function RefreshSheetsButton() {
 
       if (!res.ok) {
         setIsError(true);
-        setMessage(data.error || "No se pudo actualizar");
+        setMessage(
+          res.status === 401
+            ? "No autorizado. Entra en Acceder con una cuenta admin y vuelve a intentar."
+            : data.error || "No se pudo actualizar",
+        );
         return;
       }
 
@@ -51,7 +55,10 @@ export function RefreshSheetsButton() {
           ? `Parcial: ${data.publications ?? 0} trabajos · ${data.timelineEvents ?? 0} eventos. ${data.warning}`
           : `Listo: ${data.publications ?? 0} trabajos · ${data.timelineEvents ?? 0} eventos${sources}`,
       );
-      window.location.reload();
+      // Dar tiempo a ver el mensaje y forzar datos frescos en el panel
+      window.setTimeout(() => {
+        window.location.href = "/admin/publicaciones";
+      }, 600);
     } catch {
       setIsError(true);
       setMessage("Error de red al actualizar Sheets");

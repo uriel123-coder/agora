@@ -3,6 +3,7 @@
 export type MediaKind =
   | "pdf"
   | "google-doc"
+  | "document"
   | "image"
   | "video"
   | "youtube"
@@ -92,6 +93,10 @@ export function isPdfUrl(url: string): boolean {
   );
 }
 
+export function isOfficeDocUrl(url: string): boolean {
+  return /\.(docx?|pptx?|xlsx?|odt|rtf)(\?|$)/i.test(url);
+}
+
 export function isDirectVideoUrl(url: string): boolean {
   return /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(url);
 }
@@ -117,12 +122,17 @@ export function vimeoEmbedUrl(url: string): string | null {
   return m ? `https://player.vimeo.com/video/${m[1]}` : null;
 }
 
+/** Solo palabras claras de video — evita falsos positivos. */
 function hintSuggestsVideo(hint = ""): boolean {
-  return /\b(video|vídeo|mp4|mov|webm|reel|filmaci[oó]n|clip)\b/i.test(hint);
+  return /(^|[\s|:_-])(video|vídeo|mp4|mov|webm|reel)([\s|:_-]|$)/i.test(
+    hint.trim(),
+  );
 }
 
 function hintSuggestsImage(hint = ""): boolean {
-  return /\b(imagen|image|foto|photo|png|jpe?g|webp|galer[ií]a)\b/i.test(hint);
+  return /(^|[\s|:_-])(imagen|image|foto|photo|png|jpe?g|webp|galer[ií]a)([\s|:_-]|$)/i.test(
+    hint.trim(),
+  );
 }
 
 /** Miniatura para tarjetas: YouTube, imagen, o proxy de Drive. */
@@ -140,6 +150,10 @@ export function getMediaThumbnail(
   return null;
 }
 
+/**
+ * Clasificación inicial (sin llamar a Drive).
+ * Archivos /file/d/ sin extensión → "document" (no asumir PDF ni video).
+ */
 export function detectMediaKind(
   url: string,
   opts?: { mediaType?: string; title?: string },
@@ -159,12 +173,14 @@ export function detectMediaKind(
   }
   if (isDirectAudioUrl(url) || opts?.mediaType === "audio") return "audio";
   if (isPdfUrl(url) || opts?.mediaType === "pdf") return "pdf";
+  if (isOfficeDocUrl(url) || opts?.mediaType === "document") return "document";
   if (isGoogleWorkspaceUrl(url)) {
     if (url.includes("/document/") || url.includes("/presentation/")) {
       return "google-doc";
     }
-    // Archivo de Drive sin extensión: por defecto documento/PDF
-    return "pdf";
+    if (url.includes("/spreadsheets/")) return "document";
+    // Drive genérico: documento hasta que /api/media/kind diga otra cosa
+    return "document";
   }
   return "link";
 }
@@ -174,6 +190,7 @@ export function mediaKindLabel(kind: MediaKind): string {
     case "pdf":
       return "PDF";
     case "google-doc":
+    case "document":
       return "Documento";
     case "image":
       return "Imagen";
@@ -190,6 +207,11 @@ export function mediaKindLabel(kind: MediaKind): string {
   }
 }
 
+/** ¿Se puede intentar el visor PDF.js? */
+export function kindCanTryPdf(kind: MediaKind): boolean {
+  return kind === "pdf" || kind === "google-doc";
+}
+
 export function looksLikePdfBytes(bytes: ArrayBuffer): boolean {
   if (bytes.byteLength < 5) return false;
   const head = new Uint8Array(bytes.slice(0, 5));
@@ -199,4 +221,24 @@ export function looksLikePdfBytes(bytes: ArrayBuffer): boolean {
     head[2] === 0x44 &&
     head[3] === 0x46
   ); // %PDF
+}
+
+export function mapApiKindToMediaKind(
+  apiKind: string | undefined,
+): MediaKind | null {
+  switch (apiKind) {
+    case "video":
+      return "video";
+    case "image":
+      return "image";
+    case "audio":
+      return "audio";
+    case "pdf":
+      return "pdf";
+    case "document":
+    case "google-doc":
+      return "document";
+    default:
+      return null;
+  }
 }

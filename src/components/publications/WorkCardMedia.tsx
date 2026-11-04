@@ -8,7 +8,7 @@ import {
   type MediaKind,
 } from "@/lib/utils/media-links";
 
-/** Miniatura + etiqueta (PDF/Video) que se corrige si Drive responde mime. */
+/** Miniatura + etiqueta estable (solo Video si Drive confirma mime). */
 export function WorkCardMedia({
   src,
   accent,
@@ -29,7 +29,7 @@ export function WorkCardMedia({
       <MediaThumb
         src={src}
         accent={accent}
-        kind={kind}
+        kind={initialKind}
         mediaUrl={mediaUrl}
         onKindResolved={setKind}
       />

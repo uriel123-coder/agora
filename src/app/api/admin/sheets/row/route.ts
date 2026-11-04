@@ -1,5 +1,7 @@
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { canAccessAdmin, getSession } from "@/lib/auth/session";
+import { resolveSheetTabTitle } from "@/lib/data/adapters/sheet-aliases";
 import {
   getSheetsConfig,
   refreshSheetsCache,
@@ -7,11 +9,29 @@ import {
 import {
   appendCategorySheetRow,
   deleteCategorySheetRow,
+  listSheetTitles,
   updateCategorySheetRow,
 } from "@/lib/data/providers/sheets-auth";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
+
+async function resolveTab(spreadsheetId: string, tabTitle: string) {
+  const tabs = await listSheetTitles(spreadsheetId);
+  const resolved = resolveSheetTabTitle(
+    tabs.map((t) => t.title),
+    tabTitle,
+  );
+  return resolved || tabTitle;
+}
+
+function revalidateAfterWrite() {
+  refreshSheetsCache();
+  revalidatePath("/", "layout");
+  revalidatePath("/explorar");
+  revalidatePath("/admin/publicaciones");
+  revalidatePath("/buscar-alumno");
+}
 
 function friendlyWriteError(err: unknown): string {
   const message = err instanceof Error ? err.message : String(err);
@@ -63,6 +83,8 @@ export async function POST(request: Request) {
   }
 
   try {
+    const tabTitle = await resolveTab(config.spreadsheetId, body.tabTitle);
+
     if (body.action === "delete") {
       if (!body.rowNumber || body.rowNumber < 2) {
         return NextResponse.json(
@@ -72,16 +94,16 @@ export async function POST(request: Request) {
       }
       await deleteCategorySheetRow({
         spreadsheetId: config.spreadsheetId,
-        tabTitle: body.tabTitle,
+        tabTitle,
         rowNumber: body.rowNumber,
       });
-      refreshSheetsCache();
-      return NextResponse.json({ ok: true });
+      revalidateAfterWrite();
+      return NextResponse.json({ ok: true, tabTitle });
     }
 
     if (!body.autor?.trim() || !body.tema?.trim()) {
       return NextResponse.json(
-        { error: "Faltan autor o tema" },
+        { error: "Faltan autor o título/tema" },
         { status: 400 },
       );
     }
@@ -89,7 +111,7 @@ export async function POST(request: Request) {
     if (body.action === "append") {
       await appendCategorySheetRow({
         spreadsheetId: config.spreadsheetId,
-        tabTitle: body.tabTitle,
+        tabTitle,
         autor: body.autor.trim(),
         tema: body.tema.trim(),
         anio: body.anio?.trim() || "",
@@ -104,7 +126,7 @@ export async function POST(request: Request) {
       }
       await updateCategorySheetRow({
         spreadsheetId: config.spreadsheetId,
-        tabTitle: body.tabTitle,
+        tabTitle,
         rowNumber: body.rowNumber,
         autor: body.autor.trim(),
         tema: body.tema.trim(),
@@ -113,8 +135,8 @@ export async function POST(request: Request) {
       });
     }
 
-    refreshSheetsCache();
-    return NextResponse.json({ ok: true });
+    revalidateAfterWrite();
+    return NextResponse.json({ ok: true, tabTitle });
   } catch (err) {
     return NextResponse.json(
       { error: friendlyWriteError(err) },

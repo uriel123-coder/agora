@@ -72,53 +72,161 @@ export async function listSheetTitles(
   );
 }
 
-/** Actualiza una fila A:D de una pestaña de categoría (Autor, Tema, Año, Enlace). */
-export async function updateCategorySheetRow(input: {
+type CategoryRowInput = {
   spreadsheetId: string;
   tabTitle: string;
-  rowNumber: number;
   autor: string;
   tema: string;
   anio: string;
   enlace: string;
-}): Promise<void> {
+};
+
+const DEFAULT_HEADERS = ["Autor", "Tema", "Año", "Enlace"] as const;
+
+function colLetter(index0: number): string {
+  let n = index0 + 1;
+  let s = "";
+  while (n > 0) {
+    const rem = (n - 1) % 26;
+    s = String.fromCharCode(65 + rem) + s;
+    n = Math.floor((n - 1) / 26);
+  }
+  return s;
+}
+
+function headerIndex(headers: string[], ...candidates: string[]): number {
+  const lowered = headers.map((h) => h.trim().toLowerCase());
+  for (const c of candidates) {
+    const i = lowered.indexOf(c.toLowerCase());
+    if (i >= 0) return i;
+  }
+  return -1;
+}
+
+/**
+ * Lee encabezados reales de la pestaña.
+ * Taller puede ser Autor|Género|Título|Año|Enlace (no A:D fijo).
+ */
+async function getTabHeaders(
+  spreadsheetId: string,
+  tabTitle: string,
+): Promise<string[]> {
   const sheets = await getSheetsClient(true);
+  const safeTab = tabTitle.replace(/'/g, "''");
+  const res = await withTimeout(
+    sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `'${safeTab}'!1:1`,
+    }),
+    `headers:${tabTitle}`,
+  );
+  return ((res.data.values?.[0] as string[]) ?? []).map((h) =>
+    String(h ?? "").trim(),
+  );
+}
+
+async function ensureTabHeaders(
+  spreadsheetId: string,
+  tabTitle: string,
+): Promise<string[]> {
+  const existing = await getTabHeaders(spreadsheetId, tabTitle);
+  if (existing.some((h) => h.length > 0)) return existing;
+
+  const sheets = await getSheetsClient(true);
+  const safeTab = tabTitle.replace(/'/g, "''");
+  await withTimeout(
+    sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range: `'${safeTab}'!A1:D1`,
+      valueInputOption: "RAW",
+      requestBody: { values: [Array.from(DEFAULT_HEADERS)] },
+    }),
+    `ensure-headers:${tabTitle}`,
+  );
+  return Array.from(DEFAULT_HEADERS);
+}
+
+/** Construye la fila respetando el orden real de columnas. */
+function buildRowValues(
+  headers: string[],
+  input: Pick<CategoryRowInput, "autor" | "tema" | "anio" | "enlace">,
+  previous?: string[],
+): string[] {
+  const prev = previous ?? [];
+  const values = headers.map((_, i) => prev[i] ?? "");
+
+  const set = (candidates: string[], value: string) => {
+    const i = headerIndex(headers, ...candidates);
+    if (i >= 0) values[i] = value;
+  };
+
+  set(["Autor", "autor", "Alumno"], input.autor);
+  // Título del trabajo: Título > Tema > (si no hay) Género/Clasificación
+  const titleIdx = headerIndex(headers, "Título", "Titulo", "Tema", "Nombre");
+  if (titleIdx >= 0) {
+    values[titleIdx] = input.tema;
+  } else {
+    set(["Género", "Genero", "Clasificación", "Clasificacion"], input.tema);
+  }
+  set(["Año", "Ano", "Ciclo"], input.anio);
+  set(["Enlace", "Link", "URL", "Archivo", "Media"], input.enlace);
+
+  // Si la hoja no tenía encabezados reconocibles, caer al formato A–D clásico
+  if (!headers.length || headerIndex(headers, "Autor") < 0) {
+    return [input.autor, input.tema, input.anio, input.enlace];
+  }
+  return values;
+}
+
+/** Actualiza una fila usando los encabezados reales de la pestaña. */
+export async function updateCategorySheetRow(
+  input: CategoryRowInput & { rowNumber: number },
+): Promise<void> {
+  const sheets = await getSheetsClient(true);
+  const headers = await ensureTabHeaders(input.spreadsheetId, input.tabTitle);
   const safeTab = input.tabTitle.replace(/'/g, "''");
-  const range = `'${safeTab}'!A${input.rowNumber}:D${input.rowNumber}`;
+  const lastCol = colLetter(Math.max(headers.length, 4) - 1);
+  const rowRange = `'${safeTab}'!A${input.rowNumber}:${lastCol}${input.rowNumber}`;
+
+  const current = await withTimeout(
+    sheets.spreadsheets.values.get({
+      spreadsheetId: input.spreadsheetId,
+      range: rowRange,
+    }),
+    `read-row:${rowRange}`,
+  );
+  const previous = (current.data.values?.[0] as string[]) ?? [];
+  const values = buildRowValues(headers, input, previous);
+
   await withTimeout(
     sheets.spreadsheets.values.update({
       spreadsheetId: input.spreadsheetId,
-      range,
+      range: `'${safeTab}'!A${input.rowNumber}:${colLetter(values.length - 1)}${input.rowNumber}`,
       valueInputOption: "USER_ENTERED",
-      requestBody: {
-        values: [[input.autor, input.tema, input.anio, input.enlace]],
-      },
+      requestBody: { values: [values] },
     }),
-    `update:${range}`,
+    `update:${rowRange}`,
   );
 }
 
 /** Agrega una fila al final de una pestaña de categoría. */
-export async function appendCategorySheetRow(input: {
-  spreadsheetId: string;
-  tabTitle: string;
-  autor: string;
-  tema: string;
-  anio: string;
-  enlace: string;
-}): Promise<void> {
+export async function appendCategorySheetRow(
+  input: CategoryRowInput,
+): Promise<void> {
   const sheets = await getSheetsClient(true);
+  const headers = await ensureTabHeaders(input.spreadsheetId, input.tabTitle);
   const safeTab = input.tabTitle.replace(/'/g, "''");
-  const range = `'${safeTab}'!A:D`;
+  const values = buildRowValues(headers, input);
+  const lastCol = colLetter(Math.max(values.length, 4) - 1);
+  const range = `'${safeTab}'!A:${lastCol}`;
+
   await withTimeout(
     sheets.spreadsheets.values.append({
       spreadsheetId: input.spreadsheetId,
       range,
       valueInputOption: "USER_ENTERED",
       insertDataOption: "INSERT_ROWS",
-      requestBody: {
-        values: [[input.autor, input.tema, input.anio, input.enlace]],
-      },
+      requestBody: { values: [values] },
     }),
     `append:${range}`,
   );

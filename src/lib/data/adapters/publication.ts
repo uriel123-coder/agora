@@ -45,7 +45,7 @@ function detectMediaType(url: string, hint = ""): MediaAsset["type"] {
   if (
     /youtube\.com|youtu\.be|vimeo\.com/i.test(url) ||
     /\.(mp4|webm|mov|m4v)(\?|$)/i.test(url) ||
-    /\b(video|vídeo|reel|clip)\b/.test(value)
+    /(^|[\s|:_-])(video|vídeo|reel|mp4)([\s|:_-]|$)/i.test(value)
   ) {
     return "video";
   }
