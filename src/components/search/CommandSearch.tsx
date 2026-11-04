@@ -1,9 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { Search, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { getCategory } from "@/lib/categories";
 import type { CategorySlug } from "@/lib/types/content";
 
@@ -26,7 +24,6 @@ export function CommandSearch({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const router = useRouter();
   const [query, setQuery] = useState("");
   const [history, setHistory] = useState<string[]>([]);
   const [items, setItems] = useState<SuggestItem[]>([]);
@@ -89,14 +86,13 @@ export function CommandSearch({
 
   function goSearch(value = query) {
     const q = value.trim();
+    onOpenChange(false);
     if (!q) {
-      router.push("/buscar");
-      onOpenChange(false);
+      window.location.assign("/buscar");
       return;
     }
     persistHistory(q);
-    router.push(`/buscar?q=${encodeURIComponent(q)}`);
-    onOpenChange(false);
+    window.location.assign(`/buscar?q=${encodeURIComponent(q)}`);
   }
 
   if (!open) return null;
@@ -168,10 +164,11 @@ export function CommandSearch({
                 const cat = getCategory(item.primaryCategory);
                 return (
                   <li key={item.id}>
-                    <Link
+                    <a
                       href={`/publicacion/${item.slug}`}
                       onClick={() => onOpenChange(false)}
                       className="block rounded-xl px-3 py-3 transition hover:bg-oh-stone/80 dark:hover:bg-white/5"
+                      style={{ touchAction: "manipulation" }}
                     >
                       <p className="text-[11px] text-muted">{cat.name}</p>
                       <p className="font-display text-[1.05rem] leading-snug text-oh-ink dark:text-foreground">
@@ -180,7 +177,7 @@ export function CommandSearch({
                       {item.author ? (
                         <p className="mt-0.5 text-xs text-muted">{item.author}</p>
                       ) : null}
-                    </Link>
+                    </a>
                   </li>
                 );
               })}

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Search } from "lucide-react";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { WorkCard } from "@/components/publications/WorkCard";
@@ -151,7 +150,7 @@ export default async function BuscarPage({ searchParams }: Props) {
                 </h2>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {matchedStudents.map((s) => (
-                    <Link
+                    <a
                       key={s.id}
                       href={`/alumno/${s.id}`}
                       className="inline-flex min-h-10 items-center rounded-full border border-border bg-card px-4 text-sm touch-manipulation transition hover:border-oh-blue hover:text-oh-blue"
@@ -160,7 +159,7 @@ export default async function BuscarPage({ searchParams }: Props) {
                       <span className="ml-1.5 text-muted">
                         ({s.portfolioPublicationIds.length})
                       </span>
-                    </Link>
+                    </a>
                   ))}
                 </div>
               </section>
@@ -194,7 +193,7 @@ export default async function BuscarPage({ searchParams }: Props) {
                   params.set("sort", sort);
                   params.set("page", String(p));
                   return (
-                    <Link
+                    <a
                       key={p}
                       href={`/buscar?${params.toString()}`}
                       className={`inline-flex min-h-10 min-w-10 items-center justify-center rounded-xl px-3 text-sm touch-manipulation ${
@@ -204,7 +203,7 @@ export default async function BuscarPage({ searchParams }: Props) {
                       }`}
                     >
                       {p}
-                    </Link>
+                    </a>
                   );
                 })}
               </div>

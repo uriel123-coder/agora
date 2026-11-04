@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 import { CATEGORIES } from "@/lib/categories";
 
 export function Footer() {
@@ -31,24 +30,24 @@ export function Footer() {
           <h2 className="font-display text-lg text-white">Explorar</h2>
           <ul className="mt-3 space-y-2 text-sm text-white/75">
             <li>
-              <Link href="/explorar" className="hover:text-white">
+              <a href="/explorar" className="hover:text-white">
                 Catálogo
-              </Link>
+              </a>
             </li>
             <li>
-              <Link href="/buscar-alumno" className="hover:text-white">
+              <a href="/buscar-alumno" className="hover:text-white">
                 Buscar alumno
-              </Link>
+              </a>
             </li>
             <li>
-              <Link href="/tres-mundos-una-historia" className="hover:text-white">
+              <a href="/tres-mundos-una-historia" className="hover:text-white">
                 Tres mundos, una historia
-              </Link>
+              </a>
             </li>
             <li>
-              <Link href="/voces-creadoras" className="hover:text-white">
+              <a href="/voces-creadoras" className="hover:text-white">
                 Voces creadoras
-              </Link>
+              </a>
             </li>
           </ul>
         </div>
@@ -57,9 +56,9 @@ export function Footer() {
           <ul className="mt-3 columns-1 gap-x-6 space-y-2 text-sm text-white/75 sm:columns-2">
             {CATEGORIES.map((cat) => (
               <li key={cat.slug} className="break-inside-avoid">
-                <Link href={`/${cat.slug}`} className="hover:text-white">
+                <a href={`/${cat.slug}`} className="hover:text-white">
                   {cat.name}
-                </Link>
+                </a>
               </li>
             ))}
           </ul>

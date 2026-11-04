@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 import { cn } from "@/lib/utils/cn";
 
 export function AgoraLogo({
@@ -14,12 +13,13 @@ export function AgoraLogo({
   const logoSize = size === "lg" ? 56 : size === "sm" ? 36 : 44;
 
   return (
-    <Link
+    <a
       href="/"
       className={cn(
         "group inline-flex items-center gap-3 text-oh-ink dark:text-foreground",
         className,
       )}
+      style={{ touchAction: "manipulation" }}
       aria-label="Or Hajayim · Ágora — inicio"
     >
       <Image
@@ -43,7 +43,7 @@ export function AgoraLogo({
           </span>
         </span>
       ) : null}
-    </Link>
+    </a>
   );
 }
 

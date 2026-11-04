@@ -1,11 +1,8 @@
-"use client";
-
 import Image from "next/image";
-import Link from "next/link";
 import { CATEGORIES, TIMELINE_EXTERNAL_URL } from "@/lib/categories";
 
 /**
- * Rejilla editorial: foto protagonista, tipografía limpia, sin look de “aula”.
+ * Enlaces nativos <a>: navegan al primer toque (sin soft-nav lento).
  */
 export function CategoryExplore() {
   return (
@@ -33,11 +30,22 @@ export function CategoryExplore() {
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 lg:gap-4">
           {CATEGORIES.map((cat) => {
             const isTimeline = cat.slug === "tres-mundos-una-historia";
+            const href = isTimeline ? TIMELINE_EXTERNAL_URL : `/${cat.slug}`;
             const className =
-              "group relative flex aspect-[4/5] cursor-pointer flex-col overflow-hidden rounded-2xl touch-manipulation focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8eb4ff]";
+              "group relative flex aspect-[4/5] flex-col overflow-hidden rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8eb4ff]";
 
-            const body = (
-              <>
+            return (
+              <a
+                key={cat.slug}
+                href={href}
+                target={isTimeline ? "_blank" : undefined}
+                rel={isTimeline ? "noopener noreferrer" : undefined}
+                className={className}
+                style={{ touchAction: "manipulation" }}
+                title={
+                  isTimeline ? "Abre la cronología en otra pestaña" : undefined
+                }
+              >
                 <Image
                   src={cat.coverImage}
                   alt=""
@@ -58,33 +66,7 @@ export function CategoryExplore() {
                     {cat.name}
                   </span>
                 </div>
-              </>
-            );
-
-            if (isTimeline) {
-              return (
-                <a
-                  key={cat.slug}
-                  href={TIMELINE_EXTERNAL_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={className}
-                  title="Abre la cronología en otra pestaña"
-                >
-                  {body}
-                </a>
-              );
-            }
-
-            return (
-              <Link
-                key={cat.slug}
-                href={`/${cat.slug}`}
-                className={className}
-                prefetch
-              >
-                {body}
-              </Link>
+              </a>
             );
           })}
         </div>

@@ -1,7 +1,3 @@
-"use client";
-
-import Link from "next/link";
-
 export function Breadcrumbs({
   items,
 }: {
@@ -11,17 +7,21 @@ export function Breadcrumbs({
     <nav aria-label="Miga de pan" className="mb-6 text-sm text-muted">
       <ol className="flex flex-wrap items-center gap-2">
         <li>
-          <Link href="/" className="hover:text-oh-blue">
+          <a href="/" className="hover:text-oh-blue" style={{ touchAction: "manipulation" }}>
             Inicio
-          </Link>
+          </a>
         </li>
         {items.map((item, index) => (
           <li key={`${item.label}-${index}`} className="flex items-center gap-2">
             <span aria-hidden="true">/</span>
             {item.href ? (
-              <Link href={item.href} className="hover:text-oh-blue">
+              <a
+                href={item.href}
+                className="hover:text-oh-blue"
+                style={{ touchAction: "manipulation" }}
+              >
                 {item.label}
-              </Link>
+              </a>
             ) : (
               <span className="text-foreground">{item.label}</span>
             )}

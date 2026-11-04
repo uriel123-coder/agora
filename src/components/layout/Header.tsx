@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, Search, X } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -38,26 +37,30 @@ export function Header({
         <AgoraLogo size="md" />
         <nav className="hidden items-center gap-1 lg:flex" aria-label="Principal">
           {mainLinks.map((link) => (
-            <Link
+            <a
               key={link.href}
               href={link.href}
+              style={{ touchAction: "manipulation" }}
               className={cn(
-                "rounded-lg px-3 py-2.5 text-sm touch-manipulation transition hover:text-oh-blue",
+                "rounded-lg px-3 py-2.5 text-sm transition hover:text-oh-blue",
                 pathname === link.href ||
-                  (link.href !== "/" && pathname.startsWith(link.href))
+                  (link.href !== "/" &&
+                    !link.href.includes("#") &&
+                    pathname.startsWith(link.href))
                   ? "text-oh-blue"
                   : "text-foreground/85",
               )}
             >
               {link.label}
-            </Link>
+            </a>
           ))}
         </nav>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={onOpenSearch}
-            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border px-3.5 py-2 text-sm text-muted touch-manipulation transition hover:border-oh-blue hover:text-oh-blue"
+            style={{ touchAction: "manipulation" }}
+            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border px-3.5 py-2 text-sm text-muted transition hover:border-oh-blue hover:text-oh-blue"
             aria-label="Abrir buscador global"
           >
             <Search className="h-4 w-4" />
@@ -67,23 +70,26 @@ export function Header({
             </kbd>
           </button>
           <ThemeToggle />
-          <Link
+          <a
             href={user ? "/mi-agora" : "/acceder"}
-            className="hidden min-h-11 items-center rounded-xl bg-oh-ink px-4 py-2 text-sm text-white touch-manipulation sm:inline-flex hover:bg-oh-ink-deep dark:bg-oh-blue"
+            style={{ touchAction: "manipulation" }}
+            className="hidden min-h-11 items-center rounded-xl bg-oh-ink px-4 py-2 text-sm text-white sm:inline-flex hover:bg-oh-ink-deep dark:bg-oh-blue"
           >
             {user ? "Mi cuenta" : "Acceder"}
-          </Link>
+          </a>
           {user && canAccessAdmin(user.role) ? (
-            <Link
+            <a
               href="/admin"
-              className="hidden rounded-sm border border-oh-blue/40 px-3 py-2 text-sm text-oh-blue lg:inline-flex"
+              style={{ touchAction: "manipulation" }}
+              className="hidden min-h-11 items-center rounded-xl border border-oh-blue/40 px-3 py-2 text-sm text-oh-blue lg:inline-flex"
             >
               Admin
-            </Link>
+            </a>
           ) : null}
           <button
             type="button"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-sm border border-border lg:hidden"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-border lg:hidden"
+            style={{ touchAction: "manipulation" }}
             aria-label={open ? "Cerrar menú" : "Abrir menú"}
             onClick={() => setOpen((v) => !v)}
           >
@@ -95,26 +101,29 @@ export function Header({
         <div className="border-t border-border px-4 py-4 lg:hidden">
           <nav className="flex flex-col gap-1" aria-label="Móvil">
             {mainLinks.map((link) => (
-              <Link
+              <a
                 key={link.href}
                 href={link.href}
-                className="rounded-sm px-3 py-2.5 text-sm hover:bg-oh-stone dark:hover:bg-white/5"
+                className="rounded-lg px-3 py-3 text-sm hover:bg-oh-stone dark:hover:bg-white/5"
+                style={{ touchAction: "manipulation" }}
               >
                 {link.label}
-              </Link>
+              </a>
             ))}
-            <Link href="/categorias" className="rounded-sm px-3 py-2.5 text-sm">
+            <a
+              href="/categorias"
+              className="rounded-lg px-3 py-3 text-sm"
+              style={{ touchAction: "manipulation" }}
+            >
               Todas las categorías
-            </Link>
-            <Link href="/ideas-en-dialogo" className="rounded-sm px-3 py-2.5 text-sm">
-              Ideas en diálogo
-            </Link>
-            <Link
+            </a>
+            <a
               href={user ? "/mi-agora" : "/acceder"}
-              className="rounded-sm px-3 py-2.5 text-sm"
+              className="rounded-lg px-3 py-3 text-sm"
+              style={{ touchAction: "manipulation" }}
             >
               {user ? "Mi cuenta" : "Acceder"}
-            </Link>
+            </a>
           </nav>
         </div>
       ) : null}

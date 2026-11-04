@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils/cn";
-import Link from "next/link";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
 const variants = {
@@ -36,34 +35,34 @@ export function Button({
   ...props
 }: Props) {
   const classes = cn(
-    "inline-flex min-h-10 items-center justify-center gap-2 rounded-sm font-medium transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none",
+    "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl font-medium transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none",
     variants[variant],
     sizes[size],
     className,
   );
 
   if (href) {
-    if (external || href.startsWith("http")) {
-      return (
-        <a
-          href={href}
-          className={classes}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {children}
-        </a>
-      );
-    }
+    const isExternal = external || href.startsWith("http");
     return (
-      <Link href={href} className={classes}>
+      <a
+        href={href}
+        className={classes}
+        style={{ touchAction: "manipulation" }}
+        {...(isExternal
+          ? { target: "_blank", rel: "noopener noreferrer" }
+          : {})}
+      >
         {children}
-      </Link>
+      </a>
     );
   }
 
   return (
-    <button className={classes} {...props}>
+    <button
+      className={classes}
+      style={{ touchAction: "manipulation", ...props.style }}
+      {...props}
+    >
       {children}
     </button>
   );

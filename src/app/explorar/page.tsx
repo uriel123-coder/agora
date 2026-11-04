@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { WorkCard } from "@/components/publications/WorkCard";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -64,9 +63,14 @@ export default async function ExplorarPage() {
           }
 
           return (
-            <Link key={cat.slug} href={`/${cat.slug}`} className={className}>
+            <a
+              key={cat.slug}
+              href={`/${cat.slug}`}
+              className={className}
+              style={{ touchAction: "manipulation" }}
+            >
               {body}
-            </Link>
+            </a>
           );
         })}
       </div>

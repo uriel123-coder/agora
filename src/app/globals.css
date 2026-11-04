@@ -335,6 +335,8 @@ textarea:focus-visible {
   .cat-card,
   .tm-world-sheen::after {
     animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 
   .tm-shimmer {
