@@ -8,17 +8,17 @@ export function Footer() {
         <div>
           <div className="flex items-center gap-3">
             <Image
-              src="/brand/or-hajayim-logo.png"
-              alt="Colegio Or Hajayim"
+              src="/brand/agora-mark.png"
+              alt=""
               width={52}
               height={52}
-              className="rounded-sm bg-white/95 p-1"
+              className="object-contain"
             />
             <div>
-              <p className="text-xs uppercase tracking-[0.16em] text-white/55">
-                Colegio Or Hajayim
-              </p>
               <p className="font-display text-2xl">Ágora</p>
+              <p className="text-xs text-white/55">
+                Colegio Or Hajayim Jacobo y Yosi Cojab
+              </p>
             </div>
           </div>
           <p className="mt-5 max-w-sm text-sm leading-relaxed text-white/70">

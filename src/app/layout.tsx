@@ -29,14 +29,14 @@ export const metadata: Metadata = {
   ),
   icons: {
     icon: "/favicon.ico",
-    apple: "/brand/or-hajayim-icon.png",
+    apple: "/brand/agora-mark.png",
   },
   openGraph: {
     title: "Ágora · Or Hajayim",
     description: "Un espacio para descubrir, comprender y compartir.",
     locale: "es_MX",
     type: "website",
-    images: ["/brand/or-hajayim-logo.png"],
+    images: ["/brand/agora-logo.png"],
   },
   robots: {
     index: true,

@@ -5,41 +5,37 @@ import { HomeSearchPanel } from "@/components/home/HomeSearchPanel";
 export function HomeHero() {
   return (
     <section className="relative isolate overflow-hidden">
-      <div className="relative min-h-[520px] sm:min-h-[580px]">
+      <div className="relative min-h-[540px] sm:min-h-[620px]">
         <Image
-          src="/brand/hero-campus.jpg"
-          alt="Colegio Or Hajayim Jacobo y Yosi Cojab — Edificio Alberto y Vicky Saba"
+          src="/brand/hero-agora-collage.jpg"
+          alt=""
           fill
           priority
-          className="animate-reveal-image object-cover object-[center_42%]"
+          className="animate-reveal-image object-cover object-center"
           sizes="100vw"
+          quality={90}
         />
+        {/* Velo suave: el collage es claro; no lo oscurecemos como una foto de campus */}
         <div
           className="pointer-events-none absolute inset-0"
           aria-hidden
           style={{
             background:
-              "linear-gradient(180deg, rgba(18,28,36,0.35) 0%, rgba(18,28,36,0.45) 42%, rgba(36,55,70,0.92) 100%)",
+              "linear-gradient(180deg, rgba(255,255,255,0.28) 0%, rgba(248,250,252,0.45) 38%, rgba(36,55,70,0.55) 78%, rgba(18,28,36,0.88) 100%)",
           }}
         />
 
-        <div className="relative mx-auto flex min-h-[520px] max-w-3xl flex-col items-center justify-center px-4 pb-28 pt-20 text-center sm:min-h-[580px] sm:px-6 sm:pb-32">
-          <div className="animate-rise mb-8 flex flex-col items-center">
+        <div className="relative mx-auto flex min-h-[540px] max-w-3xl flex-col items-center justify-center px-4 pb-28 pt-16 text-center sm:min-h-[620px] sm:px-6 sm:pb-32 sm:pt-20">
+          <div className="animate-rise mb-8 flex w-full max-w-lg flex-col items-center">
             <Image
-              src="/brand/or-hajayim-logo.png"
-              alt="Colegio Or Hajayim"
-              width={64}
-              height={64}
-              className="rounded-2xl bg-white/95 p-1.5 shadow-lg"
+              src="/brand/agora-logo.png"
+              alt="Ágora — Descubrir · Comprender · Compartir"
+              width={520}
+              height={300}
+              className="h-auto w-[min(100%,22rem)] drop-shadow-[0_8px_28px_rgba(36,55,70,0.18)] sm:w-[min(100%,26rem)]"
               priority
             />
-            <p className="mt-4 text-[12px] font-medium tracking-[0.28em] text-white/75 uppercase">
-              Or Hajayim
-            </p>
-            <h1 className="mt-2 font-display text-5xl tracking-tight text-white sm:text-6xl md:text-7xl">
-              Ágora
-            </h1>
-            <p className="mt-3 max-w-md text-base leading-relaxed text-white/85 sm:text-lg">
+            <p className="mt-5 max-w-md text-base leading-relaxed text-[#243746]/90 drop-shadow-sm sm:text-lg">
               Ideas, voces y trabajos que viven en la comunidad.
             </p>
           </div>

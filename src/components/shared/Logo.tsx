@@ -10,21 +10,21 @@ export function AgoraLogo({
   showWordmark?: boolean;
   size?: "sm" | "md" | "lg";
 }) {
-  const logoSize = size === "lg" ? 56 : size === "sm" ? 36 : 44;
+  const logoSize = size === "lg" ? 52 : size === "sm" ? 34 : 42;
 
   return (
     <a
       href="/"
       className={cn(
-        "group inline-flex items-center gap-3 text-oh-ink dark:text-foreground",
+        "group inline-flex items-center gap-2.5 text-oh-ink dark:text-foreground",
         className,
       )}
       style={{ touchAction: "manipulation" }}
-      aria-label="Or Hajayim · Ágora — inicio"
+      aria-label="Ágora — inicio"
     >
       <Image
-        src="/brand/or-hajayim-logo.png"
-        alt="Colegio Or Hajayim"
+        src="/brand/agora-mark.png"
+        alt=""
         width={logoSize}
         height={logoSize}
         className="shrink-0 object-contain transition duration-300 group-hover:opacity-90"
@@ -32,10 +32,7 @@ export function AgoraLogo({
       />
       {showWordmark ? (
         <span className="flex min-w-0 flex-col leading-none">
-          <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-oh-muted dark:text-muted">
-            Or Hajayim
-          </span>
-          <span className="mt-1 font-display text-xl tracking-tight text-oh-ink dark:text-foreground sm:text-[1.35rem]">
+          <span className="font-display text-xl tracking-tight text-oh-ink dark:text-foreground sm:text-[1.35rem]">
             Ágora
           </span>
           <span className="mt-1 hidden text-[10px] text-oh-muted sm:block dark:text-muted">
@@ -47,6 +44,7 @@ export function AgoraLogo({
   );
 }
 
+/** Marca del colegio (footer / créditos). */
 export function SchoolMark({
   className,
   size = 120,
