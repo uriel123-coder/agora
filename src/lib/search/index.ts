@@ -7,6 +7,19 @@ import type {
   SearchResultItem,
 } from "@/lib/types/content";
 
+function mediaKindWords(pub: Publication): string {
+  return pub.media
+    .map((m) => {
+      if (m.type === "video") return "video vídeo videos";
+      if (m.type === "image") return "imagen foto galeria";
+      if (m.type === "audio") return "audio podcast";
+      if (m.type === "pdf") return "pdf documento";
+      if (m.type === "document") return "documento";
+      return m.type;
+    })
+    .join(" ");
+}
+
 function buildHaystack(pub: Publication): string {
   return [
     pub.title,
@@ -17,19 +30,51 @@ function buildHaystack(pub: Publication): string {
     pub.subject,
     pub.schoolYear,
     pub.contentType,
+    mediaKindWords(pub),
     pub.authors
       .filter((a) => a.nameVisible)
       .map((a) => a.displayName)
       .join(" "),
     pub.media.map((m) => m.title).join(" "),
     pub.historicalLinks.map((h) => h.label ?? "").join(" "),
-    // No indexar la categoría de cronología externa
     pub.categorySlugs
       .filter((c) => c !== "tres-mundos-una-historia")
       .join(" "),
   ]
     .filter(Boolean)
     .join(" ");
+}
+
+/** Si buscan solo "video"/"pdf"/… filtrar por tipo de medio. */
+function mediaTypeFromQuery(
+  query: string,
+): "video" | "image" | "audio" | "pdf" | "document" | null {
+  const q = normalizeText(query);
+  if (q === "video" || q === "videos" || q === "vídeo" || q === "vídeos") {
+    return "video";
+  }
+  if (q === "imagen" || q === "imagenes" || q === "foto" || q === "fotos") {
+    return "image";
+  }
+  if (q === "audio" || q === "podcast" || q === "podcasts") {
+    return "audio";
+  }
+  if (q === "pdf" || q === "pdfs") {
+    return "pdf";
+  }
+  if (q === "documento" || q === "documentos" || q === "docx" || q === "word") {
+    return "document";
+  }
+  return null;
+}
+
+function pubMatchesMediaType(
+  pub: Publication,
+  type: "video" | "image" | "audio" | "pdf" | "document",
+): boolean {
+  if (pub.contentType === type) return true;
+  if (type === "image" && pub.contentType === "galeria") return true;
+  return pub.media.some((m) => m.type === type);
 }
 
 export function searchPublications(
@@ -83,15 +128,30 @@ export function searchPublications(
     pool = pool.filter((p) => new Date(p.publishedAt).getTime() <= to);
   }
 
-  // Nunca mezclar privados en resultados públicos
-  pool = pool.filter((p) => p.accessLevel !== "private" || filters.accessLevel === "private");
-  // Tres mundos vive en la cronología externa, no en el catálogo buscable
+  pool = pool.filter(
+    (p) => p.accessLevel !== "private" || filters.accessLevel === "private",
+  );
   pool = pool.filter((p) => p.primaryCategory !== "tres-mundos-una-historia");
 
   const query = (filters.query ?? "").trim();
   let items: SearchResultItem[] = [];
 
-  if (query.length >= 2) {
+  const mediaQuery = query.length >= 2 ? mediaTypeFromQuery(query) : null;
+
+  if (mediaQuery) {
+    items = pool
+      .filter((p) => pubMatchesMediaType(p, mediaQuery))
+      .map((publication) => ({
+        publication,
+        score: publication.featured ? 1 : 0.85,
+        highlights: [
+          {
+            field: "summary" as const,
+            snippet: publication.summary,
+          },
+        ],
+      }));
+  } else if (query.length >= 2) {
     const fuse = new Fuse(
       pool.map((publication) => ({
         publication,
@@ -124,21 +184,28 @@ export function searchPublications(
       const publication = result.item.publication;
       const score = 1 - (result.score ?? 0);
       const highlights: SearchResultItem["highlights"] = [];
-      if (normalizeText(publication.title).includes(normalizedQuery.split(" ")[0] ?? "")) {
+      if (
+        normalizeText(publication.title).includes(
+          normalizedQuery.split(" ")[0] ?? "",
+        )
+      ) {
         highlights.push({ field: "title", snippet: publication.title });
       }
       highlights.push({ field: "summary", snippet: publication.summary });
       return { publication, score, highlights };
     });
-  } else if (filters.category || filters.author || filters.studentId || filters.tag) {
-    // Solo filtros (sin texto): lista filtrada, nunca el catálogo completo
+  } else if (
+    filters.category ||
+    filters.author ||
+    filters.studentId ||
+    filters.tag
+  ) {
     items = pool.map((publication) => ({
       publication,
       score: publication.featured ? 1 : 0.5,
       highlights: [],
     }));
   }
-  // Sin query ni filtros → vacío (el buscador no muestra "todos")
 
   const sort = filters.sort ?? (query ? "relevance" : "date");
   items.sort((a, b) => {

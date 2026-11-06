@@ -74,7 +74,7 @@ export default async function BuscarPage({ searchParams }: Props) {
           Buscar
         </h1>
         <p className="mt-2 max-w-xl text-base text-muted">
-          Encuentra trabajos por tema, título o nombre.
+          Encuentra trabajos por tema, título, nombre o tipo (video, pdf…).
         </p>
 
         <form

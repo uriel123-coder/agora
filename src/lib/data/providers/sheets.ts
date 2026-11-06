@@ -431,7 +431,19 @@ export async function loadPublicationsFromSheets(): Promise<{
 
   issues.push(...validatePublicationUniqueness(publications));
   const merged = upsertPublications([], publications);
-  const payload = { publications: merged, issues, sources };
+
+  // Tipar videos/pdf/docx reales de Drive (para etiquetas y búsqueda)
+  let enriched = merged;
+  try {
+    const { enrichPublicationsMedia } = await import(
+      "@/lib/data/enrich-media"
+    );
+    enriched = await enrichPublicationsMedia(merged);
+  } catch {
+    enriched = merged;
+  }
+
+  const payload = { publications: enriched, issues, sources };
   setCached(cacheKey, payload, CONTENT_CACHE_TTL_MS);
   return payload;
 }
@@ -558,6 +570,7 @@ export async function diagnoseSheetsConnection(): Promise<SheetsDiagnostic> {
 
 export function refreshSheetsCache(): void {
   invalidateCache("sheets:");
+  // Conservamos drive:kind:* para no re-consultar todos los mimes de golpe
 }
 
 export function mergeContentSources(
