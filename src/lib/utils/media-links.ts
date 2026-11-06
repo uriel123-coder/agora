@@ -135,6 +135,18 @@ function hintSuggestsImage(hint = ""): boolean {
   );
 }
 
+/** Nombre del archivo / título del enlace (p. ej. video::url o …/clip.mp4). */
+function filenameHints(url: string): string {
+  try {
+    const decoded = decodeURIComponent(url);
+    const path = decoded.split("?")[0] ?? decoded;
+    const leaf = path.split("/").pop() ?? path;
+    return `${decoded} ${leaf}`;
+  } catch {
+    return url;
+  }
+}
+
 /** Miniatura para tarjetas: YouTube, imagen, o proxy de Drive. */
 export function getMediaThumbnail(
   url: string | undefined,
@@ -158,7 +170,8 @@ export function detectMediaKind(
   url: string,
   opts?: { mediaType?: string; title?: string },
 ): MediaKind {
-  const hint = `${opts?.mediaType ?? ""} ${opts?.title ?? ""}`;
+  const fileHint = filenameHints(url);
+  const hint = `${opts?.mediaType ?? ""} ${opts?.title ?? ""} ${fileHint}`;
   if (youtubeEmbedUrl(url)) return "youtube";
   if (vimeoEmbedUrl(url)) return "vimeo";
   if (isDirectImageUrl(url) || opts?.mediaType === "image" || hintSuggestsImage(hint)) {
@@ -167,13 +180,22 @@ export function detectMediaKind(
   if (
     isDirectVideoUrl(url) ||
     opts?.mediaType === "video" ||
-    hintSuggestsVideo(hint)
+    hintSuggestsVideo(hint) ||
+    /\.(mp4|mov|webm|m4v|mkv)(\?|$)/i.test(fileHint)
   ) {
     return "video";
   }
   if (isDirectAudioUrl(url) || opts?.mediaType === "audio") return "audio";
-  if (isPdfUrl(url) || opts?.mediaType === "pdf") return "pdf";
-  if (isOfficeDocUrl(url) || opts?.mediaType === "document") return "document";
+  if (isPdfUrl(url) || opts?.mediaType === "pdf" || /\.pdf(\?|$)/i.test(fileHint)) {
+    return "pdf";
+  }
+  if (
+    isOfficeDocUrl(url) ||
+    opts?.mediaType === "document" ||
+    /\.(docx?|pptx?|xlsx?)(\?|$)/i.test(fileHint)
+  ) {
+    return "document";
+  }
   if (isGoogleWorkspaceUrl(url)) {
     if (url.includes("/document/") || url.includes("/presentation/")) {
       return "google-doc";
