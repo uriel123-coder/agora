@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import {
+  cacheDriveKind,
+  readCachedDriveKind,
+} from "@/lib/data/enrich-media";
 import { getDriveFileMeta } from "@/lib/google/drive-meta";
 
 export const runtime = "nodejs";
@@ -15,7 +19,20 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    const cached = readCachedDriveKind(id);
+    if (cached && cached !== "unknown") {
+      return NextResponse.json(
+        { kind: cached },
+        {
+          headers: {
+            "Cache-Control": "public, max-age=3600, s-maxage=3600",
+          },
+        },
+      );
+    }
+
     const meta = await getDriveFileMeta(id);
+    cacheDriveKind(id, meta.kind);
     return NextResponse.json(
       {
         kind: meta.kind,

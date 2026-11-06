@@ -4,6 +4,7 @@ import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { WorkCard } from "@/components/publications/WorkCard";
 import { getSession } from "@/lib/auth/session";
 import { CATEGORIES } from "@/lib/categories";
+import { enrichPublicationsMedia } from "@/lib/data/enrich-media";
 import { getAllPublications, getStudents } from "@/lib/data/repository";
 import { searchPublications } from "@/lib/search";
 import type { CategorySlug } from "@/lib/types/content";
@@ -13,6 +14,27 @@ export const metadata: Metadata = {
   title: "Buscar",
   robots: { index: true, follow: true },
 };
+
+export const maxDuration = 45;
+
+function isMediaTypeQuery(q: string) {
+  const n = normalizeText(q);
+  return [
+    "video",
+    "videos",
+    "pdf",
+    "pdfs",
+    "imagen",
+    "imagenes",
+    "foto",
+    "fotos",
+    "audio",
+    "documento",
+    "documentos",
+    "docx",
+    "word",
+  ].includes(n);
+}
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -33,10 +55,19 @@ export default async function BuscarPage({ searchParams }: Props) {
 
   const user = await getSession();
   const role = user?.role ?? "visitor";
-  const [publications, students] = await Promise.all([
+  const [rawPublications, students] = await Promise.all([
     getAllPublications(role),
     getStudents(true, role),
   ]);
+
+  // Si buscan «video»/«pdf»/… tipar Drive con presupuesto corto
+  const publications =
+    hasQuery && isMediaTypeQuery(q)
+      ? await enrichPublicationsMedia(rawPublications, {
+          budgetMs: 14_000,
+          concurrency: 5,
+        })
+      : rawPublications;
 
   const result = hasQuery
     ? searchPublications(publications, {

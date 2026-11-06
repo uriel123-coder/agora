@@ -7,7 +7,19 @@ import {
 } from "@/lib/utils/media-links";
 
 const KIND_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-const CONCURRENCY = 6;
+const DEFAULT_CONCURRENCY = 5;
+
+export function cacheDriveKind(fileId: string, kind: DriveFileKind) {
+  if (kind === "unknown") {
+    setCached(`drive:kind:${fileId}`, kind, 10 * 60 * 1000);
+  } else {
+    setCached(`drive:kind:${fileId}`, kind, KIND_TTL_MS);
+  }
+}
+
+export function readCachedDriveKind(fileId: string): DriveFileKind | null {
+  return getCached<DriveFileKind>(`drive:kind:${fileId}`);
+}
 
 function mapKindToMediaType(
   kind: DriveFileKind,
@@ -28,51 +40,42 @@ function mapKindToMediaType(
   }
 }
 
-async function resolveKind(fileId: string): Promise<DriveFileKind> {
-  const cacheKey = `drive:kind:${fileId}`;
-  const cached = getCached<DriveFileKind>(cacheKey);
-  if (cached) return cached;
+function applyKindToPub(
+  pub: Publication,
+  kind: DriveFileKind,
+): Publication {
+  const primary = pub.media[0];
+  if (!primary) return pub;
+  const mediaType = mapKindToMediaType(kind);
+  if (!mediaType) return pub;
+  if (mediaType === primary.type && pub.contentType !== "articulo") return pub;
 
-  const meta = await getDriveFileMeta(fileId);
-  const kind = meta.kind;
-  if (kind !== "unknown") {
-    setCached(cacheKey, kind, KIND_TTL_MS);
-  } else {
-    // Evitar martillar Drive si falla: cache corto
-    setCached(cacheKey, kind, 10 * 60 * 1000);
-  }
-  return kind;
+  const media = [{ ...primary, type: mediaType }, ...pub.media.slice(1)];
+  return {
+    ...pub,
+    media,
+    contentType:
+      mediaType === "video"
+        ? "video"
+        : mediaType === "audio"
+          ? "audio"
+          : mediaType === "image" && pub.contentType === "articulo"
+            ? "galeria"
+            : pub.contentType,
+    tags:
+      mediaType === "video" && !pub.tags.some((t) => /video/i.test(t))
+        ? [...pub.tags, "video"]
+        : pub.tags,
+  };
 }
 
-async function mapPool<T, R>(
-  items: T[],
-  limit: number,
-  fn: (item: T) => Promise<R>,
-): Promise<R[]> {
-  const out: R[] = new Array(items.length);
-  let i = 0;
-  async function worker() {
-    while (i < items.length) {
-      const idx = i++;
-      out[idx] = await fn(items[idx]);
-    }
-  }
-  await Promise.all(
-    Array.from({ length: Math.min(limit, items.length) }, () => worker()),
-  );
-  return out;
-}
-
-/**
- * Corrige media.type (y contentType video) consultando Drive una vez por archivo.
- * Así las tarjetas y el buscador saben que es Video sin esperar al cliente.
- */
-export async function enrichPublicationsMedia(
+/** Aplica tipos ya conocidos en caché (sin red). */
+export function applyCachedDriveKinds(
   publications: Publication[],
-): Promise<Publication[]> {
-  return mapPool(publications, CONCURRENCY, async (pub) => {
+): Publication[] {
+  return publications.map((pub) => {
     const primary = pub.media[0];
-    if (!primary?.url) return pub;
+    if (!primary?.url || !isGoogleWorkspaceUrl(primary.url)) return pub;
     if (
       primary.type === "video" ||
       primary.type === "image" ||
@@ -80,44 +83,74 @@ export async function enrichPublicationsMedia(
     ) {
       return pub;
     }
-    if (!isGoogleWorkspaceUrl(primary.url)) return pub;
     const id = extractGoogleDocId(primary.url);
     if (!id) return pub;
-
-    try {
-      const kind = await resolveKind(id);
-      const mediaType = mapKindToMediaType(kind);
-      if (!mediaType || mediaType === primary.type) {
-        // Aun si es document, ya lo sabíamos
-        if (mediaType === "pdf" && primary.type !== "pdf") {
-          return {
-            ...pub,
-            media: [{ ...primary, type: "pdf" }, ...pub.media.slice(1)],
-          };
-        }
-        return pub;
-      }
-
-      const media = [{ ...primary, type: mediaType }, ...pub.media.slice(1)];
-      return {
-        ...pub,
-        media,
-        contentType:
-          mediaType === "video"
-            ? "video"
-            : mediaType === "audio"
-              ? "audio"
-              : mediaType === "image" && pub.contentType === "articulo"
-                ? "galeria"
-                : pub.contentType,
-        tags:
-          mediaType === "video" &&
-          !pub.tags.some((t) => /video/i.test(t))
-            ? [...pub.tags, "video"]
-            : pub.tags,
-      };
-    } catch {
-      return pub;
-    }
+    const kind = readCachedDriveKind(id);
+    if (!kind || kind === "unknown") return pub;
+    return applyKindToPub(pub, kind);
   });
+}
+
+async function resolveKind(fileId: string): Promise<DriveFileKind> {
+  const cached = readCachedDriveKind(fileId);
+  if (cached) return cached;
+  const meta = await getDriveFileMeta(fileId);
+  cacheDriveKind(fileId, meta.kind);
+  return meta.kind;
+}
+
+/**
+ * Consulta Drive con presupuesto de tiempo (para búsqueda «video», etc.).
+ * No tumba la página: al acabarse el presupuesto devuelve lo tipado hasta entonces.
+ */
+export async function enrichPublicationsMedia(
+  publications: Publication[],
+  opts?: { budgetMs?: number; concurrency?: number },
+): Promise<Publication[]> {
+  const budgetMs = opts?.budgetMs ?? 12_000;
+  const concurrency = opts?.concurrency ?? DEFAULT_CONCURRENCY;
+  const started = Date.now();
+
+  const indexed = publications.map((pub, index) => ({ pub, index }));
+  const needs = indexed.filter(({ pub }) => {
+    const primary = pub.media[0];
+    if (!primary?.url) return false;
+    if (
+      primary.type === "video" ||
+      primary.type === "image" ||
+      primary.type === "audio"
+    ) {
+      return false;
+    }
+    return (
+      isGoogleWorkspaceUrl(primary.url) &&
+      Boolean(extractGoogleDocId(primary.url))
+    );
+  });
+
+  const out = [...publications];
+  let cursor = 0;
+
+  async function worker() {
+    while (cursor < needs.length) {
+      if (Date.now() - started > budgetMs) return;
+      const my = cursor++;
+      const { pub, index } = needs[my];
+      const id = extractGoogleDocId(pub.media[0]!.url)!;
+      try {
+        const kind = await resolveKind(id);
+        out[index] = applyKindToPub(pub, kind);
+      } catch {
+        /* deja el original */
+      }
+    }
+  }
+
+  await Promise.all(
+    Array.from({ length: Math.min(concurrency, needs.length || 1) }, () =>
+      worker(),
+    ),
+  );
+
+  return out;
 }

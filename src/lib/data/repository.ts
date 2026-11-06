@@ -56,7 +56,14 @@ export async function getAllPublications(
 
   const merged =
     sheets.length > 0 ? mergeContentSources(demo, sheets) : demo;
-  return merged.filter((p) => canView(p, role));
+  const visible = merged.filter((p) => canView(p, role));
+  // Tipos ya descubiertos (p. ej. tras visitar tarjetas) sin llamar a Drive
+  try {
+    const { applyCachedDriveKinds } = await import("@/lib/data/enrich-media");
+    return applyCachedDriveKinds(visible);
+  } catch {
+    return visible;
+  }
 }
 
 export async function getPublicationBySlug(

@@ -46,49 +46,65 @@ export function DocumentPanel({
   });
   const isDriveFile = isGoogleWorkspaceUrl(url);
   const driveId = extractGoogleDocId(url);
-  const needsProbe =
-    isDriveFile &&
-    Boolean(driveId) &&
-    (baseKind === "document" ||
-      baseKind === "pdf" ||
-      baseKind === "google-doc" ||
-      baseKind === "link");
+  const drivePreview = toGooglePreviewUrl(url);
 
   const [kind, setKind] = useState<MediaKind>(baseKind);
-  const [probed, setProbed] = useState(!needsProbe);
+  const [probed, setProbed] = useState(
+    !(isDriveFile && driveId && (baseKind === "document" || baseKind === "pdf" || baseKind === "google-doc" || baseKind === "link")),
+  );
   const [pdfFailed, setPdfFailed] = useState(false);
 
   useEffect(() => {
     setKind(baseKind);
     setPdfFailed(false);
-    setProbed(!needsProbe);
-  }, [baseKind, needsProbe, url]);
+    const needs =
+      isDriveFile &&
+      Boolean(driveId) &&
+      (baseKind === "document" ||
+        baseKind === "pdf" ||
+        baseKind === "google-doc" ||
+        baseKind === "link");
+    setProbed(!needs);
+  }, [baseKind, driveId, isDriveFile, url]);
 
-  // Preguntar a Drive el mime real — no adivinar video
   useEffect(() => {
-    if (!needsProbe || !driveId) return;
+    if (!isDriveFile || !driveId) return;
+    if (
+      baseKind === "youtube" ||
+      baseKind === "vimeo" ||
+      baseKind === "video" ||
+      baseKind === "image" ||
+      baseKind === "audio"
+    ) {
+      return;
+    }
     let cancelled = false;
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000);
     (async () => {
       try {
-        const res = await fetch(`/api/media/kind?id=${encodeURIComponent(driveId)}`);
-        if (!res.ok || cancelled) {
-          if (!cancelled) setProbed(true);
-          return;
-        }
+        const res = await fetch(
+          `/api/media/kind?id=${encodeURIComponent(driveId)}`,
+          { signal: ctrl.signal },
+        );
+        if (!res.ok || cancelled) return;
         const data = (await res.json()) as { kind?: string };
         if (cancelled) return;
         const mapped = mapApiKindToMediaKind(data.kind);
         if (mapped) setKind(mapped);
       } catch {
-        /* queda el tipo inicial */
+        /* timeout / red: dejamos vista Drive */
       } finally {
+        clearTimeout(timer);
         if (!cancelled) setProbed(true);
       }
     })();
     return () => {
       cancelled = true;
+      clearTimeout(timer);
+      ctrl.abort();
     };
-  }, [driveId, needsProbe, url]);
+  }, [baseKind, driveId, isDriveFile, url]);
 
   const downloadUrl = toGoogleDownloadUrl(url) ?? url;
   const canPdf = Boolean(toEmbeddablePdfUrl(url));
@@ -105,15 +121,23 @@ export function DocumentPanel({
 
   const yt = youtubeEmbedUrl(url);
   const vimeo = vimeoEmbedUrl(url);
-  const drivePreview = toGooglePreviewUrl(url);
   const isDriveVideo = kind === "video" && isDriveFile;
   const isDirectVideo = kind === "video" && !yt && !vimeo && !isDriveVideo;
 
-  // Docx/Office: vista Drive. Google Docs/PDF: solo si falló el visor PDF.
+  // Vista Drive para documentos / Office / mientras tipamos / si falló el PDF
   const showDocPreview =
-    probed &&
     Boolean(drivePreview) &&
-    (kind === "document" || (pdfFailed && kindCanTryPdf(kind)));
+    !yt &&
+    !vimeo &&
+    !isDirectVideo &&
+    !isDriveVideo &&
+    kind !== "image" &&
+    kind !== "audio" &&
+    (kind === "document" ||
+      kind === "google-doc" ||
+      kind === "link" ||
+      (pdfFailed && kindCanTryPdf(kind)) ||
+      (!probed && isDriveFile));
 
   const Icon =
     kind === "image"
@@ -135,7 +159,7 @@ export function DocumentPanel({
           </span>
           <div className="min-w-0">
             <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted">
-              {!probed ? "Archivo" : mediaKindLabel(kind)}
+              {!probed && isDriveFile ? "Archivo" : mediaKindLabel(kind)}
             </p>
             <h2 className="truncate font-display text-base text-oh-ink dark:text-foreground sm:text-lg">
               {title}
@@ -154,7 +178,8 @@ export function DocumentPanel({
           </a>
           {(kind === "pdf" ||
             kind === "google-doc" ||
-            kind === "document") && (
+            kind === "document" ||
+            (!probed && isDriveFile)) && (
             <a
               href={downloadUrl}
               target="_blank"
@@ -168,13 +193,7 @@ export function DocumentPanel({
         </div>
       </div>
 
-      {!probed ? (
-        <div className="flex min-h-[200px] items-center justify-center text-sm text-muted">
-          Preparando vista…
-        </div>
-      ) : null}
-
-      {probed && (yt || vimeo) ? (
+      {yt || vimeo ? (
         <div className="aspect-video bg-black">
           <iframe
             src={yt || vimeo || ""}
@@ -186,7 +205,7 @@ export function DocumentPanel({
         </div>
       ) : null}
 
-      {probed && isDirectVideo ? (
+      {isDirectVideo ? (
         <div className="bg-black">
           <video
             src={url}
@@ -200,7 +219,7 @@ export function DocumentPanel({
         </div>
       ) : null}
 
-      {probed && isDriveVideo && drivePreview ? (
+      {isDriveVideo && drivePreview ? (
         <div className="relative aspect-video bg-black">
           <iframe
             src={drivePreview}
@@ -212,7 +231,7 @@ export function DocumentPanel({
         </div>
       ) : null}
 
-      {probed && kind === "image" ? (
+      {kind === "image" ? (
         <div className="bg-oh-stone/40 p-4 dark:bg-black/20">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -237,32 +256,28 @@ export function DocumentPanel({
         />
       ) : null}
 
-      {/* DOCX / Office / Docs / PDF que no se pudo leer → vista Drive */}
-      {showDocPreview && drivePreview ? (
+      {showDocPreview && drivePreview && !pdfSrc ? (
         <div className="min-h-[50vh] bg-oh-stone/30">
           <iframe
             src={drivePreview}
             title={title}
-            className="h-[min(72vh,640px)] w-full border-0"
+            className="h-[min(72vh,720px)] w-full border-0"
             allow="autoplay"
           />
-          {pdfFailed ? (
-            <p className="border-t border-border px-4 py-2 text-center text-xs text-muted">
-              Vista del documento (PDF no disponible). También puedes abrirlo o
-              descargarlo.
-            </p>
-          ) : null}
+          <p className="border-t border-border px-4 py-2 text-center text-xs text-muted">
+            Vista del documento. Si no carga, usa Abrir o Descargar (el archivo
+            debe ser público en Drive).
+          </p>
         </div>
       ) : null}
 
-      {probed && kind === "audio" ? (
+      {kind === "audio" ? (
         <div className="px-5 py-8">
           <audio src={url} controls className="w-full" />
         </div>
       ) : null}
 
-      {probed &&
-      !yt &&
+      {!yt &&
       !vimeo &&
       !isDirectVideo &&
       !isDriveVideo &&
@@ -288,7 +303,7 @@ function EmptyOpen({ url, kind }: { url: string; kind: MediaKind }) {
       <p className="max-w-md text-sm text-muted">
         {kind === "video"
           ? "No se pudo incrustar el video aquí. Ábrelo para reproducirlo."
-          : "PDF funciona mejor en el visor. También aceptamos Word (docx), Google Docs y similares: se ven con la vista de Drive."}
+          : "No hay vista previa. Abre el archivo (mejor si está en una carpeta pública de Drive)."}
       </p>
       <a
         href={url}

@@ -1,16 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
+import { enrichPublicationsMedia } from "@/lib/data/enrich-media";
 import { getAllPublications } from "@/lib/data/repository";
 import { searchPublications } from "@/lib/search";
+import { normalizeText } from "@/lib/utils/text";
 
 export const runtime = "nodejs";
+export const maxDuration = 30;
+
+function isMediaTypeQuery(q: string) {
+  const n = normalizeText(q);
+  return [
+    "video",
+    "videos",
+    "pdf",
+    "pdfs",
+    "imagen",
+    "imagenes",
+    "foto",
+    "fotos",
+    "audio",
+    "documento",
+    "documentos",
+    "docx",
+    "word",
+  ].includes(n);
+}
 
 /** Índice ligero para el buscador ⌘K (no carga el catálogo en cada página). */
 export async function GET(req: NextRequest) {
   const q = (req.nextUrl.searchParams.get("q") ?? "").trim();
   const user = await getSession();
   const role = user?.role ?? "visitor";
-  const publications = await getAllPublications(role);
+  let publications = await getAllPublications(role);
 
   if (q.length < 2) {
     const featured = publications
@@ -22,6 +44,13 @@ export async function GET(req: NextRequest) {
         ? featured
         : publications.slice(0, 6).map(slim);
     return NextResponse.json({ items: fallback });
+  }
+
+  if (isMediaTypeQuery(q)) {
+    publications = await enrichPublicationsMedia(publications, {
+      budgetMs: 10_000,
+      concurrency: 5,
+    });
   }
 
   const result = searchPublications(publications, {
