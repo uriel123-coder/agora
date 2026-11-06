@@ -431,19 +431,9 @@ export async function loadPublicationsFromSheets(): Promise<{
 
   issues.push(...validatePublicationUniqueness(publications));
   const merged = upsertPublications([], publications);
-
-  // Tipar videos/pdf/docx reales de Drive (para etiquetas y búsqueda)
-  let enriched = merged;
-  try {
-    const { enrichPublicationsMedia } = await import(
-      "@/lib/data/enrich-media"
-    );
-    enriched = await enrichPublicationsMedia(merged);
-  } catch {
-    enriched = merged;
-  }
-
-  const payload = { publications: enriched, issues, sources };
+  // No enriquecer mime aquí: tumba la página por timeout en Vercel.
+  // El tipado de video/pdf lo hace /api/media/kind en el cliente.
+  const payload = { publications: merged, issues, sources };
   setCached(cacheKey, payload, CONTENT_CACHE_TTL_MS);
   return payload;
 }

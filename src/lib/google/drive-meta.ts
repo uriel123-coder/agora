@@ -55,6 +55,23 @@ function classify(mime: string, name: string): DriveFileKind {
   return "unknown";
 }
 
+async function withTimeout<T>(
+  promise: Promise<T>,
+  ms: number,
+): Promise<T | null> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<null>((resolve) => {
+        timer = setTimeout(() => resolve(null), ms);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 async function metaFromServiceAccount(
   id: string,
 ): Promise<DriveFileMeta | null> {
@@ -92,7 +109,7 @@ async function metaFromApiKey(id: string): Promise<DriveFileMeta | null> {
   try {
     const metaRes = await fetch(
       `https://www.googleapis.com/drive/v3/files/${id}?fields=mimeType,name,thumbnailLink&key=${key}&supportsAllDrives=true`,
-      { next: { revalidate: 3600 } },
+      { signal: AbortSignal.timeout(4000) },
     );
     if (!metaRes.ok) return null;
     const meta = (await metaRes.json()) as {
@@ -113,39 +130,12 @@ async function metaFromApiKey(id: string): Promise<DriveFileMeta | null> {
   }
 }
 
-/** HEAD/GET corto a uc?export=download para ver Content-Type público. */
-async function metaFromPublicHeaders(id: string): Promise<DriveFileMeta | null> {
-  const urls = [
-    `https://drive.google.com/uc?export=download&id=${id}`,
-    `https://drive.google.com/uc?id=${id}&export=download`,
-  ];
-  for (const url of urls) {
-    try {
-      const res = await fetch(url, {
-        method: "HEAD",
-        redirect: "follow",
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (compatible; AgoraOrHajayim/1.0; +https://agora)",
-        },
-      });
-      const type = (res.headers.get("content-type") || "").split(";")[0].trim();
-      if (!type || type.includes("text/html")) continue;
-      const kind = classify(type, "");
-      if (kind === "unknown") continue;
-      return { kind, mimeType: type, name: "" };
-    } catch {
-      /* siguiente */
-    }
-  }
-  return null;
-}
-
-/** Página pública de Drive: busca señales de video/pdf/imagen. */
+/** Página pública de Drive: busca mimeType en el HTML. */
 async function metaFromPublicPage(id: string): Promise<DriveFileMeta | null> {
   try {
     const res = await fetch(`https://drive.google.com/file/d/${id}/view`, {
       redirect: "follow",
+      signal: AbortSignal.timeout(4500),
       headers: {
         Accept: "text/html",
         "User-Agent":
@@ -153,7 +143,7 @@ async function metaFromPublicPage(id: string): Promise<DriveFileMeta | null> {
       },
     });
     if (!res.ok) return null;
-    const html = (await res.text()).slice(0, 120_000);
+    const html = (await res.text()).slice(0, 80_000);
     const mimeMatch = html.match(/"mimeType"\s*:\s*"([^"]+)"/i);
     const nameMatch = html.match(/"title"\s*:\s*"([^"]+)"/i);
     const mime = mimeMatch?.[1] ?? "";
@@ -166,7 +156,7 @@ async function metaFromPublicPage(id: string): Promise<DriveFileMeta | null> {
     ) {
       return { kind: "video", mimeType: "video/mp4", name };
     }
-    if (/application\/pdf|"pdf"/i.test(html) && /viewer/i.test(html)) {
+    if (/application\/pdf/i.test(html) && /viewer/i.test(html)) {
       return { kind: "pdf", mimeType: "application/pdf", name };
     }
   } catch {
@@ -176,26 +166,22 @@ async function metaFromPublicPage(id: string): Promise<DriveFileMeta | null> {
 }
 
 /**
- * Resuelve mime/tipo de un archivo de Drive.
- * Orden: service account → API key → cabeceras públicas.
+ * Resuelve mime/tipo de un archivo de Drive (rápido, con timeouts).
+ * Orden: API key → página pública → service account.
  */
 export async function getDriveFileMeta(id: string): Promise<DriveFileMeta> {
-  const viaSa = await metaFromServiceAccount(id);
-  if (viaSa && viaSa.kind !== "unknown") return viaSa;
-
-  const viaKey = await metaFromApiKey(id);
+  const viaKey = await withTimeout(metaFromApiKey(id), 4500);
   if (viaKey && viaKey.kind !== "unknown") return viaKey;
 
-  const viaHead = await metaFromPublicHeaders(id);
-  if (viaHead) return viaHead;
-
-  const viaPage = await metaFromPublicPage(id);
+  const viaPage = await withTimeout(metaFromPublicPage(id), 5000);
   if (viaPage && viaPage.kind !== "unknown") return viaPage;
 
-  // Devolver lo que haya (aunque unknown) para thumbnails
+  const viaSa = await withTimeout(metaFromServiceAccount(id), 6000);
+  if (viaSa && viaSa.kind !== "unknown") return viaSa;
+
   return (
-    viaSa ??
     viaKey ??
-    viaPage ?? { kind: "unknown", mimeType: "", name: "" }
+    viaPage ??
+    viaSa ?? { kind: "unknown", mimeType: "", name: "" }
   );
 }
