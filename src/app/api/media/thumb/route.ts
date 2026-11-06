@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getDriveFileMeta } from "@/lib/google/drive-meta";
 
 export const runtime = "nodejs";
 export const maxDuration = 20;
 
 /**
- * Miniatura estable de un archivo de Drive (misma en todas las PCs).
+ * Miniatura estable de un archivo de Drive.
  * GET /api/media/thumb?id=FILE_ID
  */
 export async function GET(req: NextRequest) {
@@ -14,29 +15,15 @@ export async function GET(req: NextRequest) {
   }
 
   const candidates: string[] = [];
-  const key = process.env.GOOGLE_SHEETS_API_KEY?.trim();
 
-  // 1) Metadata oficial (thumbnailLink + mime) si hay API key
-  if (key) {
-    try {
-      const metaRes = await fetch(
-        `https://www.googleapis.com/drive/v3/files/${id}?fields=thumbnailLink,mimeType,name&key=${key}`,
-        { next: { revalidate: 3600 } },
-      );
-      if (metaRes.ok) {
-        const meta = (await metaRes.json()) as {
-          thumbnailLink?: string;
-          mimeType?: string;
-        };
-        if (meta.thumbnailLink) {
-          // Pedir tamaño un poco mayor
-          candidates.push(meta.thumbnailLink.replace(/=s\d+/, "=s640"));
-          candidates.push(meta.thumbnailLink);
-        }
-      }
-    } catch {
-      // seguir con candidatos públicos
+  try {
+    const meta = await getDriveFileMeta(id);
+    if (meta.thumbnailLink) {
+      candidates.push(meta.thumbnailLink.replace(/=s\d+/, "=s640"));
+      candidates.push(meta.thumbnailLink);
     }
+  } catch {
+    /* candidatos públicos */
   }
 
   candidates.push(
@@ -70,7 +57,7 @@ export async function GET(req: NextRequest) {
         },
       });
     } catch {
-      // siguiente candidato
+      // siguiente
     }
   }
 
