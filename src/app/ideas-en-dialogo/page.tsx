@@ -13,6 +13,8 @@ export const metadata: Metadata = {
   description: "Comunidad de discusión escolar de Ágora.",
 };
 
+export const dynamic = "force-dynamic";
+
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };

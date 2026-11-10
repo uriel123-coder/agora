@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import type { ForumCommunity } from "@/lib/forum/store";
@@ -12,7 +11,6 @@ export function NewPostForm({
   communities: ForumCommunity[];
   defaultCommunityId?: string;
 }) {
-  const router = useRouter();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [communityId, setCommunityId] = useState(
@@ -25,34 +23,44 @@ export function NewPostForm({
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    e.stopPropagation();
     setLoading(true);
     setError("");
-    const res = await fetch("/api/forum/posts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title,
-        body,
-        communityId,
-        tags: tags
-          .split(",")
-          .map((t) => t.trim())
-          .filter(Boolean),
-        linkUrl: linkUrl || undefined,
-      }),
-    });
-    const data = await res.json();
-    setLoading(false);
-    if (!res.ok) {
-      setError(data.error || "No se pudo publicar");
-      return;
+    try {
+      const res = await fetch("/api/forum/posts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          body,
+          communityId,
+          tags: tags
+            .split(",")
+            .map((t) => t.trim())
+            .filter(Boolean),
+          linkUrl: linkUrl || undefined,
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        post?: { slug: string };
+      };
+      if (!res.ok || !data.post?.slug) {
+        setError(
+          data.error ||
+            (res.status === 401
+              ? "Debes iniciar sesión para publicar."
+              : "No se pudo publicar. Intenta de nuevo."),
+        );
+        return;
+      }
+      // Ir al debate creado (no solo refrescar la lista)
+      window.location.href = `/ideas-en-dialogo/${data.post.slug}`;
+    } catch {
+      setError("Error de red. Revisa tu conexión e intenta otra vez.");
+    } finally {
+      setLoading(false);
     }
-    setTitle("");
-    setBody("");
-    setTags("");
-    setLinkUrl("");
-    router.push(`/ideas-en-dialogo/${data.post.slug}`);
-    router.refresh();
   }
 
   return (
