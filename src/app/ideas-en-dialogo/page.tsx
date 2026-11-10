@@ -164,6 +164,11 @@ export default async function IdeasEnDialogoPage({ searchParams }: Props) {
                   communities={communities}
                   defaultCommunityId={communityId || communities[0]?.id}
                 />
+                <p className="mt-3 text-[11px] text-muted">
+                  Si el mensaje no se guarda y la página “se reinicia”, hace
+                  falta almacenamiento Blob en Vercel. Un admin puede borrar
+                  contenido ofensivo en Admin → Moderación del foro.
+                </p>
               </div>
             ) : null}
 

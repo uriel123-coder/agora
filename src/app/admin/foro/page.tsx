@@ -38,8 +38,9 @@ export default async function AdminForoPage() {
         Moderación · Ideas en diálogo
       </h1>
       <p className="mt-2 text-muted">
-        Revisa reportes y elimina publicaciones inapropiadas. En el catálogo de
-        Sheets también puedes borrar filas desde Admin → Publicaciones.
+        Si alguien escribe algo pesado o inapropiado: bórralo aquí (reportes o
+        lista de debates). Para borrar trabajos del catálogo (Sheets): Admin →
+        Editar por categoría → Borrar publicación.
       </p>
 
       {!canModerate(user.role) ? (

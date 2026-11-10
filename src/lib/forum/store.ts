@@ -160,8 +160,14 @@ async function saveStore(data: ForumData) {
   try {
     await fs.mkdir(path.dirname(runtimePath), { recursive: true });
     await fs.writeFile(runtimePath, JSON.stringify(data, null, 2), "utf8");
+    return;
   } catch {
-    // Persistencia solo en memoria de esta instancia.
+    // En Vercel el disco no persiste: sin Blob el post “desaparece” al recargar.
+    if (process.env.VERCEL) {
+      throw new Error(
+        "No se pudo guardar el foro de forma permanente. Configura BLOB_READ_WRITE_TOKEN en Vercel (Storage → Blob).",
+      );
+    }
   }
 }
 

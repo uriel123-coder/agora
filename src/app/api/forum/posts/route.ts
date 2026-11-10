@@ -31,18 +31,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Contenido demasiado largo." }, { status: 400 });
   }
 
-  const post = await createPost({
-    title: body.title,
-    body: body.body,
-    communityId: body.communityId,
-    authorId: user.id,
-    authorName: user.name,
-    tags: body.tags ?? [],
-    linkUrl: body.linkUrl,
-    imageUrl: body.imageUrl,
-  });
-
-  return NextResponse.json({ post });
+  try {
+    const post = await createPost({
+      title: body.title,
+      body: body.body,
+      communityId: body.communityId,
+      authorId: user.id,
+      authorName: user.name,
+      tags: body.tags ?? [],
+      linkUrl: body.linkUrl,
+      imageUrl: body.imageUrl,
+    });
+    return NextResponse.json({ post });
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "No se pudo publicar.";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
 
 export async function DELETE(request: Request) {

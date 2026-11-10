@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import type { ForumCommunity } from "@/lib/forum/store";
@@ -11,6 +12,7 @@ export function NewPostForm({
   communities: ForumCommunity[];
   defaultCommunityId?: string;
 }) {
+  const router = useRouter();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [communityId, setCommunityId] = useState(
@@ -24,6 +26,7 @@ export function NewPostForm({
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     e.stopPropagation();
+    if (loading) return;
     setLoading(true);
     setError("");
     try {
@@ -54,8 +57,12 @@ export function NewPostForm({
         );
         return;
       }
-      // Ir al debate creado (no solo refrescar la lista)
-      window.location.href = `/ideas-en-dialogo/${data.post.slug}`;
+      setTitle("");
+      setBody("");
+      setTags("");
+      setLinkUrl("");
+      router.push(`/ideas-en-dialogo/${data.post.slug}`);
+      router.refresh();
     } catch {
       setError("Error de red. Revisa tu conexión e intenta otra vez.");
     } finally {
@@ -66,7 +73,8 @@ export function NewPostForm({
   return (
     <form
       onSubmit={onSubmit}
-      className="space-y-3 rounded-xl border border-border bg-card p-5"
+      className="space-y-3"
+      noValidate={false}
     >
       <h2 className="font-display text-xl">Nueva publicación</h2>
       <input
@@ -75,6 +83,7 @@ export function NewPostForm({
         onChange={(e) => setTitle(e.target.value)}
         placeholder="Título"
         className="w-full rounded-md border border-border bg-background px-3 py-2"
+        disabled={loading}
       />
       <textarea
         required
@@ -83,12 +92,14 @@ export function NewPostForm({
         placeholder="Texto del debate"
         rows={4}
         className="w-full rounded-md border border-border bg-background px-3 py-2"
+        disabled={loading}
       />
       <div className="grid gap-3 sm:grid-cols-2">
         <select
           value={communityId}
           onChange={(e) => setCommunityId(e.target.value)}
           className="rounded-md border border-border bg-background px-3 py-2"
+          disabled={loading}
         >
           {communities.map((c) => (
             <option key={c.id} value={c.id}>
@@ -101,6 +112,7 @@ export function NewPostForm({
           onChange={(e) => setTags(e.target.value)}
           placeholder="Etiquetas (separadas por coma)"
           className="rounded-md border border-border bg-background px-3 py-2"
+          disabled={loading}
         />
       </div>
       <input
@@ -108,9 +120,10 @@ export function NewPostForm({
         onChange={(e) => setLinkUrl(e.target.value)}
         placeholder="Enlace opcional"
         className="w-full rounded-md border border-border bg-background px-3 py-2"
+        disabled={loading}
       />
-      {error ? <p className="text-sm text-red-700">{error}</p> : null}
-      <Button type="submit" disabled={loading}>
+      {error ? <p className="text-sm text-red-700 dark:text-red-300">{error}</p> : null}
+      <Button type="submit" disabled={loading || !title.trim() || !body.trim()}>
         {loading ? "Publicando…" : "Publicar"}
       </Button>
     </form>

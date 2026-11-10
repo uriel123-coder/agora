@@ -277,8 +277,9 @@ export function SheetRowEditor({
                 variant="secondary"
                 onClick={removeRow}
                 disabled={loading}
+                className="border-red-300 text-red-700 hover:border-red-500 hover:text-red-800 dark:border-red-800 dark:text-red-300"
               >
-                Quitar
+                Borrar publicación
               </Button>
             ) : null}
             {status ? (
