@@ -21,7 +21,8 @@ export default async function ExplorarPage() {
         Explorar
       </h1>
       <p className="mt-2 max-w-2xl text-sm text-muted">
-        Catálogo y categorías de Ágora. Solo contenido autorizado de Or Hajayim.
+        Esta página es el catálogo general de Ágora: categorías y trabajos
+        recientes autorizados de Or Hajayim.
       </p>
 
       <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">

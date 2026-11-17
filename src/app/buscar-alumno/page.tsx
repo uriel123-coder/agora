@@ -76,10 +76,11 @@ export default async function BuscarAlumnoPage({ searchParams }: Props) {
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
       <Breadcrumbs items={[{ label: "Buscar alumno" }]} />
       <h1 className="font-display text-4xl text-oh-ink dark:text-foreground">
-        Buscar alumno
+        Buscar alumnos
       </h1>
       <p className="mt-3 max-w-2xl text-muted">
-        Escribe un nombre. Solo aparecen coincidencias.
+        Esta página sirve para localizar publicaciones de un alumno concreto.
+        Escribe un nombre: solo aparecen coincidencias autorizadas.
       </p>
 
       <form className="mt-8 flex flex-wrap gap-3 rounded-2xl border border-border bg-card p-4">

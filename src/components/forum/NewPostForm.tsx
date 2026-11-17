@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import type { ForumCommunity } from "@/lib/forum/store";
@@ -12,7 +11,6 @@ export function NewPostForm({
   communities: ForumCommunity[];
   defaultCommunityId?: string;
 }) {
-  const router = useRouter();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [communityId, setCommunityId] = useState(
@@ -61,8 +59,9 @@ export function NewPostForm({
       setBody("");
       setTags("");
       setLinkUrl("");
-      router.push(`/ideas-en-dialogo/${data.post.slug}`);
-      router.refresh();
+      // Navegación nativa: evita colgarse en soft-nav de App Router
+      window.location.href = `/ideas-en-dialogo/${data.post.slug}`;
+      return;
     } catch {
       setError("Error de red. Revisa tu conexión e intenta otra vez.");
     } finally {

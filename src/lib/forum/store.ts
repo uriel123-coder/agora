@@ -244,6 +244,13 @@ export async function createPost(input: {
   linkUrl?: string;
 }) {
   const data = await ensureStore();
+  const community = data.communities.find((c) => c.id === input.communityId);
+  if (!community) {
+    throw new Error("Elige un espacio válido para publicar.");
+  }
+  if (!input.title.trim() || !input.body.trim()) {
+    throw new Error("Título y texto son obligatorios.");
+  }
   const baseSlug = slugify(input.title) || "debate";
   let slug = baseSlug;
   let i = 1;

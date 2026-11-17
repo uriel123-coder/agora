@@ -35,7 +35,7 @@ export function HomeHero() {
               className="h-auto w-[min(100%,22rem)] drop-shadow-[0_8px_28px_rgba(36,55,70,0.18)] sm:w-[min(100%,26rem)]"
               priority
             />
-            <p className="mt-5 max-w-md text-base leading-relaxed text-[#243746]/90 drop-shadow-sm sm:text-lg">
+            <p className="mt-5 max-w-md text-base leading-relaxed text-oh-ink/90 drop-shadow-sm sm:text-lg dark:text-foreground/90">
               Ideas, voces y trabajos que viven en la comunidad.
             </p>
           </div>

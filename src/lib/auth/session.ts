@@ -1,29 +1,30 @@
 import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
-import demoUsers from "@/data/demo/users.json";
-import type { AgoraUser, SessionUser, UserRole } from "@/lib/types/content";
+import {
+  findUserByEmail,
+  listPublicUsers,
+  listStoredUsers,
+  registerStudent,
+} from "@/lib/auth/users-store";
+import type { SessionUser, UserRole } from "@/lib/types/content";
 
 const COOKIE_NAME = "agora_session";
-
-type StoredUser = AgoraUser & { passwordHash: string };
 
 function getSecret() {
   const secret = process.env.AUTH_SECRET ?? "agora-demo-secret-change-me";
   return new TextEncoder().encode(secret);
 }
 
-export function listUsers(): StoredUser[] {
-  return demoUsers as StoredUser[];
+export async function listUsers() {
+  return listPublicUsers();
 }
 
 export async function verifyCredentials(
   email: string,
   password: string,
 ): Promise<SessionUser | null> {
-  const user = listUsers().find(
-    (u) => u.email.toLowerCase() === email.toLowerCase(),
-  );
+  const user = await findUserByEmail(email);
   if (!user || user.suspended) return null;
   const ok = await bcrypt.compare(password, user.passwordHash);
   if (!ok) return null;
@@ -34,6 +35,14 @@ export async function verifyCredentials(
     role: user.role,
     studentId: user.studentId,
   };
+}
+
+export async function registerAccount(input: {
+  name: string;
+  email: string;
+  password: string;
+}): Promise<SessionUser> {
+  return registerStudent(input);
 }
 
 export async function createSessionToken(user: SessionUser): Promise<string> {
@@ -102,4 +111,10 @@ export function canAccessAdmin(role: UserRole): boolean {
 
 export function canModerate(role: UserRole): boolean {
   return ["moderador", "administrador"].includes(role);
+}
+
+/** Solo para diagnósticos internos — no exponer hashes. */
+export async function countUsers() {
+  const users = await listStoredUsers();
+  return users.length;
 }

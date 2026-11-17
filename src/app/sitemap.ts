@@ -9,6 +9,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const pubs = demoPublications as Publication[];
   const staticRoutes = [
     "",
+    "/que-es-agora",
+    "/el-colegio",
+    "/filosofia",
     "/explorar",
     "/categorias",
     "/buscar",

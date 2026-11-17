@@ -6,8 +6,12 @@ import { getSession } from "@/lib/auth/session";
 import { CATEGORIES } from "@/lib/categories";
 import { enrichPublicationsMedia } from "@/lib/data/enrich-media";
 import { getAllPublications, getStudents } from "@/lib/data/repository";
-import { searchPublications } from "@/lib/search";
-import type { CategorySlug } from "@/lib/types/content";
+import {
+  relatedPublications,
+  searchPublications,
+  searchQuickLinks,
+} from "@/lib/search";
+import type { CategorySlug, Publication } from "@/lib/types/content";
 import { normalizeText } from "@/lib/utils/text";
 
 export const metadata: Metadata = {
@@ -44,6 +48,14 @@ function param(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
 }
 
+const EMPTY = {
+  items: [] as ReturnType<typeof searchPublications>["items"],
+  total: 0,
+  page: 1,
+  pageSize: 24,
+  query: "",
+};
+
 export default async function BuscarPage({ searchParams }: Props) {
   const sp = await searchParams;
   const q = (param(sp.q) ?? "").trim();
@@ -53,31 +65,46 @@ export default async function BuscarPage({ searchParams }: Props) {
   const page = Number(param(sp.page) ?? "1") || 1;
   const hasQuery = q.trim().length >= 2;
 
-  const user = await getSession();
-  const role = user?.role ?? "visitor";
-  const [rawPublications, students] = await Promise.all([
-    getAllPublications(role),
-    getStudents(true, role),
-  ]);
+  let publications: Publication[] = [];
+  let students: Awaited<ReturnType<typeof getStudents>> = [];
+  let loadError = false;
 
-  // Si buscan «video»/«pdf»/… tipar Drive con presupuesto corto
-  const publications =
-    hasQuery && isMediaTypeQuery(q)
-      ? await enrichPublicationsMedia(rawPublications, {
-          budgetMs: 14_000,
-          concurrency: 5,
-        })
-      : rawPublications;
+  try {
+    const user = await getSession();
+    const role = user?.role ?? "visitor";
+    const [rawPublications, rawStudents] = await Promise.all([
+      getAllPublications(role),
+      getStudents(true, role),
+    ]);
+    students = rawStudents;
+
+    if (hasQuery && isMediaTypeQuery(q)) {
+      try {
+        publications = await enrichPublicationsMedia(rawPublications, {
+          budgetMs: 10_000,
+          concurrency: 4,
+        });
+      } catch {
+        publications = rawPublications;
+      }
+    } else {
+      publications = rawPublications;
+    }
+  } catch {
+    loadError = true;
+    publications = [];
+    students = [];
+  }
 
   const result = hasQuery
     ? searchPublications(publications, {
         query: q,
-        category,
+        category: category || undefined,
         sort,
         page,
         pageSize: 24,
       })
-    : { items: [], total: 0, page: 1, pageSize: 24, query: "" };
+    : EMPTY;
 
   const matchedStudents = q
     ? students
@@ -87,7 +114,22 @@ export default async function BuscarPage({ searchParams }: Props) {
         .slice(0, 8)
     : [];
 
+  const seed = result.items.map((i) => i.publication);
+  const related = hasQuery
+    ? relatedPublications(publications, seed, 8)
+    : [];
+  const quickLinks = hasQuery ? searchQuickLinks(q) : [];
+
   const totalPages = Math.max(1, Math.ceil(result.total / result.pageSize));
+
+  const suggestions = [
+    "cuentos",
+    "poemas",
+    "ciencia",
+    "video",
+    "historia",
+    "arte",
+  ];
 
   return (
     <div className="relative">
@@ -105,7 +147,7 @@ export default async function BuscarPage({ searchParams }: Props) {
           Buscar
         </h1>
         <p className="mt-2 max-w-xl text-base text-muted">
-          Encuentra trabajos por tema, título, nombre o tipo (video, pdf…).
+          Busca por tipo (cuentos, videos…), tema, título, autor o categoría.
         </p>
 
         <form
@@ -121,8 +163,8 @@ export default async function BuscarPage({ searchParams }: Props) {
                 name="q"
                 defaultValue={q}
                 autoFocus
-                className="h-14 w-full border-0 bg-transparent pl-12 pr-4 text-base outline-none placeholder:text-muted"
-                placeholder="Título, tema, autor, año…"
+                className="h-14 w-full border-0 bg-transparent pl-12 pr-4 text-base text-foreground outline-none placeholder:text-muted"
+                placeholder="Ej. cuentos, ciencia, nombre…"
                 required
                 minLength={2}
               />
@@ -132,7 +174,7 @@ export default async function BuscarPage({ searchParams }: Props) {
               <select
                 name="category"
                 defaultValue={category}
-                className="h-14 w-full border-0 bg-transparent px-4 text-sm outline-none"
+                className="h-14 w-full border-0 bg-transparent px-4 text-sm text-foreground outline-none"
               >
                 <option value="">Todas las áreas</option>
                 {CATEGORIES.filter(
@@ -155,17 +197,31 @@ export default async function BuscarPage({ searchParams }: Props) {
         </form>
 
         {!hasQuery ? (
-          <div className="mt-14 text-center">
+          <div className="mt-10">
             <p className="font-display text-2xl text-oh-ink dark:text-foreground">
-              Empieza con una palabra
+              Prueba con
             </p>
-            <p className="mx-auto mt-2 max-w-md text-sm text-muted">
-              Solo mostramos coincidencias reales del archivo — nada de listar
-              todo el catálogo.
-            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {suggestions.map((s) => (
+                <a
+                  key={s}
+                  href={`/buscar?q=${encodeURIComponent(s)}`}
+                  className="rounded-full border border-border bg-card px-4 py-2 text-sm transition hover:border-oh-blue hover:text-oh-blue"
+                >
+                  {s}
+                </a>
+              ))}
+            </div>
           </div>
         ) : (
           <>
+            {loadError ? (
+              <p className="mt-6 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-foreground">
+                Hubo un problema al cargar el catálogo. Intenta de nuevo en un
+                momento.
+              </p>
+            ) : null}
+
             <p className="mt-8 text-sm text-muted">
               {result.total} trabajo{result.total === 1 ? "" : "s"}
               {matchedStudents.length
@@ -173,6 +229,21 @@ export default async function BuscarPage({ searchParams }: Props) {
                 : ""}
               {q ? ` para «${q}»` : ""}
             </p>
+
+            {quickLinks.length > 0 ? (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {quickLinks.map((link) => (
+                  <a
+                    key={link.href + link.label}
+                    href={link.href}
+                    className="rounded-full border border-oh-blue/30 bg-oh-blue/10 px-3 py-1.5 text-xs text-oh-blue transition hover:border-oh-blue"
+                    title={link.description}
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </div>
+            ) : null}
 
             {matchedStudents.length > 0 ? (
               <section className="mt-5">
@@ -198,9 +269,11 @@ export default async function BuscarPage({ searchParams }: Props) {
 
             {result.items.length === 0 ? (
               <div className="mt-10 rounded-2xl border border-dashed border-border px-6 py-12 text-center">
-                <p className="font-display text-xl">Sin coincidencias</p>
+                <p className="font-display text-xl text-foreground">
+                  Sin coincidencias exactas
+                </p>
                 <p className="mt-2 text-sm text-muted">
-                  Prueba otra palabra o el nombre completo.
+                  Prueba «cuento», «poema», «ciencia» o un nombre completo.
                 </p>
               </div>
             ) : (
@@ -214,6 +287,26 @@ export default async function BuscarPage({ searchParams }: Props) {
                 ))}
               </div>
             )}
+
+            {related.length > 0 ? (
+              <section className="mt-14">
+                <h2 className="font-display text-2xl text-oh-ink dark:text-foreground">
+                  También te puede interesar
+                </h2>
+                <p className="mt-1 text-sm text-muted">
+                  Relacionado por categoría, tipo o etiquetas.
+                </p>
+                <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {related.map((publication) => (
+                    <WorkCard
+                      key={`rel-${publication.id}`}
+                      publication={publication}
+                      showAuthor
+                    />
+                  ))}
+                </div>
+              </section>
+            ) : null}
 
             {totalPages > 1 ? (
               <div className="mt-10 flex flex-wrap gap-2">

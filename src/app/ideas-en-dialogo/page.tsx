@@ -37,21 +37,21 @@ export default async function IdeasEnDialogoPage({ searchParams }: Props) {
   ]);
 
   return (
-    <div className="bg-[#f4f6f9] dark:bg-transparent">
+    <div className="bg-oh-stone/40 dark:bg-transparent">
       <div className="mx-auto max-w-6xl px-4 pt-8 sm:px-6">
         <Breadcrumbs items={[{ label: "Ideas en diálogo" }]} />
       </div>
-      <div className="border-y border-border bg-[#243746] text-white">
+      <div className="border-y border-border bg-oh-ink-deep text-white dark:bg-[#15202b]">
         <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div className="max-w-2xl">
               <p className="text-[11px] uppercase tracking-[0.18em] text-white/55">
                 Foro escolar
               </p>
-              <h1 className="mt-2 font-display text-4xl sm:text-5xl">
+              <h1 className="mt-2 font-display text-4xl text-white sm:text-5xl">
                 Ideas en diálogo
               </h1>
-              <p className="mt-3 text-sm leading-relaxed text-white/80 sm:text-base">
+              <p className="mt-3 text-sm leading-relaxed text-white/85 sm:text-base">
                 Discute, pregunta y comparte con respeto. Votos, comentarios y
                 espacios temáticos — como un foro vivo de Or Hajayim.
               </p>
@@ -164,13 +164,16 @@ export default async function IdeasEnDialogoPage({ searchParams }: Props) {
                   communities={communities}
                   defaultCommunityId={communityId || communities[0]?.id}
                 />
-                <p className="mt-3 text-[11px] text-muted">
-                  Si el mensaje no se guarda y la página “se reinicia”, hace
-                  falta almacenamiento Blob en Vercel. Un admin puede borrar
-                  contenido ofensivo en Admin → Moderación del foro.
-                </p>
               </div>
-            ) : null}
+            ) : (
+              <div className="mb-5 rounded-md border border-dashed border-border bg-card p-4 text-sm text-muted">
+                Para publicar ideas{" "}
+                <a href="/acceder" className="text-oh-blue hover:underline">
+                  crea una cuenta o accede
+                </a>
+                .
+              </div>
+            )}
 
             <ul className="space-y-3">
               {posts.length === 0 ? (

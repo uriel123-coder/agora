@@ -17,6 +17,12 @@ type SuggestItem = {
   author: string;
 };
 
+type QuickLink = {
+  href: string;
+  label: string;
+  description: string;
+};
+
 export function CommandSearch({
   open,
   onOpenChange,
@@ -27,6 +33,8 @@ export function CommandSearch({
   const [query, setQuery] = useState("");
   const [history, setHistory] = useState<string[]>([]);
   const [items, setItems] = useState<SuggestItem[]>([]);
+  const [related, setRelated] = useState<SuggestItem[]>([]);
+  const [links, setLinks] = useState<QuickLink[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -61,14 +69,25 @@ export function CommandSearch({
           `/api/search/suggest?q=${encodeURIComponent(q)}`,
           { signal: ctrl.signal },
         );
-        const data = (await res.json()) as { items?: SuggestItem[] };
+        if (!res.ok) throw new Error("bad status");
+        const data = (await res.json()) as {
+          items?: SuggestItem[];
+          related?: SuggestItem[];
+          links?: QuickLink[];
+        };
         setItems(data.items ?? []);
+        setRelated(data.related ?? []);
+        setLinks(data.links ?? []);
       } catch {
-        if (!ctrl.signal.aborted) setItems([]);
+        if (!ctrl.signal.aborted) {
+          setItems([]);
+          setRelated([]);
+          setLinks([]);
+        }
       } finally {
         if (!ctrl.signal.aborted) setLoading(false);
       }
-    }, q ? 180 : 0);
+    }, q ? 160 : 0);
     return () => {
       ctrl.abort();
       window.clearTimeout(t);
@@ -77,9 +96,13 @@ export function CommandSearch({
 
   const persistHistory = useCallback(
     (value: string) => {
-      const next = [value, ...history.filter((h) => h !== value)].slice(0, 8);
-      setHistory(next);
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(next));
+      try {
+        const next = [value, ...history.filter((h) => h !== value)].slice(0, 8);
+        setHistory(next);
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(next));
+      } catch {
+        /* ignore quota */
+      }
     },
     [history],
   );
@@ -118,12 +141,12 @@ export function CommandSearch({
             onKeyDown={(e) => {
               if (e.key === "Enter") goSearch();
             }}
-            placeholder="Tema, título, autor…"
-            className="min-h-14 w-full bg-transparent text-base outline-none placeholder:text-muted"
+            placeholder="Cuentos, ciencia, autor, video…"
+            className="min-h-14 w-full bg-transparent text-base text-foreground outline-none placeholder:text-muted"
           />
           <button
             type="button"
-            className="inline-flex h-11 w-11 items-center justify-center rounded-xl text-muted hover:bg-oh-stone hover:text-oh-ink"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-xl text-muted hover:bg-oh-stone hover:text-foreground"
             onClick={() => onOpenChange(false)}
             aria-label="Cerrar"
           >
@@ -150,12 +173,27 @@ export function CommandSearch({
             </div>
           ) : null}
 
+          {links.length > 0 ? (
+            <div className="mb-2 flex flex-wrap gap-1.5 px-2">
+              {links.map((link) => (
+                <a
+                  key={link.href + link.label}
+                  href={link.href}
+                  onClick={() => onOpenChange(false)}
+                  className="rounded-full border border-oh-blue/30 bg-oh-blue/10 px-3 py-1.5 text-xs text-oh-blue"
+                >
+                  {link.label}
+                </a>
+              ))}
+            </div>
+          ) : null}
+
           {loading ? (
             <p className="px-3 py-6 text-sm text-muted">Buscando…</p>
           ) : items.length === 0 ? (
             <p className="px-3 py-6 text-sm text-muted">
               {query.trim().length >= 2
-                ? "Sin coincidencias"
+                ? "Sin coincidencias exactas — abre el buscador completo"
                 : "Escribe para buscar en el archivo"}
             </p>
           ) : (
@@ -168,9 +206,8 @@ export function CommandSearch({
                       href={`/publicacion/${item.slug}`}
                       onClick={() => onOpenChange(false)}
                       className="block rounded-xl px-3 py-3 transition hover:bg-oh-stone/80 dark:hover:bg-white/5"
-                      style={{ touchAction: "manipulation" }}
                     >
-                      <p className="text-[11px] text-muted">{cat.name}</p>
+                      <p className="text-[11px] text-muted">{cat?.name}</p>
                       <p className="font-display text-[1.05rem] leading-snug text-oh-ink dark:text-foreground">
                         {item.title}
                       </p>
@@ -183,6 +220,27 @@ export function CommandSearch({
               })}
             </ul>
           )}
+
+          {related.length > 0 ? (
+            <div className="mt-3 border-t border-border px-2 pt-3">
+              <p className="mb-1 text-[11px] text-muted">
+                También te puede interesar
+              </p>
+              <ul className="space-y-0.5">
+                {related.map((item) => (
+                  <li key={`rel-${item.id}`}>
+                    <a
+                      href={`/publicacion/${item.slug}`}
+                      onClick={() => onOpenChange(false)}
+                      className="block rounded-xl px-3 py-2.5 text-sm transition hover:bg-oh-stone/80 dark:hover:bg-white/5"
+                    >
+                      <span className="text-foreground">{item.title}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
         </div>
 
         <div className="flex items-center justify-between border-t border-border px-4 py-2.5 text-xs text-muted">

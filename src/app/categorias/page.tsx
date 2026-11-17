@@ -13,8 +13,8 @@ export default function CategoriasPage() {
         Categorías
       </h1>
       <p className="mt-3 max-w-2xl text-muted">
-        Las nueve categorías oficiales de Ágora. No se añaden categorías
-        principales adicionales.
+        Esta página reúne las nueve categorías oficiales de Ágora. Entra a
+        cada una para ver su propósito y el contenido publicado.
       </p>
       <div className="mt-8 grid gap-4 md:grid-cols-2">
         {CATEGORIES.map((cat, index) => (

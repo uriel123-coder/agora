@@ -20,18 +20,29 @@
   --border: var(--oh-line);
   --muted: var(--oh-muted);
   --header-bg: color-mix(in oklab, var(--oh-white) 92%, transparent);
+  --footer-bg: #243746;
+  --footer-fg: #ffffff;
 }
 
 .dark {
-  --background: #121a22;
-  --foreground: #e8eef4;
-  --card: #1a2530;
-  --border: color-mix(in oklab, white 14%, transparent);
-  --muted: #9aa6b2;
-  --header-bg: color-mix(in oklab, #121a22 92%, transparent);
-  --oh-paper: #121a22;
-  --oh-stone: #1e2a35;
-  --oh-ink: #d7e0ea;
+  --background: #0e151c;
+  --foreground: #f1f5f9;
+  --card: #17222c;
+  --border: color-mix(in oklab, white 18%, transparent);
+  --muted: #b7c3d0;
+  --header-bg: color-mix(in oklab, #0e151c 94%, transparent);
+  --footer-bg: #0a1016;
+  --footer-fg: #e8eef4;
+  --oh-paper: #0e151c;
+  --oh-stone: #1c2833;
+  /* Texto claro en modo oscuro; ink-deep se mantiene oscuro para franjas/fondos */
+  --oh-ink: #e8eef4;
+  --oh-ink-deep: #101821;
+  --oh-line: color-mix(in oklab, white 16%, transparent);
+  --oh-text: #f1f5f9;
+  --oh-muted: #b7c3d0;
+  --oh-blue: #6b93e8;
+  --oh-blue-deep: #8eb4ff;
 }
 
 @theme inline {
@@ -56,6 +67,31 @@
 
 html {
   scroll-behavior: smooth;
+}
+
+/* Transición suave al cambiar claro ↔ oscuro */
+html.theme-transition,
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+  transition:
+    background-color 0.35s ease,
+    color 0.35s ease,
+    border-color 0.35s ease,
+    fill 0.35s ease,
+    stroke 0.35s ease,
+    box-shadow 0.35s ease !important;
+}
+
+.dark input,
+.dark textarea,
+.dark select {
+  color: var(--foreground);
+  background-color: color-mix(in oklab, var(--card) 88%, black);
+}
+
+.dark ::placeholder {
+  color: color-mix(in oklab, var(--muted) 85%, transparent);
 }
 
 /* Clicks más fiables en móvil/trackpad (sin delay de 300ms) */
@@ -117,6 +153,28 @@ textarea:focus-visible {
 
 .prose-agora p {
   margin-bottom: 1.05em;
+}
+
+.prose-agora ul {
+  margin: 0.85em 0 1.2em;
+  padding-left: 1.25rem;
+  list-style: disc;
+}
+
+.prose-agora li {
+  margin-bottom: 0.45em;
+  line-height: 1.7;
+}
+
+.prose-agora a {
+  color: var(--oh-blue);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.prose-agora strong {
+  font-weight: 650;
+  color: var(--foreground);
 }
 
 .prose-agora blockquote {

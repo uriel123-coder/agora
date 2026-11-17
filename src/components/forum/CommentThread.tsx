@@ -123,7 +123,9 @@ export function CommentThread({
             placeholder="Escribe un comentario…"
             className="w-full rounded-md border border-border bg-background px-3 py-2"
           />
-          {error ? <p className="text-sm text-red-700">{error}</p> : null}
+          {error ? (
+            <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+          ) : null}
           <Button type="button" onClick={() => submit(null)}>
             Comentar
           </Button>

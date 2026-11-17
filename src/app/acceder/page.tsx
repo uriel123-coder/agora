@@ -1,56 +1,121 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { Button } from "@/components/ui/Button";
 
+type Mode = "login" | "register";
+
 export default function AccederPage() {
-  const router = useRouter();
-  const [email, setEmail] = useState("admin@agora.demo");
-  const [password, setPassword] = useState("AgoraDemo2026!");
+  const [mode, setMode] = useState<Mode>("login");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
     setError("");
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-    const data = await res.json();
-    setLoading(false);
-    if (!res.ok) {
-      setError(data.error || "No se pudo iniciar sesión");
-      return;
+
+    const endpoint = mode === "login" ? "/api/auth/login" : "/api/auth/register";
+    const payload =
+      mode === "login"
+        ? { email, password }
+        : { name, email, password };
+
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setError(data.error || "No se pudo completar la operación.");
+        return;
+      }
+      window.location.href = "/mi-agora";
+    } catch {
+      setError("Error de red. Intenta de nuevo.");
+    } finally {
+      setLoading(false);
     }
-    router.push("/mi-agora");
-    router.refresh();
   }
 
   return (
     <div className="mx-auto max-w-lg px-4 py-10 sm:px-6">
       <Breadcrumbs items={[{ label: "Acceder" }]} />
-      <h1 className="font-display text-4xl text-oh-ink dark:text-foreground">Acceder</h1>
+      <h1 className="font-display text-4xl text-oh-ink dark:text-foreground">
+        {mode === "login" ? "Acceder" : "Crear cuenta"}
+      </h1>
       <p className="mt-3 text-muted">
-        Autenticación real con roles. Cuentas de demostración disponibles para
-        pruebas locales.
+        {mode === "login"
+          ? "Entra con tu correo para participar en Ideas en diálogo y guardar tu actividad."
+          : "Registro rápido para alumnos. Solo necesitas nombre, correo y contraseña."}
       </p>
+
+      <div className="mt-6 grid grid-cols-2 gap-1 rounded-xl border border-border bg-card p-1">
+        <button
+          type="button"
+          onClick={() => {
+            setMode("login");
+            setError("");
+          }}
+          className={`rounded-lg px-3 py-2.5 text-sm transition ${
+            mode === "login"
+              ? "bg-oh-ink text-white dark:bg-oh-blue"
+              : "text-muted hover:text-foreground"
+          }`}
+        >
+          Entrar
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setMode("register");
+            setError("");
+          }}
+          className={`rounded-lg px-3 py-2.5 text-sm transition ${
+            mode === "register"
+              ? "bg-oh-ink text-white dark:bg-oh-blue"
+              : "text-muted hover:text-foreground"
+          }`}
+        >
+          Crear cuenta
+        </button>
+      </div>
+
       <form
         onSubmit={onSubmit}
-        className="mt-8 space-y-4 rounded-2xl border border-border bg-card p-6"
+        className="mt-6 space-y-4 rounded-2xl border border-border bg-card p-6"
       >
+        {mode === "register" ? (
+          <label className="block">
+            <span className="mb-1 block text-sm">Nombre</span>
+            <input
+              type="text"
+              required
+              autoComplete="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Tu nombre"
+              className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-foreground"
+            />
+          </label>
+        ) : null}
         <label className="block">
           <span className="mb-1 block text-sm">Correo</span>
           <input
             type="email"
             required
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-md border border-border bg-background px-3 py-2"
+            placeholder="tu@correo.com"
+            className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-foreground"
           />
         </label>
         <label className="block">
@@ -58,27 +123,59 @@ export default function AccederPage() {
           <input
             type="password"
             required
+            autoComplete={mode === "login" ? "current-password" : "new-password"}
+            minLength={mode === "register" ? 6 : undefined}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-md border border-border bg-background px-3 py-2"
+            placeholder={mode === "register" ? "Mínimo 6 caracteres" : "••••••••"}
+            className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-foreground"
           />
         </label>
-        {error ? <p className="text-sm text-red-700">{error}</p> : null}
+        {error ? (
+          <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+        ) : null}
         <Button type="submit" disabled={loading} className="w-full">
-          {loading ? "Entrando…" : "Entrar"}
+          {loading
+            ? mode === "login"
+              ? "Entrando…"
+              : "Creando…"
+            : mode === "login"
+              ? "Entrar"
+              : "Crear cuenta"}
         </Button>
       </form>
-      <div className="mt-6 rounded-xl border border-dashed border-border p-4 text-sm text-muted">
-        <p className="font-medium text-foreground">Cuentas demo</p>
-        <ul className="mt-2 list-disc space-y-1 pl-5">
-          <li>admin@agora.demo</li>
-          <li>editor@agora.demo</li>
-          <li>moderador@agora.demo</li>
-          <li>docente@agora.demo</li>
-          <li>alumno@agora.demo</li>
-        </ul>
-        <p className="mt-2">Contraseña: AgoraDemo2026!</p>
-      </div>
+
+      <p className="mt-5 text-center text-sm text-muted">
+        {mode === "login" ? (
+          <>
+            ¿Primera vez?{" "}
+            <button
+              type="button"
+              className="text-oh-blue hover:underline"
+              onClick={() => {
+                setMode("register");
+                setError("");
+              }}
+            >
+              Crea tu cuenta en un minuto
+            </button>
+          </>
+        ) : (
+          <>
+            ¿Ya tienes cuenta?{" "}
+            <button
+              type="button"
+              className="text-oh-blue hover:underline"
+              onClick={() => {
+                setMode("login");
+                setError("");
+              }}
+            >
+              Acceder
+            </button>
+          </>
+        )}
+      </p>
     </div>
   );
 }

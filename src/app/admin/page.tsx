@@ -26,7 +26,7 @@ export default async function AdminPage() {
     diagnoseSheetsConnection(),
   ]);
   const sheets = getSheetsConfig();
-  const users = listUsers();
+  const users = await listUsers();
   const published = publications.filter((p) => p.status === "published").length;
   const fromSheets = publications.filter(
     (p) => p.source === "google-sheets",
@@ -52,7 +52,7 @@ export default async function AdminPage() {
     {
       href: "/admin/usuarios",
       title: "Usuarios",
-      desc: `${users.length} cuentas`,
+      desc: `${users.filter((u) => u.role !== "administrador").length} cuentas`,
     },
     {
       href: "/admin/diagnostico",
