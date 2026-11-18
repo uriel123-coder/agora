@@ -1,3 +1,4 @@
+import { resolveContentType } from "@/lib/content-type";
 import { slugify } from "@/lib/utils/text";
 import { normalizeSheetRow } from "@/lib/data/adapters/sheet-aliases";
 import {
@@ -123,29 +124,8 @@ function asAccess(value: string): AccessLevel {
 }
 
 function asContentType(value: string): ContentType {
-  const v = (value || "articulo").trim().toLowerCase();
-  const map: Record<string, ContentType> = {
-    articulo: "articulo",
-    artículo: "articulo",
-    cuento: "cuento",
-    poema: "poema",
-    ensayo: "ensayo",
-    investigacion: "investigacion",
-    investigación: "investigacion",
-    experimento: "experimento",
-    galeria: "galeria",
-    galería: "galeria",
-    video: "video",
-    audio: "audio",
-    documento: "documento",
-    entrevista: "entrevista",
-    proyecto: "proyecto",
-    obra: "obra",
-    reflexion: "reflexion",
-    reflexión: "reflexion",
-    shorashim: "ensayo",
-  };
-  return map[v] || "otro";
+  // Entiende género/tipo de Sheets: «audio», «audio/podcast», «video | clip», etc.
+  return resolveContentType(value);
 }
 
 function asLine(value: string): HistoricalLine | undefined {

@@ -125,8 +125,9 @@ export default async function BuscarPage({ searchParams }: Props) {
   const suggestions = [
     "cuentos",
     "poemas",
-    "ciencia",
+    "audio/podcast",
     "video",
+    "ciencia",
     "historia",
     "arte",
   ];
@@ -164,7 +165,7 @@ export default async function BuscarPage({ searchParams }: Props) {
                 defaultValue={q}
                 autoFocus
                 className="h-14 w-full border-0 bg-transparent pl-12 pr-4 text-base text-foreground outline-none placeholder:text-muted"
-                placeholder="Ej. cuentos, ciencia, nombre…"
+                placeholder="Ej. cuentos, audio/podcast, ciencia…"
                 required
                 minLength={2}
               />

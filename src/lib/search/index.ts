@@ -1,5 +1,12 @@
 import Fuse from "fuse.js";
 import { CATEGORIES } from "@/lib/categories";
+import {
+  contentTypeSearchAliases,
+  editDistance,
+  fuzzyLookup,
+  resolveContentType,
+  splitTypeFragments,
+} from "@/lib/content-type";
 import { normalizeText } from "@/lib/utils/text";
 import type {
   CategorySlug,
@@ -10,54 +17,7 @@ import type {
   SearchResultItem,
 } from "@/lib/types/content";
 
-/** Sinónimos y plurales → tipo de contenido canónico. */
-const CONTENT_TYPE_ALIASES: Record<string, ContentType> = {
-  cuento: "cuento",
-  cuentos: "cuento",
-  fabula: "cuento",
-  fabulas: "cuento",
-  relato: "cuento",
-  relatos: "cuento",
-  leyenda: "cuento",
-  leyendas: "cuento",
-  poema: "poema",
-  poemas: "poema",
-  poesia: "poema",
-  poesias: "poema",
-  ensayo: "ensayo",
-  ensayos: "ensayo",
-  articulo: "articulo",
-  articulos: "articulo",
-  investigacion: "investigacion",
-  investigaciones: "investigacion",
-  experimento: "experimento",
-  experimentos: "experimento",
-  galeria: "galeria",
-  galerias: "galeria",
-  foto: "galeria",
-  fotos: "galeria",
-  imagen: "galeria",
-  imagenes: "galeria",
-  video: "video",
-  videos: "video",
-  audio: "audio",
-  podcast: "audio",
-  podcasts: "audio",
-  documento: "documento",
-  documentos: "documento",
-  pdf: "documento",
-  pdfs: "documento",
-  docx: "documento",
-  word: "documento",
-  entrevista: "entrevista",
-  entrevistas: "entrevista",
-  proyecto: "proyecto",
-  proyectos: "proyecto",
-  obra: "obra",
-  obras: "obra",
-  reflexion: "reflexion",
-  reflexiones: "reflexion",
-};
+const CONTENT_TYPE_ALIASES = contentTypeSearchAliases();
 
 const CATEGORY_ALIASES: Record<string, CategorySlug> = {
   letras: "taller-de-letras",
@@ -90,19 +50,43 @@ function lightStem(token: string): string {
   return t;
 }
 
+/** Partes de búsqueda: «audio/podcast», «cuentos / poemas», espacios. */
+function queryParts(query: string): string[] {
+  return splitTypeFragments(query).flatMap((part) =>
+    part.split(/\s+/).map((t) => t.trim()).filter((t) => t.length >= 2),
+  );
+}
+
+function resolveTypeToken(token: string): ContentType | null {
+  const n = normalizeText(token);
+  if (CONTENT_TYPE_ALIASES[n]) return CONTENT_TYPE_ALIASES[n]!;
+  const stemmed = lightStem(n);
+  if (CONTENT_TYPE_ALIASES[stemmed]) return CONTENT_TYPE_ALIASES[stemmed]!;
+  return fuzzyLookup(n, CONTENT_TYPE_ALIASES, n.length >= 5 ? 2 : 1);
+}
+
 function expandQueryTokens(query: string): string[] {
-  const raw = normalizeText(query)
-    .split(/\s+/)
-    .map((t) => t.trim())
-    .filter((t) => t.length >= 2);
+  const raw = queryParts(query);
   const out = new Set<string>();
   for (const token of raw) {
     out.add(token);
     out.add(lightStem(token));
-    const type = CONTENT_TYPE_ALIASES[token] ?? CONTENT_TYPE_ALIASES[lightStem(token)];
+    const type = resolveTypeToken(token);
     if (type) {
       out.add(normalizeText(type));
       out.add(lightStem(type));
+      if (type === "audio") {
+        out.add("podcast");
+        out.add("podcasts");
+        out.add("audios");
+        out.add("sonido");
+      }
+    }
+    // Tipazos leves contra alias conocidos
+    const fuzzy = fuzzyLookup(token, CONTENT_TYPE_ALIASES, token.length >= 5 ? 2 : 1);
+    if (fuzzy) {
+      out.add(normalizeText(fuzzy));
+      out.add(lightStem(fuzzy));
     }
   }
   return [...out];
@@ -111,9 +95,9 @@ function expandQueryTokens(query: string): string[] {
 function mediaKindWords(pub: Publication): string {
   return pub.media
     .map((m) => {
-      if (m.type === "video") return "video videos vídeo";
+      if (m.type === "video") return "video videos";
       if (m.type === "image") return "imagen imagenes foto fotos galeria";
-      if (m.type === "audio") return "audio podcast podcasts";
+      if (m.type === "audio") return "audio audios podcast podcasts sonido";
       if (m.type === "pdf") return "pdf documento documentos";
       if (m.type === "document") return "documento documentos word docx";
       return m.type;
@@ -129,6 +113,7 @@ function contentTypeWords(type: ContentType): string {
     experimento: "experimento experimentos ciencia laboratorio",
     galeria: "galeria galerias foto fotos imagen imagenes",
     video: "video videos",
+    audio: "audio audios podcast podcasts sonido audio/podcast",
     documento: "documento documentos pdf",
     entrevista: "entrevista entrevistas",
     proyecto: "proyecto proyectos",
@@ -172,41 +157,69 @@ function buildHaystack(pub: Publication): string {
     .join(" ");
 }
 
-function mediaTypeFromQuery(
-  query: string,
-): "video" | "image" | "audio" | "pdf" | "document" | null {
-  const q = normalizeText(query);
-  if (["video", "videos", "vídeo", "vídeos"].includes(q)) return "video";
-  if (["imagen", "imagenes", "foto", "fotos"].includes(q)) return "image";
-  if (["audio", "podcast", "podcasts"].includes(q)) return "audio";
-  if (["pdf", "pdfs"].includes(q)) return "pdf";
-  if (["documento", "documentos", "docx", "word"].includes(q)) return "document";
-  return null;
-}
+type MediaKind = "video" | "image" | "audio" | "pdf" | "document";
 
-function contentTypeFromQuery(query: string): ContentType | null {
-  const q = normalizeText(query.trim());
-  if (CONTENT_TYPE_ALIASES[q]) return CONTENT_TYPE_ALIASES[q];
-  const stemmed = lightStem(q);
-  if (CONTENT_TYPE_ALIASES[stemmed]) return CONTENT_TYPE_ALIASES[stemmed];
-  return null;
+/** Tipos de contenido sugeridos por la consulta (soporta audio/podcast). */
+function contentTypesFromQuery(query: string): ContentType[] {
+  const parts = queryParts(query);
+  if (parts.length === 0) {
+    const single = resolveContentType(query);
+    return single !== "otro" && single !== "articulo" ? [single] : [];
+  }
+  const types = new Set<ContentType>();
+  for (const part of parts) {
+    const t = resolveTypeToken(part);
+    if (t) types.add(t);
+  }
+  // Toda la cadena tipo Sheets
+  const whole = resolveContentType(query);
+  if (whole !== "otro") types.add(whole);
+  return [...types];
 }
 
 function categoryFromQuery(query: string): CategorySlug | null {
   const q = normalizeText(query.trim());
-  if (CATEGORY_ALIASES[q]) return CATEGORY_ALIASES[q];
+  if (CATEGORY_ALIASES[q]) return CATEGORY_ALIASES[q]!;
   const byName = CATEGORIES.find((c) => normalizeText(c.name) === q);
-  return byName?.slug ?? null;
+  if (byName) return byName.slug;
+  return fuzzyLookup(q, CATEGORY_ALIASES, q.length >= 6 ? 2 : 1);
 }
 
-function pubMatchesMediaType(
-  pub: Publication,
-  type: "video" | "image" | "audio" | "pdf" | "document",
-): boolean {
+function pubMatchesMediaType(pub: Publication, type: MediaKind): boolean {
+  if (type === "audio") {
+    return (
+      pub.contentType === "audio" ||
+      pub.media.some((m) => m.type === "audio")
+    );
+  }
   if (pub.contentType === type) return true;
   if (type === "image" && pub.contentType === "galeria") return true;
   if (type === "document" && pub.contentType === "documento") return true;
+  if (type === "pdf") {
+    return (
+      pub.media.some((m) => m.type === "pdf") ||
+      pub.contentType === "documento"
+    );
+  }
   return pub.media.some((m) => m.type === type);
+}
+
+function pubMatchesContentType(pub: Publication, type: ContentType): boolean {
+  if (pub.contentType === type) return true;
+  if (type === "audio") return pubMatchesMediaType(pub, "audio");
+  if (type === "video") return pubMatchesMediaType(pub, "video");
+  if (type === "documento") {
+    return (
+      pubMatchesMediaType(pub, "document") || pubMatchesMediaType(pub, "pdf")
+    );
+  }
+  if (type === "galeria") return pubMatchesMediaType(pub, "image");
+  // Etiquetas / sinónimos explícitos (no haystack completo)
+  const tagBlob = normalizeText((pub.tags ?? []).join(" "));
+  const aliases = Object.entries(CONTENT_TYPE_ALIASES)
+    .filter(([, v]) => v === type)
+    .map(([k]) => k);
+  return aliases.some((a) => tagBlob.includes(a));
 }
 
 function scoreExactMatch(haystack: string, tokens: string[]): number {
@@ -214,7 +227,22 @@ function scoreExactMatch(haystack: string, tokens: string[]): number {
   let hits = 0;
   for (const token of tokens) {
     if (token.length < 2) continue;
-    if (haystack.includes(token)) hits += 1;
+    if (haystack.includes(token)) {
+      hits += 1;
+      continue;
+    }
+    // Tipazo leve dentro del haystack: comparar con palabras
+    if (token.length >= 4) {
+      const words = haystack.split(/\s+/);
+      if (
+        words.some((w) => {
+          if (Math.abs(w.length - token.length) > 2) return false;
+          return editDistance(token, w) <= (token.length >= 6 ? 2 : 1);
+        })
+      ) {
+        hits += 0.7;
+      }
+    }
   }
   return hits / tokens.length;
 }
@@ -314,35 +342,30 @@ export function searchPublications(
     const query = (filters.query ?? "").trim();
     let items: SearchResultItem[] = [];
 
-    const mediaQuery = query.length >= 2 ? mediaTypeFromQuery(query) : null;
-    const typeQuery = query.length >= 2 ? contentTypeFromQuery(query) : null;
-    const categoryQuery = query.length >= 2 ? categoryFromQuery(query) : null;
+    const typeQueries =
+      query.length >= 2 ? contentTypesFromQuery(query) : [];
+    const categoryQuery =
+      query.length >= 2 && !query.includes("/")
+        ? categoryFromQuery(query)
+        : null;
 
-    if (mediaQuery) {
-      items = pool
-        .filter((p) => pubMatchesMediaType(p, mediaQuery))
-        .map((p) => toItem(p, p.featured ? 1 : 0.9));
-    } else if (typeQuery) {
-      items = pool
-        .filter((p) => p.contentType === typeQuery)
-        .map((p) => toItem(p, p.featured ? 1 : 0.92));
-      // Si no hay del tipo exacto, ampliar con tags/haystack
-      if (items.length === 0) {
-        const token = normalizeText(typeQuery);
-        items = pool
-          .filter((p) => {
-            const hay = normalizeText(buildHaystack(p));
-            return hay.includes(token) || hay.includes(lightStem(token));
-          })
-          .map((p) => toItem(p, 0.75));
-      }
+    // Consulta solo de tipo(s): audio, podcast, audio/podcast, cuentos/poemas…
+    const onlyTypes =
+      typeQueries.length > 0 &&
+      queryParts(query).every((p) => resolveTypeToken(p) !== null);
+
+    if (onlyTypes) {
+      const matched = pool.filter((p) =>
+        typeQueries.some((t) => pubMatchesContentType(p, t)),
+      );
+      items = matched.map((p) => toItem(p, p.featured ? 1 : 0.92));
     } else if (categoryQuery && !filters.category) {
       items = pool
         .filter((p) => p.categorySlugs.includes(categoryQuery))
         .map((p) => toItem(p, p.featured ? 1 : 0.88));
     } else if (query.length >= 2) {
       const tokens = expandQueryTokens(query);
-      const normalizedQuery = normalizeText(query);
+      const normalizedQuery = normalizeText(query.replace(/\//g, " "));
 
       const scored = pool.map((publication) => {
         const haystack = normalizeText(buildHaystack(publication));
@@ -351,9 +374,12 @@ export function searchPublications(
         const exact = scoreExactMatch(haystack, tokens);
         const titleHit = tokens.some((t) => title.includes(t)) ? 0.35 : 0;
         const tagHit = tokens.some((t) => tags.includes(t)) ? 0.2 : 0;
-        const typeHit =
-          publication.contentType &&
-          tokens.includes(normalizeText(publication.contentType))
+        const typeHit = typeQueries.some((t) =>
+          pubMatchesContentType(publication, t),
+        )
+          ? 0.3
+          : publication.contentType &&
+              tokens.includes(normalizeText(publication.contentType))
             ? 0.25
             : 0;
         return {
@@ -364,13 +390,12 @@ export function searchPublications(
       });
 
       const strong = scored
-        .filter((s) => s.exact > 0 || s.score >= 0.25)
+        .filter((s) => s.exact > 0 || s.score >= 0.22)
         .map((s) => toItem(s.publication, Math.max(s.score, 0.4)));
 
       if (strong.length > 0) {
         items = strong;
       } else {
-        // Fuse como respaldo más permisivo
         const fuse = new Fuse(
           pool.map((publication) => ({
             publication,
@@ -389,13 +414,13 @@ export function searchPublications(
           })),
           {
             keys: [
-              { name: "title", weight: 0.35 },
-              { name: "contentType", weight: 0.2 },
-              { name: "authors", weight: 0.15 },
-              { name: "tags", weight: 0.15 },
-              { name: "haystack", weight: 0.15 },
+              { name: "title", weight: 0.32 },
+              { name: "contentType", weight: 0.22 },
+              { name: "authors", weight: 0.14 },
+              { name: "tags", weight: 0.14 },
+              { name: "haystack", weight: 0.18 },
             ],
-            threshold: 0.48,
+            threshold: 0.52,
             ignoreLocation: true,
             includeScore: true,
             minMatchCharLength: 2,
@@ -419,7 +444,6 @@ export function searchPublications(
       );
     }
 
-    // Deduplicar por id
     const seen = new Set<string>();
     items = items.filter((item) => {
       if (seen.has(item.publication.id)) return false;
@@ -463,7 +487,6 @@ export function searchPublications(
   }
 }
 
-/** Sugerencias relacionadas por categoría, tipo o etiquetas. */
 export function relatedPublications(
   publications: Publication[],
   seed: Publication[],
@@ -472,7 +495,10 @@ export function relatedPublications(
   try {
     if (!seed.length) {
       return publications
-        .filter((p) => p.featured && p.primaryCategory !== "tres-mundos-una-historia")
+        .filter(
+          (p) =>
+            p.featured && p.primaryCategory !== "tres-mundos-una-historia",
+        )
         .slice(0, limit);
     }
 
@@ -550,23 +576,31 @@ export function searchQuickLinks(query: string): {
   if (q.length < 2) return [];
   const links: { href: string; label: string; description: string }[] = [];
 
-  const type = contentTypeFromQuery(query);
-  if (type) {
+  const types = contentTypesFromQuery(query);
+  for (const type of types.slice(0, 2)) {
+    const label =
+      type === "audio"
+        ? "Ver audio / podcast"
+        : type === "galeria"
+          ? "Ver fotos / galería"
+          : `Ver ${type}`;
     links.push({
-      href: `/buscar?q=${encodeURIComponent(type)}`,
-      label: `Ver ${type}s`,
-      description: `Todos los trabajos de tipo ${type}`,
+      href: `/buscar?q=${encodeURIComponent(type === "audio" ? "audio/podcast" : type)}`,
+      label,
+      description: `Trabajos de tipo ${type}`,
     });
   }
 
-  const cat = categoryFromQuery(query);
-  if (cat) {
-    const name = CATEGORIES.find((c) => c.slug === cat)?.name ?? cat;
-    links.push({
-      href: `/${cat}`,
-      label: name,
-      description: "Abrir categoría completa",
-    });
+  if (!query.includes("/")) {
+    const cat = categoryFromQuery(query);
+    if (cat) {
+      const name = CATEGORIES.find((c) => c.slug === cat)?.name ?? cat;
+      links.push({
+        href: `/${cat}`,
+        label: name,
+        description: "Abrir categoría completa",
+      });
+    }
   }
 
   if (q.includes("alumno") || q.includes("estudiante")) {

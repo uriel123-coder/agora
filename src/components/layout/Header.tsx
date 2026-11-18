@@ -1,15 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import {
-  GraduationCap,
-  Info,
-  Menu,
-  Search,
-  Sparkles,
-  UserRound,
-  X,
-} from "lucide-react";
+import { Info, Menu, Search, UserRound, Users, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AgoraLogo } from "@/components/shared/Logo";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
@@ -18,31 +10,31 @@ import type { SessionUser } from "@/lib/types/content";
 import { canAccessAdmin } from "@/lib/auth/client-roles";
 
 const desktopLinks = [
-  { href: "/que-es-agora", label: "Qué es Ágora" },
-  { href: "/el-colegio", label: "El colegio" },
-  { href: "/filosofia", label: "Filosofía" },
+  { href: "/que-es-agora", label: "Qué es Ágora", icon: Info },
+  { href: "/quienes-somos", label: "Quiénes somos", icon: Info },
+  { href: "/buscar-alumno", label: "Buscar alumno", icon: Users },
 ];
 
 const menuPages = [
   {
     href: "/que-es-agora",
-    label: "Qué es este proyecto",
+    label: "Qué es Ágora",
     description:
       "Ágora: la biblioteca digital para descubrir, comprender y compartir.",
     icon: Info,
   },
   {
-    href: "/el-colegio",
-    label: "Qué escuela es",
+    href: "/quienes-somos",
+    label: "Quiénes somos",
     description:
-      "Colegio Or Hajayim Jacobo y Yosi Cojab: misión, pilares y contacto.",
-    icon: GraduationCap,
+      "El colegio Or Hajayim y su filosofía Torá Im Dérej Éretz.",
+    icon: Info,
   },
   {
-    href: "/filosofia",
-    label: "Filosofía de la escuela",
-    description: "Torá Im Dérej Éretz: ideología educativa de Or Hajayim.",
-    icon: Sparkles,
+    href: "/buscar-alumno",
+    label: "Buscar alumno",
+    description: "Localiza publicaciones asociadas a un alumno.",
+    icon: Users,
   },
 ];
 
@@ -74,20 +66,24 @@ export function Header({
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <AgoraLogo size="md" />
         <nav className="hidden items-center gap-1 lg:flex" aria-label="Principal">
-          {desktopLinks.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              className={cn(
-                "rounded-lg px-3 py-2.5 text-sm transition hover:text-oh-blue",
-                pathname === link.href || pathname.startsWith(`${link.href}/`)
-                  ? "text-oh-blue"
-                  : "text-foreground/85",
-              )}
-            >
-              {link.label}
-            </a>
-          ))}
+          {desktopLinks.map((link) => {
+            const Icon = link.icon;
+            const active =
+              pathname === link.href || pathname.startsWith(`${link.href}/`);
+            return (
+              <a
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-lg px-3 py-2.5 text-sm transition hover:text-oh-blue",
+                  active ? "text-oh-blue" : "text-foreground/85",
+                )}
+              >
+                <Icon className="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden />
+                {link.label}
+              </a>
+            );
+          })}
         </nav>
         <div className="flex items-center gap-2">
           <button

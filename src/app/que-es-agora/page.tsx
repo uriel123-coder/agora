@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Info } from "lucide-react";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 
 export const metadata: Metadata = {
@@ -11,7 +12,8 @@ export default function QueEsAgoraPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <Breadcrumbs items={[{ label: "Qué es Ágora" }]} />
-      <p className="text-[11px] uppercase tracking-[0.18em] text-muted">
+      <p className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.18em] text-muted">
+        <Info className="h-3.5 w-3.5 text-oh-blue" aria-hidden />
         Este proyecto
       </p>
       <h1 className="mt-2 font-display text-4xl text-oh-ink dark:text-foreground sm:text-5xl">
@@ -49,10 +51,6 @@ export default function QueEsAgoraPage() {
           ciencia a historia, arte, fe y voces creadoras—. Todo lo publicado
           responde a autorización escolar y a la identidad educativa de Or
           Hajayim.
-        </p>
-        <p>
-          Ágora fue impulsado como proyecto de la comunidad escolar. Creado por{" "}
-          <strong>Javier Rubio Patiño</strong>.
         </p>
       </div>
     </div>

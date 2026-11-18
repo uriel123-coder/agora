@@ -29,13 +29,10 @@ export function Footer() {
                 contacto@oh.edu.mx
               </a>
             </p>
-            <p className="mt-3 text-xs opacity-70">
-              Ágora · Creado por Javier Rubio Patiño
-            </p>
           </div>
         </div>
-        <p className="shrink-0 text-[10px] leading-relaxed opacity-45 sm:max-w-[11rem] sm:text-right">
-          Uriel Nakach · Ágora · Or Hajayim
+        <p className="shrink-0 text-[10px] leading-relaxed opacity-45 sm:max-w-[14rem] sm:text-right">
+          Creado por Javier Rubio Patiño · Uriel Nakach · Ágora · Or Hajayim
         </p>
       </div>
     </footer>
