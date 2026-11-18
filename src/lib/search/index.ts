@@ -580,12 +580,12 @@ export function searchQuickLinks(query: string): {
   for (const type of types.slice(0, 2)) {
     const label =
       type === "audio"
-        ? "Ver audio / podcast"
+        ? "Ver audio y podcast"
         : type === "galeria"
           ? "Ver fotos / galería"
           : `Ver ${type}`;
     links.push({
-      href: `/buscar?q=${encodeURIComponent(type === "audio" ? "audio/podcast" : type)}`,
+      href: `/buscar?q=${encodeURIComponent(type)}`,
       label,
       description: `Trabajos de tipo ${type}`,
     });

@@ -1,6 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { nanoid } from "nanoid";
+import { assertForumTextAllowed } from "@/lib/forum/censor";
 import { slugify } from "@/lib/utils/text";
 import demoForum from "@/data/demo/forum.json";
 
@@ -95,9 +96,13 @@ async function loadFromBlob(): Promise<ForumData | null> {
     const hit =
       blobs.find((b) => b.pathname === BLOB_PATHNAME) ?? blobs[0] ?? null;
     if (!hit?.url) return null;
-    const res = await fetch(hit.url, { cache: "no-store" });
+    // Evitar CDN cacheado: el post nuevo debe verse al instante
+    const url = `${hit.url}${hit.url.includes("?") ? "&" : "?"}t=${Date.now()}`;
+    const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) return null;
-    return (await res.json()) as ForumData;
+    const data = (await res.json()) as ForumData;
+    if (!data?.communities || !Array.isArray(data.posts)) return null;
+    return data;
   } catch {
     return null;
   }
@@ -121,12 +126,16 @@ async function saveToBlob(data: ForumData): Promise<boolean> {
   }
 }
 
-async function ensureStore(): Promise<ForumData> {
-  // En Vercel siempre preferir Blob (cada instancia tiene memoria distinta)
-  const fromBlob = await loadFromBlob();
-  if (fromBlob?.posts && fromBlob?.communities) {
-    memoryStore = fromBlob;
-    return memoryStore;
+/** En Vercel siempre releer Blob; la memoria solo ayuda en local. */
+async function ensureStore(opts?: { fresh?: boolean }): Promise<ForumData> {
+  if (opts?.fresh) memoryStore = null;
+
+  if (process.env.VERCEL || opts?.fresh || !memoryStore) {
+    const fromBlob = await loadFromBlob();
+    if (fromBlob) {
+      memoryStore = fromBlob;
+      return memoryStore;
+    }
   }
 
   if (memoryStore) return memoryStore;
@@ -156,16 +165,19 @@ async function ensureStore(): Promise<ForumData> {
 async function saveStore(data: ForumData) {
   memoryStore = data;
   const savedBlob = await saveToBlob(data);
-  if (savedBlob) return;
+  if (savedBlob) {
+    // Forzar que la siguiente lectura vea lo recién escrito
+    memoryStore = data;
+    return;
+  }
   try {
     await fs.mkdir(path.dirname(runtimePath), { recursive: true });
     await fs.writeFile(runtimePath, JSON.stringify(data, null, 2), "utf8");
     return;
   } catch {
-    // En Vercel el disco no persiste: sin Blob el post “desaparece” al recargar.
     if (process.env.VERCEL) {
       throw new Error(
-        "No se pudo guardar el foro de forma permanente. Configura BLOB_READ_WRITE_TOKEN en Vercel (Storage → Blob).",
+        "No se pudo guardar el foro. Configura BLOB_READ_WRITE_TOKEN en Vercel (Storage → Blob).",
       );
     }
   }
@@ -219,8 +231,12 @@ export async function listPosts(filters?: {
 }
 
 export async function getPostBySlug(slug: string) {
-  const data = await ensureStore();
-  return data.posts.find((p) => p.slug === slug) ?? null;
+  // Siempre fresco: tras publicar otra instancia no debe devolver 404
+  const data = await ensureStore({ fresh: true });
+  const decoded = decodeURIComponent(slug);
+  return (
+    data.posts.find((p) => p.slug === slug || p.slug === decoded) ?? null
+  );
 }
 
 export async function getCommentsForPost(postId: string) {
@@ -243,29 +259,30 @@ export async function createPost(input: {
   imageUrl?: string;
   linkUrl?: string;
 }) {
-  const data = await ensureStore();
+  const data = await ensureStore({ fresh: true });
   const community = data.communities.find((c) => c.id === input.communityId);
   if (!community) {
     throw new Error("Elige un espacio válido para publicar.");
   }
-  if (!input.title.trim() || !input.body.trim()) {
-    throw new Error("Título y texto son obligatorios.");
-  }
-  const baseSlug = slugify(input.title) || "debate";
-  let slug = baseSlug;
-  let i = 1;
-  while (data.posts.some((p) => p.slug === slug)) {
-    slug = `${baseSlug}-${i++}`;
-  }
+  const title = assertForumTextAllowed(input.title, "Título");
+  const body = assertForumTextAllowed(input.body, "Texto");
+  const tags = (input.tags ?? [])
+    .map((t) => assertForumTextAllowed(t, "Etiqueta"))
+    .filter(Boolean);
+
+  // Slug único y estable para no chocar ni dar 404
+  const baseSlug = slugify(title) || "debate";
+  const slug = `${baseSlug}-${nanoid(6)}`;
+
   const post: ForumPost = {
     id: `fpost-${nanoid(8)}`,
     slug,
     communityId: input.communityId,
-    title: input.title.trim(),
-    body: input.body.trim(),
+    title,
+    body,
     authorId: input.authorId,
     authorName: input.authorName,
-    tags: input.tags ?? [],
+    tags,
     imageUrl: input.imageUrl,
     linkUrl: input.linkUrl,
     score: 1,
@@ -284,7 +301,16 @@ export async function createPost(input: {
     value: 1,
   });
   await saveStore(data);
-  // Invalidar memoria en esta instancia ya está; Blob garantiza otras instancias
+
+  // Verificar que el post quedó persistido (evita 404 al abrir)
+  memoryStore = null;
+  const verified = await ensureStore({ fresh: true });
+  const found = verified.posts.find((p) => p.id === post.id);
+  if (!found) {
+    // Reintento: reinyectar y guardar otra vez
+    verified.posts.unshift(post);
+    await saveStore(verified);
+  }
   return post;
 }
 
@@ -295,7 +321,7 @@ export async function addComment(input: {
   authorName: string;
   body: string;
 }) {
-  const data = await ensureStore();
+  const data = await ensureStore({ fresh: true });
   const post = data.posts.find((p) => p.id === input.postId);
   if (!post) throw new Error("Publicación no encontrada");
   if (post.locked) throw new Error("El debate está cerrado");
@@ -305,7 +331,7 @@ export async function addComment(input: {
     parentId: input.parentId ?? null,
     authorId: input.authorId,
     authorName: input.authorName,
-    body: input.body.trim(),
+    body: assertForumTextAllowed(input.body, "Comentario"),
     score: 1,
     createdAt: new Date().toISOString(),
   };

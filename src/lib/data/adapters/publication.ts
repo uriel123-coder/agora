@@ -1,4 +1,4 @@
-import { resolveContentType } from "@/lib/content-type";
+import { resolveContentType, splitTypeFragments } from "@/lib/content-type";
 import { slugify } from "@/lib/utils/text";
 import { normalizeSheetRow } from "@/lib/data/adapters/sheet-aliases";
 import {
@@ -231,8 +231,14 @@ export function rowToPublication(
       ? `${titleBase} · ${authorLabel}`
       : titleBase || (authorLabel ? `Trabajo de ${authorLabel}` : "Sin título");
 
-  const contentType = asContentType(row.contentType || titleBase || "articulo");
-  const mediaHint = [titleBase, row.contentType, contentType].filter(Boolean).join(" ");
+  const rawGenre = (row.contentType || "").trim();
+  const contentType = asContentType(rawGenre || titleBase || "articulo");
+  // Si en Sheets ponen «audio/podcast», guardar fragmentos como tags
+  // para que la búsqueda encuentre «audio» y «podcast».
+  const genreFragments = rawGenre ? splitTypeFragments(rawGenre) : [];
+  const mediaHint = [titleBase, rawGenre, contentType, ...genreFragments]
+    .filter(Boolean)
+    .join(" ");
   let media = parseMedia(row.media, mediaHint);
   // Si el tipo de contenido es video/audio/galería, forzar el primer media
   if (media[0] && contentType === "video" && media[0].type !== "video") {
@@ -271,9 +277,18 @@ export function rowToPublication(
     categorySlugs: categories,
     primaryCategory: primary,
     contentType,
-    tags: splitList(row.tags).length
-      ? splitList(row.tags)
-      : [titleBase, year].filter(Boolean) as string[],
+    tags: [
+      ...new Set(
+        [
+          ...splitList(row.tags),
+          ...genreFragments,
+          rawGenre.includes("/") ? rawGenre : "",
+          ...(splitList(row.tags).length
+            ? []
+            : ([titleBase, year].filter(Boolean) as string[])),
+        ].filter(Boolean),
+      ),
+    ],
     authors,
     subject: row.subject || titleBase || undefined,
     schoolYear: year || undefined,

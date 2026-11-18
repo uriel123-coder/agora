@@ -68,13 +68,16 @@ export function PostActions({
 
   async function remove() {
     if (!window.confirm("¿Eliminar esta publicación?")) return;
-    await fetch("/api/forum/posts", {
+    const res = await fetch("/api/forum/posts", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ postId }),
     });
-    router.push("/ideas-en-dialogo");
-    router.refresh();
+    if (!res.ok) {
+      alert("No se pudo eliminar. Intenta de nuevo.");
+      return;
+    }
+    window.location.assign("/ideas-en-dialogo");
   }
 
   const shareUrl =

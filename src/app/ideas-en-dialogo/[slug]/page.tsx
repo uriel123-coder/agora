@@ -14,6 +14,9 @@ import {
   listCommunities,
 } from "@/lib/forum/store";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

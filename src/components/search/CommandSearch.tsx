@@ -141,7 +141,7 @@ export function CommandSearch({
             onKeyDown={(e) => {
               if (e.key === "Enter") goSearch();
             }}
-            placeholder="Cuentos, audio/podcast, ciencia…"
+            placeholder="Cuentos, audio, podcast, ciencia…"
             className="min-h-14 w-full bg-transparent text-base text-foreground outline-none placeholder:text-muted"
           />
           <button

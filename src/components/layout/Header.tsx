@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Info, Menu, Search, UserRound, Users, X } from "lucide-react";
+import { Home, Info, Menu, Search, UserRound, Users, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AgoraLogo } from "@/components/shared/Logo";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
@@ -10,12 +10,19 @@ import type { SessionUser } from "@/lib/types/content";
 import { canAccessAdmin } from "@/lib/auth/client-roles";
 
 const desktopLinks = [
+  { href: "/", label: "Inicio", icon: Home },
   { href: "/que-es-agora", label: "Qué es Ágora", icon: Info },
   { href: "/quienes-somos", label: "Quiénes somos", icon: Info },
   { href: "/buscar-alumno", label: "Buscar alumno", icon: Users },
 ];
 
 const menuPages = [
+  {
+    href: "/",
+    label: "Inicio",
+    description: "Volver a la portada de Ágora.",
+    icon: Home,
+  },
   {
     href: "/que-es-agora",
     label: "Qué es Ágora",
@@ -69,7 +76,9 @@ export function Header({
           {desktopLinks.map((link) => {
             const Icon = link.icon;
             const active =
-              pathname === link.href || pathname.startsWith(`${link.href}/`);
+              link.href === "/"
+                ? pathname === "/"
+                : pathname === link.href || pathname.startsWith(`${link.href}/`);
             return (
               <a
                 key={link.href}
@@ -150,7 +159,10 @@ export function Header({
                 {menuPages.map((item) => {
                   const Icon = item.icon;
                   const active =
-                    pathname === item.href || pathname.startsWith(`${item.href}/`);
+                    item.href === "/"
+                      ? pathname === "/"
+                      : pathname === item.href ||
+                        pathname.startsWith(`${item.href}/`);
                   return (
                     <li key={item.href}>
                       <a

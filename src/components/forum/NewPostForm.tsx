@@ -59,8 +59,9 @@ export function NewPostForm({
       setBody("");
       setTags("");
       setLinkUrl("");
-      // Navegación nativa: evita colgarse en soft-nav de App Router
-      window.location.href = `/ideas-en-dialogo/${data.post.slug}`;
+      // Navegación nativa + encode: el post debe abrirse al instante
+      const path = `/ideas-en-dialogo/${encodeURIComponent(data.post.slug)}`;
+      window.location.assign(path);
       return;
     } catch {
       setError("Error de red. Revisa tu conexión e intenta otra vez.");
